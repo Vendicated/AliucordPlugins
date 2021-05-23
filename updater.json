@@ -1,0 +1,11 @@
+{
+    "ExamplePlugin": {
+        "version": "1.0.0",
+        "minimumDiscordVersion": 1498
+    },
+    "default": {
+        "minimumDiscordVersion": 1456,
+        "version": "1.0.0",
+        "build": "https://raw.githubusercontent.com/USERNAME/REPONAME/builds/%s.apk"
+    }
+}
