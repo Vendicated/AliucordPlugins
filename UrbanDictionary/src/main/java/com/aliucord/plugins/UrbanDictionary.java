@@ -58,7 +58,7 @@ public class UrbanDictionary extends Plugin {
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Get definitions from urbandictionary.com";
         manifest.version = "1.0.0";
-        manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AluicordPlugins/builds/updater.json";
+        manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
