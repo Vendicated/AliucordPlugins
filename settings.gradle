@@ -1,4 +1,4 @@
-include ':ExamplePlugin'
+include ':UrbanDictionary'
 rootProject.name = "plugins"
 
 include ':DiscordStubs'
