@@ -3,7 +3,7 @@
 trap "cd '$PWD'" EXIT
 set -ex
 
-cd ../../buildtool
+cd ../buildtool
 ./buildtool -p "$1"
 
 cd ../buildsPlugins
