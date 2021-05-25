@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package com.aliucord.plugins.Urban;
+package com.aliucord.plugins.urban;
 
 import java.util.List;
 

@@ -27,8 +27,8 @@ import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.MessageEmbed;
 import com.aliucord.entities.Plugin;
 
-import com.aliucord.plugins.Urban.ApiResponse;
-import com.aliucord.plugins.Urban.ApiResponse.Definition;
+import com.aliucord.plugins.urban.ApiResponse;
+import com.aliucord.plugins.urban.ApiResponse.Definition;
 
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
