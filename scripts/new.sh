@@ -7,7 +7,7 @@ first_char="$(printf %.1s "$name")"
 [ "$(echo "$first_char"  | tr "[:lower:]" "[:upper:]")" != "$first_char" ] && { >&2 echo "Name must be PascalCase"; exit 1; }
 
 set -x
-cp -r ../Template "$name"
+cp -r Template "$name"
 # Rename file
 mv "$name/src/main/java/com/aliucord/plugins/Template.java" "$name/src/main/java/com/aliucord/plugins/$name.java"
 # Change class name
