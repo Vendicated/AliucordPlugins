@@ -5,7 +5,7 @@
   },
   "default": {
     "minimumDiscordVersion": 1456,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "build": "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/%s.zip"
   }
 }
