@@ -57,7 +57,7 @@ public class UrbanDictionary extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Get definitions from urbandictionary.com";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -104,12 +104,7 @@ public class UrbanDictionary extends Plugin {
                                 embed.setTitle(data.word);
                                 embed.setUrl(data.permalink);
                                 embed.setDescription(formatUrls(data.definition));
-                                // FIXME: Switch to actual class if this gets added to DiscordStubs
-                                try {
-                                    ModelMessageEmbed.Item footer = new ModelMessageEmbed.Item();
-                                    Utils.setPrivateField(footer.getClass(), footer, "text", votes);
-                                    embed.setFooter(footer);
-                                } catch (Throwable ignored) { }
+                                embed.setFooter(votes, null);
                             }
                         }
                     } catch (Throwable t) {
