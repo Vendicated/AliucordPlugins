@@ -1,14 +1,13 @@
 {
   "default": {
-    "minimumDiscordVersion": 1456,
+    "minimumDiscordVersion": 79201,
     "version": "1.0.0",
     "build": "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/%s.zip"
   },
   "UrbanDictionary": {
-    "version": "1.0.3"
+    "version": "1.0.4"
   },
   "Hastebin": {
-    "version": "1.0.0",
-    "minimumDiscordVersion": 1498
+    "version": "1.0.0"
   }
 }
