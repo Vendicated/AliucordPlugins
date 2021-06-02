@@ -1,7 +1,12 @@
 #!/bin/sh
 # shellcheck disable=SC2064
+set -e
 trap "cd '$PWD'" EXIT
-set -ex
+
+# add build tools to path for d8
+export PATH=/home/ven/Android/Sdk/build-tools/30.0.3:$PATH
+
+set -x
 
 cd ../buildtool
 ./buildtool -p "$1"
