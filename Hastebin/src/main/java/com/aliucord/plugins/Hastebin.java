@@ -38,7 +38,7 @@ public class Hastebin extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Create pastes on hastebin";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -59,7 +59,7 @@ public class Hastebin extends Plugin {
                     boolean send = _send != null && (boolean) _send;
 
                     String result;
-                    String mirror = sets.getString("mirror", "https://hb.powercord.dev") + "/";
+                    String mirror = sets.getString("mirror", "https://haste.powercord.dev") + "/";
 
                     try {
                         HasteResponse res = Http.simpleJsonPost(mirror + "documents", text, HasteResponse.class);
