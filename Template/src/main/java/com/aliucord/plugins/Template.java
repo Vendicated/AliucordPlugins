@@ -27,7 +27,7 @@ public class Template extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "";
         manifest.version = "1.0.0";
@@ -37,7 +37,7 @@ public class Template extends Plugin {
 
     @Override
     public void start(Context context) {
-        List<ApplicationCommandOption> arguments = new ArrayList<>();
+        var arguments = new ArrayList<ApplicationCommandOption>();
         arguments.add(new ApplicationCommandOption(ApplicationCommandType.STRING, "", "", null, true, true, null, null));
 
         commands.registerCommand(

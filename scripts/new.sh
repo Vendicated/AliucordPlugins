@@ -14,6 +14,7 @@ mv "$name/src/main/java/com/aliucord/plugins/Template.java" "$name/src/main/java
 sed -i "s/Template/$name/" "$name/src/main/java/com/aliucord/plugins/$name.java"
 # Add to settings.gradle
 echo "include ':$name'" | cat - settings.gradle > settings.gradle.new && mv settings.gradle.new settings.gradle
-# Add to updater.json - cat instead of < since < doesn't like piping into same file
-# shellcheck disable=SC2002
-cat updater.json | jq --argjson "$name" '{"version": "1.0.0","minimumDiscordVersion": 1498}' ". + { $name: \$$name }" | tee updater.json >/dev/null
+# Add to updater.json
+jq --argjson "$name" '{"version": "1.0.0"}' ". + { $name: \$$name }" < updater.json \
+  > updater.json.new && \
+  mv updater.json.new updater.json
