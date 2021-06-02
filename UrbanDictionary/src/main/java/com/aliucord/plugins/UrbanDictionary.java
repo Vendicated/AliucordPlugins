@@ -14,7 +14,7 @@ import android.content.Context;
 
 import androidx.annotation.NonNull;
 
-import com.aliucord.Utils;
+import com.aliucord.Http;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.MessageEmbed;
 import com.aliucord.entities.Plugin;
@@ -24,13 +24,9 @@ import com.aliucord.plugins.urban.ApiResponse.Definition;
 
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
-import com.discord.models.domain.ModelMessageEmbed;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +35,7 @@ import java.util.Locale;
 
 @SuppressWarnings("unused")
 public class UrbanDictionary extends Plugin {
-    private final String baseUrl = "https://api.urbandictionary.com/v0/define?term=";
+    private final String baseUrl = "https://api.urbandictionary.com/v0/define";
     private final String thumbsUp = "\uD83D\uDC4D";
     private final String thumbsDown = "\uD83D\uDC4E";
 
@@ -49,7 +45,7 @@ public class UrbanDictionary extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Get definitions from urbandictionary.com";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -70,13 +66,13 @@ public class UrbanDictionary extends Plugin {
                     boolean send = _send != null && (boolean) _send;
 
                     if (search == null) return new CommandsAPI.CommandResult("You did not specify a search term", null, false);
-                    String url = baseUrl + encodeUri(search);
 
-                    MessageEmbed embed = null;
-                    String result = null;
+                    String url = new Http.QueryBuilder(baseUrl).append("term", search).toString();
+
+                    List<com.discord.api.message.embed.MessageEmbed> embed = null;
+                    String result;
                     try {
-                        String raw = fetch(url);
-                        ApiResponse res = parse(raw);
+                        ApiResponse res = Http.simpleJsonGet(url, ApiResponse.class);
                         if (res.list.size() == 0) {
                             result = "No definition found for `" + search + "`";
                             send = false;
@@ -84,32 +80,30 @@ public class UrbanDictionary extends Plugin {
                             Definition data = res.list.get(0);
                             String votes = String.format(Locale.ENGLISH, "%s %d | %s %d", thumbsUp, data.thumbs_up, thumbsDown, data.thumbs_down);
                             if (send) {
-                                result = String.format(Locale.ENGLISH,
-                                        "**__'%s' on urban dictionary:__**\n>>> %s\n\n<%s>\n\n%s",
+                                result = String.format(Locale.ENGLISH,"**__'%s' on urban dictionary:__**\n>>> %s\n\n<%s>\n\n%s",
                                         data.word,
                                         trimLong(data.definition.replaceAll("\\[", "").replaceAll("]", ""), 1000),
                                         data.permalink,
                                         votes
                                 );
                             } else {
-                                embed = new MessageEmbed();
-                                embed.setTitle(data.word);
-                                embed.setUrl(data.permalink);
-                                embed.setDescription(formatUrls(data.definition));
-                                embed.setFooter(votes, null);
+                                result = "I found the following:";
+                                embed = Collections.singletonList(
+                                            new MessageEmbed()
+                                                .setTitle(data.word)
+                                                .setUrl(data.permalink)
+                                                .setDescription(formatUrls(data.definition))
+                                                .setFooter(votes, null)
+                                                .embed
+                                        );
                             }
                         }
-                    } catch (Throwable t) {
+                    } catch (IOException t) {
                         result = "Something went wrong: " + t.getMessage();
                         send = false;
                     }
 
-                    List<ModelMessageEmbed> embeds = null;
-                    if (embed != null) {
-                        result = "I found the following:";
-                        embeds = Collections.singletonList(embed);
-                    }
-                    return new CommandsAPI.CommandResult(result, embeds, send);
+                    return new CommandsAPI.CommandResult(result, embed, send);
                 }
         );
     }
@@ -134,7 +128,7 @@ public class UrbanDictionary extends Plugin {
                 String word = wb.toString();
                 wb.setLength(0);
                 resolvingWord = false;
-                sb.append(String.format(Locale.ENGLISH, "[%s](https://www.urbandictionary.com/define.php?term=%s)", word, encodeUri(word)));
+                sb.append(String.format("[%s](https://www.urbandictionary.com/define.php?term=%s)", word, encodeUri(word)));
             } else if (resolvingWord) wb.append(c);
             else sb.append(c);
         }
@@ -144,25 +138,8 @@ public class UrbanDictionary extends Plugin {
     private String encodeUri(String raw) {
         try {
             return URLEncoder.encode(raw, "UTF-8");
-        } catch (UnsupportedEncodingException ex) {
-            return raw;
+        } catch (UnsupportedEncodingException ignored) {
+            throw new AssertionError("UTF-8 is not supported somehow");
         }
-    }
-
-    private ApiResponse parse(String raw) {
-        return Utils.fromJson(raw, ApiResponse.class);
-    }
-
-    private String fetch(String url) throws Throwable {
-        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
-        con.setRequestProperty("User-Agent", "Aliucord");
-
-        String line;
-        StringBuilder sb = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
-            while ((line = reader.readLine()) != null) sb.append(line);
-        }
-
-        return sb.toString().trim();
     }
 }
