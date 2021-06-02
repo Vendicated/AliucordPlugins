@@ -20,7 +20,6 @@ import com.aliucord.entities.MessageEmbed;
 import com.aliucord.entities.Plugin;
 
 import com.aliucord.plugins.urban.ApiResponse;
-import com.aliucord.plugins.urban.ApiResponse.Definition;
 
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
@@ -42,7 +41,7 @@ public class UrbanDictionary extends Plugin {
     @NonNull
     @Override
     public Manifest getManifest() {
-        Manifest manifest = new Manifest();
+        var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Get definitions from urbandictionary.com";
         manifest.version = "1.0.2";
@@ -52,7 +51,7 @@ public class UrbanDictionary extends Plugin {
 
     @Override
     public void start(Context context) {
-        List<ApplicationCommandOption> arguments = new ArrayList<>();
+        var arguments = new ArrayList<ApplicationCommandOption>();
         arguments.add(new ApplicationCommandOption(ApplicationCommandType.STRING, "search", "The word to search for", null, true, true, null, null));
         arguments.add(new ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether the result should be visible for everyone", null, false, true, null, null));
 
@@ -77,7 +76,7 @@ public class UrbanDictionary extends Plugin {
                             result = "No definition found for `" + search + "`";
                             send = false;
                         } else {
-                            Definition data = res.list.get(0);
+                            var data = res.list.get(0);
                             String votes = String.format(Locale.ENGLISH, "%s %d | %s %d", thumbsUp, data.thumbs_up, thumbsDown, data.thumbs_down);
                             if (send) {
                                 result = String.format(Locale.ENGLISH,"**__'%s' on urban dictionary:__**\n>>> %s\n\n<%s>\n\n%s",
@@ -118,8 +117,8 @@ public class UrbanDictionary extends Plugin {
     }
 
     private String formatUrls(String raw) {
-        StringBuilder sb = new StringBuilder();
-        StringBuilder wb = new StringBuilder();
+        var sb = new StringBuilder();
+        var wb = new StringBuilder();
         boolean resolvingWord = false;
         for (int i = 0; i < raw.length(); i++) {
             char c = raw.charAt(i);
