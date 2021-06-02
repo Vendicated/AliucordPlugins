@@ -5,6 +5,6 @@
     "build": "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/%s.zip"
   },
   "UrbanDictionary": {
-    "version": "1.0.2"
+    "version": "1.0.3"
   }
 }
