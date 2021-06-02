@@ -6,5 +6,9 @@
   },
   "UrbanDictionary": {
     "version": "1.0.3"
+  },
+  "Hastebin": {
+    "version": "1.0.0",
+    "minimumDiscordVersion": 1498
   }
 }
