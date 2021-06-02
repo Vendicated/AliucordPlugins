@@ -16,7 +16,7 @@ import androidx.annotation.NonNull;
 
 import com.aliucord.Http;
 import com.aliucord.api.CommandsAPI;
-import com.aliucord.entities.MessageEmbed;
+import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
 
 import com.aliucord.plugins.urban.ApiResponse;
@@ -44,7 +44,7 @@ public class UrbanDictionary extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Get definitions from urbandictionary.com";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -88,12 +88,12 @@ public class UrbanDictionary extends Plugin {
                             } else {
                                 result = "I found the following:";
                                 embed = Collections.singletonList(
-                                            new MessageEmbed()
+                                            new MessageEmbedBuilder()
                                                 .setTitle(data.word)
                                                 .setUrl(data.permalink)
                                                 .setDescription(formatUrls(data.definition))
                                                 .setFooter(votes, null)
-                                                .embed
+                                                .build()
                                         );
                             }
                         }
