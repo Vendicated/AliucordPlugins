@@ -24,7 +24,6 @@ import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Constants;
 import com.aliucord.Http;
-import com.aliucord.Main;
 import com.aliucord.entities.Plugin;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
@@ -34,7 +33,6 @@ import com.lytefast.flexinput.R$h;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -85,53 +83,45 @@ public class PluginDownloader extends Plugin {
         icon.setTint(ColorCompat.getThemedColor(context, R$b.colorInteractiveNormal));
         AtomicReference<LinearLayout> layoutRef = new AtomicReference<>();
 
-        try {
-            Method getBinding = WidgetChatListActions.class.getDeclaredMethod("getBinding");
-            getBinding.setAccessible(true);
+        patcher.patch(className, "configureUI", (_this, args, ret) -> {
+            var layout = layoutRef.get();
+            if (layout == null) return ret;
+            var ctx = layout.getContext();
+            var msg = ((WidgetChatListActions.Model) args.get(0)).getMessage();
+            if (msg == null) return ret;
+            String content = msg.getContent();
+            long channelId = msg.getChannelId();
 
-            patcher.patch(className, "configureUI", (_this, args, ret) -> {
-                try {
-                    var layout = layoutRef.get();
-                    if (layout == null) return ret;
-                    var ctx = layout.getContext();
-                    var msg = ((WidgetChatListActions.Model) args.get(0)).getMessage();
-                    if (msg == null) return ret;
-                    String content = msg.getContent();
-                    long channelId = msg.getChannelId();
+            if (channelId == 845784407846813696L /* Plugin-Links-Updates */) {
+                var matcher = zipPattern.matcher(content);
+                while (matcher.find()) {
+                    String author = matcher.group(1);
+                    String repo = matcher.group(2);
+                    String name = matcher.group(4);
+                    var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    view.setText("Download " + name);
+                    view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    view.setOnClickListener(e -> downloadPlugin(ctx, author, repo, name));
+                    layout.addView(view);
+                }
+            } else if (channelId == 811275162715553823L /* Plugin-Links */) {
+                var repoMatcher = repoPattern.matcher(content);
+                if (!repoMatcher.find()) return ret; // zzzzzzz don't post junk
+                String author = repoMatcher.group(1);
+                String repo = repoMatcher.group(2);
 
-                    if (channelId == 845784407846813696L /* Plugin-Links-Updates */) {
-                        var matcher = zipPattern.matcher(content);
-                        while (matcher.find()) {
-                            String author = matcher.group(1);
-                            String repo = matcher.group(2);
-                            String name = matcher.group(4);
-                            var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
-                            view.setText("Download " + name);
-                            view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                            view.setOnClickListener(e -> downloadPlugin(ctx, author, repo, name));
-                            layout.addView(view);
-                        }
-                    } else if (channelId == 811275162715553823L /* Plugin-Links */) {
-                        var repoMatcher = repoPattern.matcher(content);
-                        if (!repoMatcher.find()) return ret; // zzzzzzz don't post junk
-                        String author = repoMatcher.group(1);
-                        String repo = repoMatcher.group(2);
-
-                        var pluginMatcher = pluginTitle.matcher(content);
-                        while (pluginMatcher.find()) {
-                            String name = pluginMatcher.group(1);
-                            var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
-                            view.setText("Download " + name);
-                            view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                            view.setOnClickListener(e -> downloadPlugin(ctx, author, repo, name));
-                            layout.addView(view);
-                        }
-                    }
-                    return ret;
-                } catch (Throwable ignored) {}
-                return ret;
-            });
-        } catch (Throwable e) { Main.logger.error(e); }
+                var pluginMatcher = pluginTitle.matcher(content);
+                while (pluginMatcher.find()) {
+                    String name = pluginMatcher.group(1);
+                    var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    view.setText("Download " + name);
+                    view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    view.setOnClickListener(e -> downloadPlugin(ctx, author, repo, name));
+                    layout.addView(view);
+                }
+            }
+            return ret;
+        });
 
         patcher.patch(className, "onViewCreated", (_this, args, ret) -> {
             layoutRef.set((LinearLayout) ((NestedScrollView) args.get(0)).getChildAt(0));
