@@ -9,5 +9,8 @@
   },
   "Hastebin": {
     "version": "1.0.1"
+  },
+  "PluginDownloader": {
+    "version": "1.0.0"
   }
 }
