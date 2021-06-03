@@ -56,7 +56,7 @@ public class PluginDownloader extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -82,7 +82,7 @@ public class PluginDownloader extends Plugin {
 
         patcher.patch(className, "configureUI", (_this, args, ret) -> {
             var layout = layoutRef.get();
-            if (layout == null) return ret;
+            if (layout == null || layout.findViewById(id) != null) return ret;
             var ctx = layout.getContext();
             var msg = ((WidgetChatListActions.Model) args.get(0)).getMessage();
             if (msg == null) return ret;
@@ -96,13 +96,14 @@ public class PluginDownloader extends Plugin {
                     String repo = matcher.group(2);
                     String name = matcher.group(4);
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    view.setId(id);
                     view.setText("Download " + name);
                     if (icon != null) icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
                     view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     view.setOnClickListener(e -> PDUtil.downloadPlugin(ctx, author, repo, name, () -> {}));
                     layout.addView(view, 1);
                 }
-            } else if (channelId == Constants.PLUGIN_LINKS_CHANNEL_ID && layout.findViewById(id) == null) {
+            } else if (channelId == Constants.PLUGIN_LINKS_CHANNEL_ID) {
                     var repoMatcher = repoPattern.matcher(content);
                     if (!repoMatcher.find()) return ret; // zzzzzzz don't post junk
                     String author = repoMatcher.group(1);
