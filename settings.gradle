@@ -1,3 +1,4 @@
+include ':PluginDownloader'
 include ':Hastebin'
 include ':UrbanDictionary'
 rootProject.name = "plugins"
