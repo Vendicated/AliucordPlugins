@@ -12,27 +12,25 @@ package com.aliucord.plugins;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
+import android.graphics.drawable.Drawable;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Constants;
-import com.aliucord.Http;
+import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
+import com.aliucord.plugins.plugindownloader.Modal;
+import com.aliucord.plugins.plugindownloader.PDUtil;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R$b;
 import com.lytefast.flexinput.R$h;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -40,10 +38,10 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+
 @SuppressWarnings("unused")
 @SuppressLint("SetTextI18n")
 public class PluginDownloader extends Plugin {
-    private final Pattern pluginTitle = Pattern.compile("\\*{2}(\\w+)\\*{2}");
     private final Pattern repoPattern = Pattern.compile("https?://github.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)");
     private final Pattern zipPattern = Pattern.compile("https?://github.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)/(raw|blob)/\\w+/(\\w+).zip");
 
@@ -72,16 +70,15 @@ public class PluginDownloader extends Plugin {
 
     @Override
     public void start(Context context) {
-        var icon = ResourcesCompat.getDrawable(
+        Drawable icon = ResourcesCompat.getDrawable(
                 resources,
                 resources.getIdentifier(
-                        "ic_download_plugin",
+                        "ic_download",
                         "drawable",
                         "com.aliucord.plugins"),
                 null);
-        assert icon != null;
-        icon.setTint(ColorCompat.getThemedColor(context, R$b.colorInteractiveNormal));
         AtomicReference<LinearLayout> layoutRef = new AtomicReference<>();
+        int id = View.generateViewId();
 
         patcher.patch(className, "configureUI", (_this, args, ret) -> {
             var layout = layoutRef.get();
@@ -92,7 +89,7 @@ public class PluginDownloader extends Plugin {
             String content = msg.getContent();
             long channelId = msg.getChannelId();
 
-            if (channelId == 845784407846813696L /* Plugin-Links-Updates */) {
+            if (channelId == Constants.PLUGIN_LINKS_UPDATES_CHANNEL_ID) {
                 var matcher = zipPattern.matcher(content);
                 while (matcher.find()) {
                     String author = matcher.group(1);
@@ -100,25 +97,25 @@ public class PluginDownloader extends Plugin {
                     String name = matcher.group(4);
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
                     view.setText("Download " + name);
+                    if (icon != null) icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
                     view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                    view.setOnClickListener(e -> downloadPlugin(ctx, author, repo, name));
-                    layout.addView(view);
+                    view.setOnClickListener(e -> PDUtil.downloadPlugin(ctx, author, repo, name, () -> {}));
+                    layout.addView(view, 1);
                 }
-            } else if (channelId == 811275162715553823L /* Plugin-Links */) {
-                var repoMatcher = repoPattern.matcher(content);
-                if (!repoMatcher.find()) return ret; // zzzzzzz don't post junk
-                String author = repoMatcher.group(1);
-                String repo = repoMatcher.group(2);
+            } else if (channelId == Constants.PLUGIN_LINKS_CHANNEL_ID && layout.findViewById(id) == null) {
+                    var repoMatcher = repoPattern.matcher(content);
+                    if (!repoMatcher.find()) return ret; // zzzzzzz don't post junk
+                    String author = repoMatcher.group(1);
+                    String repo = repoMatcher.group(2);
 
-                var pluginMatcher = pluginTitle.matcher(content);
-                while (pluginMatcher.find()) {
-                    String name = pluginMatcher.group(1);
+                    var modal = new Modal(author, repo);
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
-                    view.setText("Download " + name);
+                    view.setId(id);
+                    view.setText("Open Plugin Downloader");
+                    if (icon != null) icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
                     view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                    view.setOnClickListener(e -> downloadPlugin(ctx, author, repo, name));
-                    layout.addView(view);
-                }
+                    view.setOnClickListener(e -> Utils.openPageWithProxy(e.getContext(), modal));
+                    layout.addView(view, 1);
             }
             return ret;
         });
@@ -127,33 +124,6 @@ public class PluginDownloader extends Plugin {
             layoutRef.set((LinearLayout) ((NestedScrollView) args.get(0)).getChildAt(0));
             return ret;
         });
-    }
-
-    private void downloadPlugin(Context ctx, String author, String repo, String name) {
-        new Thread(() -> {
-            var url = String.format("https://github.com/%s/%s/raw/builds/%s.zip", author, repo, name);
-            var fileName = String.format("%s/plugins/%s.zip", Constants.BASE_PATH, name);
-
-            var file = new File(fileName);
-            if (file.exists()) {
-                showToast(ctx, String.format("Plugin %s already installed", name));
-                return;
-            }
-            try {
-                var res = new Http.Request(url).execute();
-                try (var out = new FileOutputStream(file)) {
-                    res.pipe(out);
-                    showToast(ctx, String.format("Plugin %s successfully downloaded", name));
-                }
-            } catch (IOException ex) {
-                showToast(ctx, String.format("Something went wrong while downloading plugin %s, sorry: %s", name, ex.getMessage()));
-            };
-        }).start();
-    }
-
-    private void showToast(Context ctx, String text) {
-        var handler = new Handler(Looper.getMainLooper());
-        handler.post(() -> Toast.makeText(ctx, text, Toast.LENGTH_SHORT).show());
     }
 
     @Override
