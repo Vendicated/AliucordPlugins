@@ -42,6 +42,7 @@ import java.util.regex.Pattern;
 @SuppressWarnings("unused")
 @SuppressLint("SetTextI18n")
 public class PluginDownloader extends Plugin {
+    private final int id = View.generateViewId();
     private final Pattern repoPattern = Pattern.compile("https?://github.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)");
     private final Pattern zipPattern = Pattern.compile("https?://github.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)/(raw|blob)/\\w+/(\\w+).zip");
 
@@ -78,7 +79,6 @@ public class PluginDownloader extends Plugin {
                         "com.aliucord.plugins"),
                 null);
         AtomicReference<LinearLayout> layoutRef = new AtomicReference<>();
-        int id = View.generateViewId();
 
         patcher.patch(className, "configureUI", (_this, args, ret) -> {
             var layout = layoutRef.get();
