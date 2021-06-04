@@ -57,7 +57,7 @@ public class PluginDownloader extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -129,6 +129,6 @@ public class PluginDownloader extends Plugin {
 
     @Override
     public void stop(Context context) {
-        commands.unregisterAll();
+        patcher.unpatchAll();
     }
 }
