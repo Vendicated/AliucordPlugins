@@ -16,7 +16,6 @@ public final class EmojiNode {
     public static abstract class EmojiIdAndType implements Serializable {
         public static final class Custom extends EmojiIdAndType {
             public final long getId() { return 0; }
-            public final String getName() { return null; }
             public final boolean isAnimated() { return false; }
         }
     }

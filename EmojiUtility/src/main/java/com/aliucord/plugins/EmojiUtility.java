@@ -27,7 +27,8 @@ import com.discord.databinding.WidgetEmojiSheetBinding;
 import com.discord.utilities.textprocessing.node.EmojiNode;
 import com.discord.widgets.emoji.WidgetEmojiSheet;
 
-import java.util.Arrays;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -40,7 +41,7 @@ public class EmojiUtility extends Plugin {
     public Manifest getManifest() {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
-        manifest.description = "";
+        manifest.description = "Adds lots of utility for emojis";
         manifest.version = "1.0.0";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
@@ -49,7 +50,7 @@ public class EmojiUtility extends Plugin {
     private static final String className = "com.discord.widgets.emoji.WidgetEmojiSheet";
     public static Map<String, List<String>> getClassesToPatch() {
         var map = new HashMap<String, List<String>>();
-        map.put(className, Arrays.asList("configureButtons"));
+        map.put(className, Collections.singletonList("configureButtons"));
         return map;
     }
 
@@ -63,6 +64,7 @@ public class EmojiUtility extends Plugin {
             getEmojiIdAndType.setAccessible(true);
             var getBinding = WidgetEmojiSheet.class.getDeclaredMethod("getBinding");
             getBinding.setAccessible(true);
+
             patcher.patch(className, "configureButtons", (_this, args, ret) -> {
                 try {
                     var emoji = (EmojiNode.EmojiIdAndType.Custom) getEmojiIdAndType.invoke(_this);
@@ -74,53 +76,82 @@ public class EmojiUtility extends Plugin {
                             emoji.isAnimated() ? "gif" : "png");
 
                     var binding = (WidgetEmojiSheetBinding) getBinding.invoke(_this);
-                    var rootLinearLayout = (LinearLayout) ((ViewGroup) binding.getRoot()).getChildAt(0);
+                    if (binding == null) return ret;
+                    var root = (ViewGroup) binding.getRoot();
+                    if (root == null) return ret;
+                    var rootLayout = (LinearLayout) root.getChildAt(0);
 
-                    var ctx = ((WidgetEmojiSheet) _this).getContext();
+                    var ctx = rootLayout.getContext();
+                    if (ctx == null) return ret;
 
-                    assert ctx != null;
-                    var marginDpSixteen = dpToPx(ctx, 16);
-                    var marginDpEight = dpToPx(ctx, 8);
+                    int marginDpSixteen = dpToPx(ctx, 16);
+                    int marginDpEight = dpToPx(ctx, 8);
+                    int marginDpFour = dpToPx(ctx, 4);
 
-                    //Params for plugin's buttons
-                    var pluginButtonLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    pluginButtonLayoutParams.setMargins(0, marginDpEight, 0, 0);
-
-                    //Adjust favorite button margins, otherwise new buttons look too far away
-                    var favoriteButtonLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    favoriteButtonLayoutParams.setMargins(0, marginDpSixteen, 0, 0);
-
-                    binding.f.setLayoutParams(favoriteButtonLayoutParams);
-                    binding.h.setLayoutParams(favoriteButtonLayoutParams);
-
-                    //Adjust guild buttons' parent LinearLayout for the same reason
-                    var guildLinearLayoutParams = new LinearLayout.LayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-                    guildLinearLayoutParams.setMargins(marginDpSixteen, marginDpSixteen, marginDpSixteen, 0);
-                    binding.k.setLayoutParams(guildLinearLayoutParams);
-
-                    //LinearLayout for plugin's buttons
-                    var pluginButtonLinearLayout = new com.aliucord.widgets.LinearLayout(ctx);
-                    pluginButtonLinearLayout.setPadding(marginDpSixteen, 0, marginDpSixteen, marginDpSixteen);
-
-                    var button = new Button(ctx, false);
-                    button.setLayoutParams(pluginButtonLayoutParams);
+                    var button = new Button(ctx);
                     button.setText("Copy Link");
                     button.setOnClickListener(v -> {
-                        var clip = ClipData.newPlainText("Copied to clipboard", url);
+                        var clip = ClipData.newPlainText("Copy emoji link", url);
                         clipboard.setPrimaryClip(clip);
                         Utils.showToast(ctx, "Copied to clipboard");
                     });
 
-                    pluginButtonLinearLayout.addView(button);
-                    rootLinearLayout.addView(pluginButtonLinearLayout);
-                } catch (Throwable ignored) { }
+                    var buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                    buttonParams.setMargins(0, 0, 0, 0);
+                    button.setLayoutParams(buttonParams);
+
+                    var pluginButtonLayout = new com.aliucord.widgets.LinearLayout(ctx);
+
+                    int idx = 2;
+                    if (
+                            (args.get(0).equals(false) /* need nitro */ ||
+                            args.get(1).equals(false) /* not on server */ ) &&
+                            args.get(2) != null
+                    ) {
+                        // Nitro or Join Button visible
+                        pluginButtonLayout.setPadding(marginDpSixteen, marginDpFour, marginDpSixteen, marginDpEight);
+
+                        // Adjust nitro and join button
+                        var params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(0, 0, 0, 0);
+                        binding.q.setLayoutParams(params); // Nitro
+                        binding.o.setLayoutParams(params); // Join
+
+                        // Adjust nitro/join container
+                        var joinContainer = (FrameLayout) binding.o.getParent();
+                        var containerParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        containerParams.setMargins(marginDpSixteen, marginDpEight, marginDpSixteen, 0);
+                        joinContainer.setLayoutParams(containerParams);
+                    } else if (args.get(2) != null) {
+                        // Favourite buttons
+                        idx = 3;
+                        pluginButtonLayout.setPadding(marginDpSixteen, marginDpFour, marginDpSixteen, marginDpEight);
+
+                        // Adjust  fav button margins
+                        var params = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                        params.setMargins(0, marginDpEight, 0, 0);
+                        binding.f.setLayoutParams(params); // Fav
+                        binding.h.setLayoutParams(params); // Unfav
+
+                        // Adjust favs container
+                        var favsContainer = (FrameLayout) binding.f.getParent();
+                        var containerParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                        containerParams.setMargins(marginDpSixteen, marginDpEight, marginDpSixteen, 0);
+                        favsContainer.setLayoutParams(containerParams);
+                    } else {
+                        // No buttons
+                        pluginButtonLayout.setPadding(marginDpSixteen, marginDpEight, marginDpSixteen, marginDpEight);
+                    }
+
+                    pluginButtonLayout.addView(button);
+                    rootLayout.addView(pluginButtonLayout, idx);
+                } catch (IllegalAccessException | InvocationTargetException ignored) { }
                 return ret;
             });
-        } catch (Throwable ignored) { }
+        } catch (NoSuchMethodException ignored) { }
     }
 
-    //Converting DP values to their respective PX values,
-    //as LayoutParams only accept PX values.
+    // Convert DP values to their respective PX values, as LayoutParams only accept PX values.
     private int dpToPx(Context context, float dp) {
         return Math.round(dp * context.getResources().getDisplayMetrics().density);
     }

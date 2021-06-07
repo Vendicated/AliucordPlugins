@@ -11,9 +11,5 @@
 package com.discord.widgets.emoji;
 import androidx.fragment.app.Fragment;
 
-import com.discord.utilities.textprocessing.node.EmojiNode;
-
-public final class WidgetEmojiSheet extends Fragment {
-    public final EmojiNode.EmojiIdAndType getEmojiIdAndType() { return null; }
-}
+public final class WidgetEmojiSheet extends Fragment { }
 
