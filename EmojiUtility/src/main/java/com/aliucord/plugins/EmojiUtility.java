@@ -14,6 +14,7 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -52,6 +53,7 @@ public class EmojiUtility extends Plugin {
     @SuppressLint("SetTextI18n")
     @Override
     public void start(Context context) {
+        int id = View.generateViewId();
         var clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
 
         try {
@@ -84,6 +86,8 @@ public class EmojiUtility extends Plugin {
                         if (root == null) return;
                         var rootLayout = (LinearLayout) root.getChildAt(0);
 
+                        if (rootLayout.findViewById(id) != null) return;
+
                         var ctx = rootLayout.getContext();
                         if (ctx == null) return;
 
@@ -92,6 +96,7 @@ public class EmojiUtility extends Plugin {
                         int marginDpFour = dpToPx(ctx, 4);
 
                         var button = new Button(ctx);
+                        button.setId(id);
                         button.setText("Copy Link");
                         button.setOnClickListener(v -> {
                             var clip = ClipData.newPlainText("Copy emoji link", url);
