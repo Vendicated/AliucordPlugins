@@ -10,12 +10,32 @@
 
 package com.discord.databinding;
 
-import android.widget.FrameLayout;
+import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.ViewFlipper;
+
+import com.google.android.material.button.MaterialButton;
 
 public class WidgetEmojiSheetBinding {
-    public final LinearLayout k = null;
-    public final FrameLayout g = null;
-    public final ViewFlipper a = null;
+
+    /**
+     * Guild button parent LinearLayout
+     */
+    public LinearLayout k;
+
+    /**
+     * Add to favorites button
+     */
+    public MaterialButton f;
+
+    /**
+     * Remove from favorites button
+     */
+    public MaterialButton h;
+
+    /**
+     * @return Root view of bottom sheet
+     */
+    public final View getRoot() {
+        return null;
+    }
 }
