@@ -14,6 +14,9 @@ import android.annotation.SuppressLint;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 
@@ -70,21 +73,56 @@ public class EmojiUtility extends Plugin {
                             emoji.getId(),
                             emoji.isAnimated() ? "gif" : "png");
 
-                    var layout = ((WidgetEmojiSheetBinding) getBinding.invoke(_this)).g;
+                    var binding = (WidgetEmojiSheetBinding) getBinding.invoke(_this);
+                    var rootLinearLayout = (LinearLayout) ((ViewGroup) binding.getRoot()).getChildAt(0);
 
                     var ctx = ((WidgetEmojiSheet) _this).getContext();
+
+                    assert ctx != null;
+                    var marginDpSixteen = dpToPx(ctx, 16);
+                    var marginDpEight = dpToPx(ctx, 8);
+
+                    //Params for plugin's buttons
+                    var pluginButtonLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                    pluginButtonLayoutParams.setMargins(0, marginDpEight, 0, 0);
+
+                    //Adjust favorite button margins, otherwise new buttons look too far away
+                    var favoriteButtonLayoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                    favoriteButtonLayoutParams.setMargins(0, marginDpSixteen, 0, 0);
+
+                    binding.f.setLayoutParams(favoriteButtonLayoutParams);
+                    binding.h.setLayoutParams(favoriteButtonLayoutParams);
+
+                    //Adjust guild buttons' parent LinearLayout for the same reason
+                    var guildLinearLayoutParams = new LinearLayout.LayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+                    guildLinearLayoutParams.setMargins(marginDpSixteen, marginDpSixteen, marginDpSixteen, 0);
+                    binding.k.setLayoutParams(guildLinearLayoutParams);
+
+                    //LinearLayout for plugin's buttons
+                    var pluginButtonLinearLayout = new com.aliucord.widgets.LinearLayout(ctx);
+                    pluginButtonLinearLayout.setPadding(marginDpSixteen, 0, marginDpSixteen, marginDpSixteen);
+
                     var button = new Button(ctx, false);
+                    button.setLayoutParams(pluginButtonLayoutParams);
                     button.setText("Copy Link");
-                    button.setOnClickListener(e -> {
+                    button.setOnClickListener(v -> {
                         var clip = ClipData.newPlainText("Copied to clipboard", url);
                         clipboard.setPrimaryClip(clip);
                         Utils.showToast(ctx, "Copied to clipboard");
                     });
-                    layout.addView(button);
+
+                    pluginButtonLinearLayout.addView(button);
+                    rootLinearLayout.addView(pluginButtonLinearLayout);
                 } catch (Throwable ignored) { }
                 return ret;
             });
         } catch (Throwable ignored) { }
+    }
+
+    //Converting DP values to their respective PX values,
+    //as LayoutParams only accept PX values.
+    private int dpToPx(Context context, float dp) {
+        return Math.round(dp * context.getResources().getDisplayMetrics().density);
     }
 
     @Override
