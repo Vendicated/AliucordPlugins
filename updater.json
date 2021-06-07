@@ -12,5 +12,8 @@
   },
   "PluginDownloader": {
     "version": "1.0.2"
+  },
+  "MessageLinkEmbeds": {
+    "version": "1.0.0"
   }
 }
