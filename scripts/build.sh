@@ -4,7 +4,7 @@ set -e
 trap "cd '$PWD'" EXIT
 
 # add build tools to path for d8
-export PATH=/home/ven/Android/Sdk/build-tools/30.0.3:$PATH
+command -v d8 >/dev/null || export PATH=/home/ven/Android/Sdk/build-tools/30.0.3:$PATH
 
 set -x
 
