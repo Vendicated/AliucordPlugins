@@ -3,11 +3,11 @@ plugins {
 }
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion sdkVer
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 30
+        minSdkVersion minSdkVer
+        targetSdkVersion sdkVer
     }
 
     buildTypes {
@@ -22,6 +22,6 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.3.0'
+    implementation "androidx.appcompat:appcompat:$appCompatVer"
     implementation project(':Aliucord')
 }
