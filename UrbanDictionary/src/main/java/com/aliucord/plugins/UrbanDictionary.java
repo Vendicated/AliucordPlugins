@@ -92,7 +92,7 @@ public class UrbanDictionary extends Plugin {
                                                 .setTitle(data.word)
                                                 .setUrl(data.permalink)
                                                 .setDescription(formatUrls(data.definition))
-                                                .setFooter(votes, null)
+                                                .setFooter(votes, null, null)
                                                 .build()
                                         );
                             }
