@@ -3,7 +3,8 @@ include ':EmojiUtility'
 include ':PluginDownloader'
 include ':Hastebin'
 include ':UrbanDictionary'
-rootProject.name = "plugins"
+
+rootProject.name = "AliucordPlugins"
 
 include ':DiscordStubs'
 project(':DiscordStubs').projectDir = new File('../repo/DiscordStubs')
