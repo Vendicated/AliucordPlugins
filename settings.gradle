@@ -6,7 +6,7 @@ include ':UrbanDictionary'
 rootProject.name = "plugins"
 
 include ':DiscordStubs'
-project(':DiscordStubs').projectDir = new File('../repo/DiscordStubs')
+project(':DiscordStubs').projectDir = new File('../unstablerepo/DiscordStubs')
 
 include ':Aliucord'
-project(':Aliucord').projectDir = new File('../repo/Aliucord')
+project(':Aliucord').projectDir = new File('../unstablerepo/Aliucord')

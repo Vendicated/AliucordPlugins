@@ -17,17 +17,15 @@ import androidx.annotation.NonNull;
 import com.aliucord.CollectionUtils;
 import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
 import com.discord.api.utcdatetime.UtcDateTime;
 import com.discord.stores.StoreStream;
 import com.discord.utilities.SnowflakeUtils;
+import com.discord.utilities.icon.IconUtils;
 import com.discord.widgets.chat.list.entries.ChatListEntry;
 import com.discord.widgets.chat.list.entries.MessageEntry;
 
-import java.util.Locale;
 import java.util.regex.Pattern;
-
-import top.canyie.pine.Pine;
-import top.canyie.pine.callback.MethodHook;
 
 @SuppressWarnings("unused")
 public class MessageLinkEmbeds extends Plugin {
@@ -51,58 +49,59 @@ public class MessageLinkEmbeds extends Plugin {
         var channelStore = StoreStream.getChannels();
         var guildStore = StoreStream.getGuilds();
 
-        patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new MethodHook() {
-            @Override
-            public void afterCall(Pine.CallFrame callFrame) throws Throwable {
-                super.afterCall(callFrame);
+        patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
+            var msg = ((MessageEntry) callFrame.args[1]).getMessage();
+            if (msg == null) return;
+            var embeds = msg.getEmbeds();
+            var matcher = messageLinkPattern.matcher(msg.getContent());
+            while (matcher.find()) {
+                String url = matcher.group();
+                String messageIdStr = matcher.group(6);
+                String channelIdStr = matcher.group(5);
+                if (messageIdStr == null || channelIdStr == null) continue; // Please shut up java
+                long channelId = Long.parseLong(channelIdStr);
+                long messageId = Long.parseLong(messageIdStr);
+                // Check if link already embedded by checking if footer starting with # exists
+                if (CollectionUtils.find(embeds, e -> e.e() != null && e.e().b().startsWith("#")) != null) continue;
 
-                var msg = ((MessageEntry)callFrame.args[1]).getMessage();
-                if (msg == null) return;
-                var embeds = msg.getEmbeds();
-                var matcher = messageLinkPattern.matcher(msg.getContent());
-                while (matcher.find()) {
-                    String url = matcher.group();
-                    String messageIdStr = matcher.group(6);
-                    String channelIdStr = matcher.group(5);
-                    if (messageIdStr == null || channelIdStr == null) continue; // Please shut up java
-                    long channelId = Long.parseLong(channelIdStr);
-                    long messageId = Long.parseLong(messageIdStr);
-                    // Check if link already embedded by checking if footer starting with # exists
-                    if (CollectionUtils.find(embeds, e -> e.e() != null && e.e().b().startsWith("#")) != null) continue;
+                var m = msgStore.getMessage(channelId, messageId);
+                if (m == null) return;
+                var author = m.getAuthor();
+                String avatarUrl = IconUtils.getForUser(author.f(), author.a().a(), Integer.valueOf(author.c()), true);
+                var eb = new MessageEmbedBuilder()
+                        .setUrl(url)
+                        .setAuthor(author.o(), avatarUrl, avatarUrl)
+                        .setDescription(m.getContent())
+                        .setTimestamp(new UtcDateTime(SnowflakeUtils.toTimestamp(messageId)));
 
-                    var m = msgStore.getMessage(channelId, messageId);
-                    if (m == null) return;
-                    var author = m.getAuthor();
-                    String avatarUrl = author.a() != null ? author.a().a() : String.format(Locale.ENGLISH, "https://cdn.discordapp.com/embed/avatars/%d.png", Integer.parseInt(author.c()) % 5);
-                    var eb = new MessageEmbedBuilder()
-                            .setUrl(url)
-                            .setAuthor(author.o(), avatarUrl, url)
-                            .setDescription(m.getContent())
-                            .setTimestamp(new UtcDateTime(SnowflakeUtils.toTimestamp(messageId)));
-
-                    var mEmbeds = m.getEmbeds();
-                    if (mEmbeds.size() != 0) {
-                        mEmbeds.size();
-                        var color = CollectionUtils.find(mEmbeds, e -> e.b() != null);
-                        if (color != null) eb.setColor(color.b());
-                        var img = CollectionUtils.find(mEmbeds, e -> e.f() != null);
-                        if (img != null) eb.setImage(img.f());
-                        if (m.getContent().equals("")) {
-                            var description = CollectionUtils.find(mEmbeds, e -> e.c() != null);
-                            if (description != null) eb.setDescription(description.c());
-                        }
+                var mEmbeds = m.getEmbeds();
+                if (mEmbeds.size() != 0) {
+                    mEmbeds.size();
+                    var color = CollectionUtils.find(mEmbeds, e -> e.b() != null);
+                    if (color != null) eb.setColor(color.b());
+                    var img = CollectionUtils.find(mEmbeds, e -> e.f() != null);
+                    if (img != null) eb.setImage(img.f().c(), img.f().b());
+                    if (m.getContent().equals("")) {
+                        var description = CollectionUtils.find(mEmbeds, e -> e.c() != null);
+                        if (description != null) eb.setDescription(description.c());
                     }
-
-                    var channel = channelStore.getChannel(channelId);
-                    if (channel != null) {
-                        var guild = guildStore.getGuild(channel.e());
-                        if (guild != null) eb.setFooter(String.format("#%s (%s)", channel.l(), guild.getName()), null);
-                    }
-
-                    embeds.add(eb.build());
                 }
+
+                var attachments = m.getAttachments();
+                if (attachments.size() != 0) {
+                    var firstAtachment = attachments.get(0);
+                    eb.setImage(firstAtachment.f(), firstAtachment.c(), firstAtachment.b(), firstAtachment.g());
+                }
+
+                var channel = channelStore.getChannel(channelId);
+                if (channel != null) {
+                    var guild = guildStore.getGuild(channel.e());
+                    if (guild != null) eb.setFooter(String.format("#%s (%s)", channel.l(), guild.getName()), null, null);
+                }
+
+                embeds.add(eb.build());
             }
-        });
+        }));
     }
 
     @Override
