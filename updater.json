@@ -5,7 +5,7 @@
     "build": "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/%s.zip"
   },
   "UrbanDictionary": {
-    "version": "1.0.4"
+    "version": "1.0.5"
   },
   "Hastebin": {
     "version": "1.0.1"
