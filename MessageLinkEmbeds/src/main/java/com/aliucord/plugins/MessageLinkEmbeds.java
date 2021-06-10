@@ -51,7 +51,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -69,7 +69,7 @@ public class MessageLinkEmbeds extends Plugin {
             while (matcher.find()) {
                 String url = matcher.group();
                 // Check if link already embedded by checking if embed with same url already exists
-                if (CollectionUtils.find(embeds, e -> e.a() != null && e.a().c() != null && e.a().c().equals(url)) != null) continue;
+                if (CollectionUtils.find(embeds, e -> e.l() != null && e.l().equals(url)) != null) continue;
 
                 String messageIdStr = matcher.group(6);
                 String channelIdStr = matcher.group(5);
@@ -122,7 +122,11 @@ public class MessageLinkEmbeds extends Plugin {
             var color = CollectionUtils.find(mEmbeds, e -> e.b() != null);
             if (color != null) eb.setColor(color.b());
             var img = CollectionUtils.find(mEmbeds, e -> e.f() != null);
-            if (img != null) eb.setImage(img.f().c(), img.f().b());
+            if (img != null) {
+                eb.setImage(img.f().c(), img.f().b(), img.f().a(), img.f().d());
+            } else if ((img = CollectionUtils.find(mEmbeds, e -> e.h() != null)) != null) {
+                eb.setImage(img.h().c(), img.h().b(), img.h().a(), img.h().d());
+            }
             if (msg.getContent().equals("")) {
                 var description = CollectionUtils.find(mEmbeds, e -> e.c() != null);
                 if (description != null) eb.setDescription(description.c());
