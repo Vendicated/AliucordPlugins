@@ -11,6 +11,7 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -65,10 +66,9 @@ public class MessageLinkEmbeds extends Plugin {
         var msgStore = StoreStream.getMessages();
 
         // FIXME: Find better way to re-render messages
-        Patcher.addPatch("com.discord.widgets.chat.list.WidgetChatList", "onViewBound", (_this, args, ret) -> {
-            chatListFragment = (Fragment) _this;
-            return ret;
-        });
+        Patcher.addPatch("com.discord.widgets.chat.list.WidgetChatList", "onViewBound", new Class<?>[] {View.class}, new PinePatchFn(callFrame -> {
+            chatListFragment = (Fragment) callFrame.thisObject;
+        }));
 
         patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
             var msg = ((MessageEntry) callFrame.args[1]).getMessage();
