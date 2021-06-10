@@ -13,11 +13,14 @@ package com.aliucord.plugins;
 import android.content.Context;
 
 import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 import com.aliucord.CollectionUtils;
 import com.aliucord.Logger;
+import com.aliucord.Utils;
 import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.Patcher;
 import com.aliucord.patcher.PinePatchFn;
 import com.discord.api.message.embed.MessageEmbed;
 import com.discord.api.utcdatetime.UtcDateTime;
@@ -51,7 +54,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -60,6 +63,12 @@ public class MessageLinkEmbeds extends Plugin {
     @Override
     public void start(Context context) {
         var msgStore = StoreStream.getMessages();
+
+        // FIXME: Find better way to re-render messages
+        Patcher.addPatch("com.discord.widgets.chat.list.WidgetChatList", "onViewBound", (_this, args, ret) -> {
+            chatListFragment = (Fragment) _this;
+            return ret;
+        });
 
         patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
             var msg = ((MessageEntry) callFrame.args[1]).getMessage();
@@ -147,7 +156,20 @@ public class MessageLinkEmbeds extends Plugin {
         }
 
         embeds.add(eb.build());
+        rerenderChat();
     }
+
+    private static Fragment chatListFragment;
+    private static void rerenderChat() {
+        if (chatListFragment == null || chatListFragment.isStateSaved()) return;
+        var manager = chatListFragment.getFragmentManager();
+        if (manager == null) return;
+        Utils.mainThread.post(() -> {
+            manager.beginTransaction().detach(chatListFragment).commitNow();
+            manager.beginTransaction().attach(chatListFragment).commitNow();
+        });
+    }
+
 
     @Override
     public void stop(Context context) {
