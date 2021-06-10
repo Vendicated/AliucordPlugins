@@ -51,7 +51,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -63,7 +63,7 @@ public class MessageLinkEmbeds extends Plugin {
 
         patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
             var msg = ((MessageEntry) callFrame.args[1]).getMessage();
-            if (msg == null) return;
+            if (msg == null || msg.getType() == -1 /* isSending */) return;
             var embeds = msg.getEmbeds();
             var matcher = messageLinkPattern.matcher(msg.getContent());
             while (matcher.find()) {
