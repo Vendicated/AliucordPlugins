@@ -11,17 +11,13 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
-import android.view.View;
 
 import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
 
 import com.aliucord.CollectionUtils;
 import com.aliucord.Logger;
-import com.aliucord.Utils;
 import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.Patcher;
 import com.aliucord.patcher.PinePatchFn;
 import com.discord.api.message.embed.MessageEmbed;
 import com.discord.api.utcdatetime.UtcDateTime;
@@ -29,6 +25,7 @@ import com.discord.models.domain.ModelMessage;
 import com.discord.stores.StoreStream;
 import com.discord.utilities.SnowflakeUtils;
 import com.discord.utilities.icon.IconUtils;
+import com.discord.utilities.permissions.PermissionUtils;
 import com.discord.utilities.rest.RestAPI;
 import com.discord.widgets.chat.list.entries.ChatListEntry;
 import com.discord.widgets.chat.list.entries.MessageEntry;
@@ -55,7 +52,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -63,13 +60,6 @@ public class MessageLinkEmbeds extends Plugin {
     private static final String className = "com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage";
     @Override
     public void start(Context context) {
-        var msgStore = StoreStream.getMessages();
-
-        // FIXME: Find better way to re-render messages
-        Patcher.addPatch("com.discord.widgets.chat.list.WidgetChatList", "onViewBound", new Class<?>[] {View.class}, new PinePatchFn(callFrame -> {
-            chatListFragment = (Fragment) callFrame.thisObject;
-        }));
-
         patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
             var msg = ((MessageEntry) callFrame.args[1]).getMessage();
             if (msg == null || msg.getType() == -1 /* isSending */) return;
@@ -87,10 +77,19 @@ public class MessageLinkEmbeds extends Plugin {
                 long messageId = Long.parseLong(messageIdStr);
 
                 var m = cache.get(messageId);
-                if (m == null) m = msgStore.getMessage(channelId, messageId);
+                if (m == null) m = StoreStream.getMessages().getMessage(channelId, messageId);
                 if (m != null) {
-                    addEmbed(embeds, m, url, messageId, channelId);
+                    addEmbed(msg, embeds, m, url, messageId, channelId);
                 } else {
+                    var channel = StoreStream.getChannels().getChannel(channelId);
+                    Long myPerms = StoreStream.getPermissions().getPermissionsByChannel().get(channelId);
+                    if (
+                            channel == null // sad
+                            || !PermissionUtils.INSTANCE.hasAccess(channel, myPerms) // oh no... can ViewHiddenChannels help us??????!!!!
+                    ) {
+                        return;
+                    }
+
                     Runnable doFetch = () -> {
                         var api = RestAPI.getApi();
                         if (api == null) return;
@@ -99,14 +98,15 @@ public class MessageLinkEmbeds extends Plugin {
                         observable.V(new Subscriber<>() {
                             public void onCompleted() { }
                             public void onError(Throwable th) {
+                                // this should never happen because we check whether we can access the channel first
                                 logger.error(th);
                             }
                             public void onNext(List<ModelMessage> messages) {
                                 if (messages.size() == 0) return;
-                                var msg = messages.get(0);
+                                var m = messages.get(0);
+                                if (m.getId() != messageId) return;
                                 cache.put(messageId, msg);
-                                addEmbed(embeds, msg, url, messageId, channelId);
-                                // TODO: Force re-render
+                                addEmbed(msg, embeds, m, url, messageId, channelId);
                             }
                         });
                     };
@@ -116,7 +116,7 @@ public class MessageLinkEmbeds extends Plugin {
         }));
     }
 
-    public void addEmbed(List<MessageEmbed> embeds, ModelMessage msg, String url, long messageId, long channelId) {
+    public void addEmbed(ModelMessage originalMsg, List<MessageEmbed> embeds, ModelMessage msg, String url, long messageId, long channelId) {
         var author = msg.getAuthor();
         String avatar = author.a().a();
         String avatarUrl = IconUtils.getForUser(author.i(), avatar, Integer.valueOf(author.f()), avatar != null && avatar.startsWith("a_"));
@@ -156,20 +156,8 @@ public class MessageLinkEmbeds extends Plugin {
         }
 
         embeds.add(eb.build());
-        rerenderChat();
+        StoreStream.getMessages().handleMessageUpdate(originalMsg);
     }
-
-    private static Fragment chatListFragment;
-    private static void rerenderChat() {
-        if (chatListFragment == null || chatListFragment.isStateSaved()) return;
-        var manager = chatListFragment.getFragmentManager();
-        if (manager == null) return;
-        Utils.mainThread.post(() -> {
-            manager.beginTransaction().detach(chatListFragment).commitNow();
-            manager.beginTransaction().attach(chatListFragment).commitNow();
-        });
-    }
-
 
     @Override
     public void stop(Context context) {

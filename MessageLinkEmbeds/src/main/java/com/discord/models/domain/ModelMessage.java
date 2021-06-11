@@ -25,4 +25,5 @@ public class ModelMessage {
     public String getContent() { return null; }
     public List<MessageEmbed> getEmbeds() { return new ArrayList<>(); }
     public int getType() { return 0; }
+    public long getId() { return 0; }
 }
