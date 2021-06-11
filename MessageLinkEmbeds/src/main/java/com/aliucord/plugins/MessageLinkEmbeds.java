@@ -52,7 +52,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.4";
+        manifest.version = "1.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -105,7 +105,7 @@ public class MessageLinkEmbeds extends Plugin {
                                 if (messages.size() == 0) return;
                                 var m = messages.get(0);
                                 if (m.getId() != messageId) return;
-                                cache.put(messageId, msg);
+                                cache.put(messageId, m);
                                 addEmbed(msg, embeds, m, url, messageId, channelId);
                             }
                         });
