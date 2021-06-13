@@ -13,6 +13,7 @@ package com.aliucord.plugins;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import androidx.core.widget.NestedScrollView;
 import com.aliucord.Constants;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.plugins.plugindownloader.Modal;
 import com.aliucord.plugins.plugindownloader.PDUtil;
 import com.discord.utilities.color.ColorCompat;
@@ -31,10 +33,6 @@ import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R$b;
 import com.lytefast.flexinput.R$h;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -57,16 +55,9 @@ public class PluginDownloader extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
-    }
-
-    private static final String className = "com.discord.widgets.chat.list.actions.WidgetChatListActions";
-    public static Map<String, List<String>> getClassesToPatch() {
-        var map = new HashMap<String, List<String>>();
-        map.put(className, Arrays.asList("configureUI", "onViewCreated"));
-        return map;
     }
 
     @Override
@@ -80,12 +71,12 @@ public class PluginDownloader extends Plugin {
                 null);
         AtomicReference<LinearLayout> layoutRef = new AtomicReference<>();
 
-        patcher.patch(className, "configureUI", (_this, args, ret) -> {
+        patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new PinePatchFn(callFrame -> {
             var layout = layoutRef.get();
-            if (layout == null || layout.findViewById(id) != null) return ret;
+            if (layout == null || layout.findViewById(id) != null) return;
             var ctx = layout.getContext();
-            var msg = ((WidgetChatListActions.Model) args.get(0)).getMessage();
-            if (msg == null) return ret;
+            var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
+            if (msg == null) return;
             String content = msg.getContent();
             long channelId = msg.getChannelId();
 
@@ -105,7 +96,7 @@ public class PluginDownloader extends Plugin {
                 }
             } else if (channelId == Constants.PLUGIN_LINKS_CHANNEL_ID) {
                     var repoMatcher = repoPattern.matcher(content);
-                    if (!repoMatcher.find()) return ret; // zzzzzzz don't post junk
+                    if (!repoMatcher.find()) return; // zzzzzzz don't post junk
                     String author = repoMatcher.group(1);
                     String repo = repoMatcher.group(2);
 
@@ -118,13 +109,11 @@ public class PluginDownloader extends Plugin {
                     view.setOnClickListener(e -> Utils.openPageWithProxy(e.getContext(), modal));
                     layout.addView(view, 1);
             }
-            return ret;
-        });
+        }));
 
-        patcher.patch(className, "onViewCreated", (_this, args, ret) -> {
-            layoutRef.set((LinearLayout) ((NestedScrollView) args.get(0)).getChildAt(0));
-            return ret;
-        });
+        patcher.patch(WidgetChatListActions.class, "onViewCreated", new Class<?>[] {View.class, Bundle.class}, new PinePatchFn(callFrame -> {
+            layoutRef.set((LinearLayout) ((NestedScrollView) callFrame.args[0]).getChildAt(0));
+        }));
     }
 
     @Override

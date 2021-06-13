@@ -12,8 +12,6 @@ package com.aliucord.plugins.plugindownloader;
 
 import android.annotation.SuppressLint;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -26,6 +24,7 @@ import com.aliucord.Http;
 import com.aliucord.Utils;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.views.Button;
+import com.aliucord.views.DangerButton;
 import com.google.gson.reflect.TypeToken;
 import com.lytefast.flexinput.R$h;
 
@@ -34,7 +33,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.Map;
 
 public final class Modal extends SettingsPage {
@@ -78,16 +77,16 @@ public final class Modal extends SettingsPage {
             exView.setTextIsSelectable(true);
             layout.addView(exView);
         } else if (plugins == null) {
-            new Thread(() -> {
+            Utils.threadPool.execute(() -> {
                 try {
                     plugins = Http.simpleJsonGet(getUpdaterUrl(), resType);
                 } catch (IOException e) {
                     ex = e;
                 }
-                new Handler(Looper.getMainLooper()).post(() -> {
+                Utils.mainThread.post(() -> {
                     onViewBound(view);
                 });
-            }).start();
+            });
         } else {
             var list = new ArrayList<Plugin.CardInfo>();
             for (var plugin : plugins.entrySet()) {
@@ -97,9 +96,9 @@ public final class Modal extends SettingsPage {
                 String title = String.format("%s %s v%s", exists ? "Uninstall" : "Install", name, plugin.getValue().version);
                 list.add(new Plugin.CardInfo(name, title, exists));
             }
-            Collections.sort(list, (a,b) -> a.title.compareTo(b.title));
+            list.sort(Comparator.comparing(a -> a.title));
             for (var plugin: list) {
-                var button = new Button(ctx, plugin.exists);
+                var button = plugin.exists ? new DangerButton(ctx) : new Button(ctx);
                 button.setText(plugin.title);
                 Runnable callback = () -> {
                     layout.removeAllViews();
