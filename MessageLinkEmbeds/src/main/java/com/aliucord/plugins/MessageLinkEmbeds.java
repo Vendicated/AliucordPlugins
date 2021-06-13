@@ -19,6 +19,7 @@ import com.aliucord.Logger;
 import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
+import com.discord.api.message.embed.EmbedType;
 import com.discord.api.message.embed.MessageEmbed;
 import com.discord.api.utcdatetime.UtcDateTime;
 import com.discord.models.domain.ModelMessage;
@@ -42,6 +43,7 @@ import rx.Subscriber;
 @SuppressWarnings("unused")
 public class MessageLinkEmbeds extends Plugin {
     private static final Pattern messageLinkPattern = Pattern.compile("https?://((canary|ptb)\\.)?discord(app)?\\.com/channels/(\\d{17,19}|@me)/(\\d{17,19})/(\\d{17,19})");
+    private static final Pattern videoLinkPattern = Pattern.compile("\\.(mp4|webm|mov)$", Pattern.CASE_INSENSITIVE);
     private static final Logger logger = new Logger("MessageLinkEmbeds");
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
     private final Map<Long, ModelMessage> cache = new HashMap<>();
@@ -52,7 +54,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.5";
+        manifest.version = "1.0.6";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -130,12 +132,23 @@ public class MessageLinkEmbeds extends Plugin {
         if (mEmbeds.size() != 0) {
             var color = CollectionUtils.find(mEmbeds, e -> e.b() != null);
             if (color != null) eb.setColor(color.b());
-            var img = CollectionUtils.find(mEmbeds, e -> e.f() != null);
-            if (img != null) {
-                eb.setImage(img.f().c(), img.f().b(), img.f().a(), img.f().d());
-            } else if ((img = CollectionUtils.find(mEmbeds, e -> e.h() != null)) != null) {
-                eb.setImage(img.h().c(), img.h().b(), img.h().a(), img.h().d());
+
+            var media = CollectionUtils.find(mEmbeds, e -> e.f() != null);
+            if (media != null) {
+                var img = media.f();
+                eb.setImage(img.c(), img.b(), img.a(), img.d());
+            } else if ((media = CollectionUtils.find(mEmbeds, e -> e.m() != null)) != null) {
+                var vid = media.m();
+                // FIXME: remove once https://github.com/Aliucord/Aliucord/commit/807d8da62f64b87eebd85647e660eb71ace9798e aged a little
+                try {
+                    eb.setType(EmbedType.VIDEO);
+                    eb.setVideo(vid.c(), vid.b(), vid.a(), vid.d());
+                } catch (Throwable ignored) {}
+            } else if ((media = CollectionUtils.find(mEmbeds, e -> e.h() != null)) != null) {
+                var img = media.h();
+                eb.setImage(img.c(), img.b(), img.a(), img.d());
             }
+
             if (msg.getContent().equals("")) {
                 var description = CollectionUtils.find(mEmbeds, e -> e.c() != null);
                 if (description != null) eb.setDescription(description.c());
@@ -144,8 +157,19 @@ public class MessageLinkEmbeds extends Plugin {
 
         var attachments = msg.getAttachments();
         if (attachments.size() != 0) {
-            var firstAttachment = attachments.get(0);
-            eb.setImage(firstAttachment.f(), firstAttachment.c(), firstAttachment.b(), firstAttachment.g());
+            var attachment = attachments.get(0);
+            String imgUrl = attachment.f();
+            if (imgUrl != null) {
+                if (videoLinkPattern.matcher((imgUrl)).find()) {
+                    // FIXME: remove once https://github.com/Aliucord/Aliucord/commit/807d8da62f64b87eebd85647e660eb71ace9798e aged a little
+                    try {
+                        eb.setType(EmbedType.VIDEO);
+                        eb.setVideo(imgUrl, attachment.c(), attachment.b(), attachment.g());
+                    } catch (Throwable ignored) {}
+                } else {
+                    eb.setImage(imgUrl, attachment.c(), attachment.b(), attachment.g());
+                }
+            }
         }
 
         var channel = StoreStream.getChannels().getChannel(channelId);
