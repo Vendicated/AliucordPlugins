@@ -11,8 +11,6 @@
 package com.aliucord.plugins.plugindownloader;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.aliucord.Constants;
 import com.aliucord.Http;
@@ -24,8 +22,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 public final class PDUtil {
-    private static final Handler handler = new Handler(Looper.getMainLooper());
-
     private static File openPluginFile(String plugin) {
         return new File(String.format("%s/plugins/%s.zip", Constants.BASE_PATH, plugin));
     }
@@ -42,11 +38,15 @@ public final class PDUtil {
                 try (var out = new FileOutputStream(file)) {
                     res.pipe(out);
                     PluginManager.loadPlugin(ctx, file);
+                    PluginManager.startPlugin(name);
                     Utils.showToast(ctx, String.format("Plugin %s successfully downloaded", name));
-                    handler.post(callback);
+                    Utils.mainThread.post(callback);
                 }
             } catch (IOException ex) {
                 Utils.showToast(ctx, String.format("Something went wrong while downloading plugin %s, sorry: %s", name, ex.getMessage()));
+                if (file.exists())
+                    //noinspection ResultOfMethodCallIgnored
+                    file.delete();
             };
         });
     }
@@ -57,7 +57,10 @@ public final class PDUtil {
 
     public static void deletePlugin(Context ctx, String plugin, Runnable callback) {
         boolean success = openPluginFile(plugin).delete();
-        Utils.showToast(ctx, String.format("%s uninstalled plugin %s", success ? "Successfully" : "Failed to", plugin));
-        if (success) handler.post(callback);
+        Utils.showToast(ctx, String.format("%s plugin %s", success ? "Successfully uninstalled" : "Failed to uninstall", plugin));
+        if (success) {
+            PluginManager.stopPlugin(plugin);
+            Utils.mainThread.post(callback);
+        }
     }
 }
