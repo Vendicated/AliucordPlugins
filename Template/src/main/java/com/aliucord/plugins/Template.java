@@ -16,11 +16,11 @@ import androidx.annotation.NonNull;
 
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class Template extends Plugin {
@@ -36,7 +36,7 @@ public class Template extends Plugin {
     }
 
     @Override
-    public void start(Context context) {
+    public void start(Context ctx) {
         var arguments = new ArrayList<ApplicationCommandOption>();
         arguments.add(new ApplicationCommandOption(ApplicationCommandType.STRING, "", "", null, true, true, null, null));
 
@@ -45,13 +45,18 @@ public class Template extends Plugin {
                 "",
                 arguments,
                 args -> {
-                    return new CommandsAPI.CommandResult("", null, false);
+
                 }
         );
+
+        patcher.patch("", "", new Class<?>[] {}, new PinePatchFn(callFrame -> {
+
+        }));
     }
 
     @Override
     public void stop(Context context) {
         commands.unregisterAll();
+        patcher.unpatchAll();
     }
 }
