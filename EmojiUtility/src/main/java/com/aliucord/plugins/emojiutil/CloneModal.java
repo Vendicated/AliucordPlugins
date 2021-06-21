@@ -10,7 +10,6 @@
 
 package com.aliucord.plugins.emojiutil;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.util.Base64;
 import android.view.View;
@@ -48,6 +47,8 @@ import java.util.Map;
 
 
 public class CloneModal extends SettingsPage {
+    private static final int guildIconRadiusIs = Utils.getResId("guild_icon_radius", "dimen");
+
     private static final Map<Integer, Integer> emojiLimits = new HashMap<>();
     static {
         emojiLimits.put(0, 50);
@@ -73,7 +74,6 @@ public class CloneModal extends SettingsPage {
 
     @Override
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    @SuppressLint("SetTextI18n")
     public void onViewBound(View view) {
         super.onViewBound(view);
 
@@ -90,10 +90,9 @@ public class CloneModal extends SettingsPage {
         grid.setColumnCount(3);
         grid.setAlignmentMode(GridLayout.ALIGN_BOUNDS);
 
-        int m = Utils.dpToPx(8);
+        int m = Utils.dpToPx(8); // margin
         var color = Integer.valueOf(ColorCompat.getThemedColor(ctx, R$b.colorBackgroundPrimary));
-        // FIXME do not hardcode this, we need R.guild_icon_radius
-        @SuppressLint("ResourceType") var dimension = (float) ctx.getResources().getDimensionPixelSize(2131165445);
+        var dimension = ctx.getResources().getDimension(guildIconRadiusIs);
 
         var guilds = getGuilds();
         for (int i = 0; i < guilds.size(); i++) {
@@ -137,7 +136,7 @@ public class CloneModal extends SettingsPage {
         return slots != null && usedSlots < slots;
     }
 
-    private String imageToUri() {
+    private String imageToDataUri() {
         try {
             var res = new Http.Request(url).execute();
             try (var baos = new ByteArrayOutputStream()) {
@@ -151,7 +150,7 @@ public class CloneModal extends SettingsPage {
     private void clone(Context ctx, Guild guild) {
         Utils.threadPool.execute(() -> {
             var api = RestAPI.getApi();
-            var uri = imageToUri();
+            var uri = imageToDataUri();
             if (uri == null) {
                 EmojiUtility.logger.error(ctx, "Something went wrong while preparing the image");
                 return;
