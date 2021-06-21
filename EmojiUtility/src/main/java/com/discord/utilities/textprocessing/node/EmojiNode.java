@@ -17,6 +17,7 @@ public final class EmojiNode {
         public static final class Custom extends EmojiIdAndType {
             public final long getId() { return 0; }
             public final boolean isAnimated() { return false; }
+            public final String getName() { return ""; }
         }
     }
 }
