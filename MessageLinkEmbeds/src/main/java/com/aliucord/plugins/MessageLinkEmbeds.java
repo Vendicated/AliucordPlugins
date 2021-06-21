@@ -19,10 +19,14 @@ import com.aliucord.Logger;
 import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.utils.RxUtils;
+import com.aliucord.wrappers.ChannelWrapper;
+import com.aliucord.wrappers.embeds.MessageEmbedWrapper;
 import com.discord.api.message.embed.EmbedType;
 import com.discord.api.message.embed.MessageEmbed;
 import com.discord.api.utcdatetime.UtcDateTime;
 import com.discord.models.domain.ModelMessage;
+import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
 import com.discord.utilities.SnowflakeUtils;
 import com.discord.utilities.icon.IconUtils;
@@ -54,7 +58,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.6";
+        manifest.version = "1.0.7";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -70,7 +74,10 @@ public class MessageLinkEmbeds extends Plugin {
             while (matcher.find()) {
                 String url = matcher.group();
                 // Check if link already embedded by checking if embed with same url already exists
-                if (CollectionUtils.find(embeds, e -> e.l() != null && e.l().equals(url)) != null) continue;
+                if (CollectionUtils.some(embeds, e -> {
+                    var u = MessageEmbedWrapper.getUrl(e);
+                    return u != null && u.equals(url);
+                })) continue;
 
                 String messageIdStr = matcher.group(6);
                 String channelIdStr = matcher.group(5);
@@ -79,25 +86,17 @@ public class MessageLinkEmbeds extends Plugin {
                 long messageId = Long.parseLong(messageIdStr);
 
                 var m = cache.get(messageId);
-                if (m == null) m = StoreStream.getMessages().getMessage(channelId, messageId);
-                if (m != null) {
+                if (m != null || (m = StoreStream.getMessages().getMessage(channelId, messageId)) != null) {
                     addEmbed(msg, embeds, m, url, messageId, channelId);
                 } else {
                     var channel = StoreStream.getChannels().getChannel(channelId);
                     Long myPerms = StoreStream.getPermissions().getPermissionsByChannel().get(channelId);
-                    if (
-                            channel == null // sad
-                            || !PermissionUtils.INSTANCE.hasAccess(channel, myPerms) // oh no... can ViewHiddenChannels help us??????!!!!
-                    ) {
-                        return;
-                    }
+                    if (channel == null || !PermissionUtils.INSTANCE.hasAccess(channel, myPerms)) return;
 
                     Runnable doFetch = () -> {
                         var api = RestAPI.getApi();
-                        if (api == null) return;
                         var observable = api.getChannelMessagesAround(channelId, 1, messageId);
-                        if (observable == null) return;
-                        observable.V(new Subscriber<>() {
+                        RxUtils.subscribe(observable, new Subscriber<>() {
                             public void onCompleted() { }
                             public void onError(Throwable th) {
                                 // this should never happen because we check whether we can access the channel first
@@ -118,40 +117,38 @@ public class MessageLinkEmbeds extends Plugin {
         }));
     }
 
+    @SuppressWarnings("ConstantConditions")
     public void addEmbed(ModelMessage originalMsg, List<MessageEmbed> embeds, ModelMessage msg, String url, long messageId, long channelId) {
-        var author = msg.getAuthor();
-        String avatar = author.a().a();
-        String avatarUrl = IconUtils.getForUser(author.i(), avatar, Integer.valueOf(author.f()), avatar != null && avatar.startsWith("a_"));
+        var author = new CoreUser(msg.getAuthor());
+        String avatar = author.getAvatar();
+        String avatarUrl = IconUtils.getForUser(author.getId(), avatar, author.getDiscriminator(), avatar != null && avatar.startsWith("a_"));
         var eb = new MessageEmbedBuilder()
                 .setUrl(url)
-                .setAuthor(author.r() + "#" + author.f(), avatarUrl, avatarUrl)
+                .setAuthor(author.getUsername() + "#" + author.getDiscriminator(), avatarUrl, avatarUrl)
                 .setDescription(msg.getContent())
                 .setTimestamp(new UtcDateTime(SnowflakeUtils.toTimestamp(messageId)));
 
-        var mEmbeds = msg.getEmbeds();
+        var mEmbeds = MessageEmbedWrapper.wrapList(msg.getEmbeds());
         if (mEmbeds.size() != 0) {
-            var color = CollectionUtils.find(mEmbeds, e -> e.b() != null);
-            if (color != null) eb.setColor(color.b());
+            var color = CollectionUtils.find(mEmbeds, e -> e.getColor() != null);
+            if (color != null) eb.setColor(color.getColor());
 
-            var media = CollectionUtils.find(mEmbeds, e -> e.f() != null);
+            var media = CollectionUtils.find(mEmbeds, e -> e.getImage() != null);
             if (media != null) {
-                var img = media.f();
-                eb.setImage(img.c(), img.b(), img.a(), img.d());
-            } else if ((media = CollectionUtils.find(mEmbeds, e -> e.m() != null)) != null) {
-                var vid = media.m();
-                // FIXME: remove once https://github.com/Aliucord/Aliucord/commit/807d8da62f64b87eebd85647e660eb71ace9798e aged a little
-                try {
-                    eb.setType(EmbedType.VIDEO);
-                    eb.setVideo(vid.c(), vid.b(), vid.a(), vid.d());
-                } catch (Throwable ignored) {}
-            } else if ((media = CollectionUtils.find(mEmbeds, e -> e.h() != null)) != null) {
-                var img = media.h();
-                eb.setImage(img.c(), img.b(), img.a(), img.d());
+                var img = media.getImage();
+                eb.setImage(img.getUrl(), img.getProxyUrl(), img.getHeight(), img.getWidth());
+            } else if ((media = CollectionUtils.find(mEmbeds, e -> e.getVideo() != null)) != null) {
+                var vid = media.getVideo();
+                eb.setType(EmbedType.VIDEO);
+                eb.setVideo(vid.getUrl(), vid.getProxyUrl(), vid.getHeight(), vid.getWidth());
+            } else if ((media = CollectionUtils.find(mEmbeds, e -> e.getThumbnail() != null)) != null) {
+                var thumb = media.getThumbnail();
+                eb.setImage(thumb.getUrl(), thumb.getProxyUrl(), thumb.getHeight(), thumb.getWidth());
             }
 
             if (msg.getContent().equals("")) {
-                var description = CollectionUtils.find(mEmbeds, e -> e.c() != null);
-                if (description != null) eb.setDescription(description.c());
+                var description = CollectionUtils.find(mEmbeds, e -> e.getDescription() != null && !e.getDescription().equals(""));
+                if (description != null) eb.setDescription(description.getDescription());
             }
         }
 
@@ -161,11 +158,8 @@ public class MessageLinkEmbeds extends Plugin {
             String imgUrl = attachment.f();
             if (imgUrl != null) {
                 if (videoLinkPattern.matcher((imgUrl)).find()) {
-                    // FIXME: remove once https://github.com/Aliucord/Aliucord/commit/807d8da62f64b87eebd85647e660eb71ace9798e aged a little
-                    try {
-                        eb.setType(EmbedType.VIDEO);
-                        eb.setVideo(imgUrl, attachment.c(), attachment.b(), attachment.g());
-                    } catch (Throwable ignored) {}
+                    eb.setType(EmbedType.VIDEO);
+                    eb.setVideo(imgUrl, attachment.c(), attachment.b(), attachment.g());
                 } else {
                     eb.setImage(imgUrl, attachment.c(), attachment.b(), attachment.g());
                 }
@@ -174,9 +168,9 @@ public class MessageLinkEmbeds extends Plugin {
 
         var channel = StoreStream.getChannels().getChannel(channelId);
         if (channel != null) {
-            var guild = StoreStream.getGuilds().getGuild(channel.e());
+            var guild = StoreStream.getGuilds().getGuild(ChannelWrapper.getGuildId(channel));
             if (guild != null)
-                eb.setFooter(String.format("#%s (%s)", channel.l(), guild.getName()), null, null);
+                eb.setFooter(String.format("#%s (%s)", ChannelWrapper.getName(channel), guild.getName()), null, null);
         }
 
         embeds.add(eb.build());
