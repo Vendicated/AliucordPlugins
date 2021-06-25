@@ -3,7 +3,6 @@ include ':EmojiUtility'
 include ':PluginDownloader'
 include ':Hastebin'
 include ':UrbanDictionary'
-include ':Dev'
 rootProject.name = "AliucordPlugins"
 
 include ':DiscordStubs'
