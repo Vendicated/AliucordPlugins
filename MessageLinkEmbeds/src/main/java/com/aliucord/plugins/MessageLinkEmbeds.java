@@ -22,10 +22,11 @@ import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.utils.RxUtils;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper;
+import com.aliucord.wrappers.messages.MessageWrapper;
+import com.discord.api.message.Message;
 import com.discord.api.message.embed.EmbedType;
 import com.discord.api.message.embed.MessageEmbed;
 import com.discord.api.utcdatetime.UtcDateTime;
-import com.discord.models.domain.ModelMessage;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
 import com.discord.utilities.SnowflakeUtils;
@@ -50,7 +51,7 @@ public class MessageLinkEmbeds extends Plugin {
     private static final Pattern videoLinkPattern = Pattern.compile("\\.(mp4|webm|mov)$", Pattern.CASE_INSENSITIVE);
     private static final Logger logger = new Logger("MessageLinkEmbeds");
     private final ExecutorService worker = Executors.newSingleThreadExecutor();
-    private final Map<Long, ModelMessage> cache = new HashMap<>();
+    private final Map<Long, Message> cache = new HashMap<>();
 
     @NonNull
     @Override
@@ -58,7 +59,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.0.7";
+        manifest.version = "1.1.0";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -67,8 +68,8 @@ public class MessageLinkEmbeds extends Plugin {
     @Override
     public void start(Context context) {
         patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
-            var msg = ((MessageEntry) callFrame.args[1]).getMessage();
-            if (msg == null || msg.getType() == -1 /* isSending */) return;
+            var msg = new MessageWrapper(((MessageEntry) callFrame.args[1]).getMessage());
+            if (msg.getType() == -1 /* isSending */) return;
             var embeds = msg.getEmbeds();
             var matcher = messageLinkPattern.matcher(msg.getContent());
             while (matcher.find()) {
@@ -87,7 +88,7 @@ public class MessageLinkEmbeds extends Plugin {
 
                 var m = cache.get(messageId);
                 if (m != null || (m = StoreStream.getMessages().getMessage(channelId, messageId)) != null) {
-                    addEmbed(msg, embeds, m, url, messageId, channelId);
+                    addEmbed(msg, embeds, new MessageWrapper(m), url, messageId, channelId);
                 } else {
                     var channel = StoreStream.getChannels().getChannel(channelId);
                     Long myPerms = StoreStream.getPermissions().getPermissionsByChannel().get(channelId);
@@ -102,12 +103,12 @@ public class MessageLinkEmbeds extends Plugin {
                                 // this should never happen because we check whether we can access the channel first
                                 logger.error(th);
                             }
-                            public void onNext(List<ModelMessage> messages) {
+                            public void onNext(List<Message> messages) {
                                 if (messages.size() == 0) return;
                                 var m = messages.get(0);
-                                if (m.getId() != messageId) return;
+                                if (MessageWrapper.getId(m) != messageId) return;
                                 cache.put(messageId, m);
-                                addEmbed(msg, embeds, m, url, messageId, channelId);
+                                addEmbed(msg, embeds, new MessageWrapper(m), url, messageId, channelId);
                             }
                         });
                     };
@@ -118,7 +119,7 @@ public class MessageLinkEmbeds extends Plugin {
     }
 
     @SuppressWarnings("ConstantConditions")
-    public void addEmbed(ModelMessage originalMsg, List<MessageEmbed> embeds, ModelMessage msg, String url, long messageId, long channelId) {
+    public void addEmbed(MessageWrapper originalMsg, List<MessageEmbed> embeds, MessageWrapper msg, String url, long messageId, long channelId) {
         var author = new CoreUser(msg.getAuthor());
         String avatar = author.getAvatar();
         String avatarUrl = IconUtils.getForUser(author.getId(), avatar, author.getDiscriminator(), avatar != null && avatar.startsWith("a_"));
@@ -174,7 +175,7 @@ public class MessageLinkEmbeds extends Plugin {
         }
 
         embeds.add(eb.build());
-        StoreStream.getMessages().handleMessageUpdate(originalMsg);
+        StoreStream.getMessages().handleMessageUpdate(originalMsg.raw());
     }
 
     @Override

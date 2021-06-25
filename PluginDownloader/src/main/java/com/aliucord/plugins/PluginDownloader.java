@@ -28,6 +28,7 @@ import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.plugins.plugindownloader.Modal;
 import com.aliucord.plugins.plugindownloader.PDUtil;
+import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R$b;
@@ -55,7 +56,7 @@ public class PluginDownloader extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.0.4";
+        manifest.version = "1.1.0";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -77,8 +78,8 @@ public class PluginDownloader extends Plugin {
             var ctx = layout.getContext();
             var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
             if (msg == null) return;
-            String content = msg.getContent();
-            long channelId = msg.getChannelId();
+            String content = MessageWrapper.getContent(msg);
+            long channelId = MessageWrapper.getChannelId(msg);
 
             if (channelId == Constants.PLUGIN_LINKS_UPDATES_CHANNEL_ID) {
                 var matcher = zipPattern.matcher(content);

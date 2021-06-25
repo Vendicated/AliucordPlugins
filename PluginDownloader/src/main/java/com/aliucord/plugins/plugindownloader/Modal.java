@@ -11,12 +11,10 @@
 package com.aliucord.plugins.plugindownloader;
 
 import android.annotation.SuppressLint;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.widget.NestedScrollView;
 
@@ -51,18 +49,14 @@ public final class Modal extends SettingsPage {
     }
 
     @Override
+    @SuppressLint("SetTextI18n")
     @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onViewBound(View view) {
+        super.onViewBound(view);
 
         setActionBarTitle("Plugin downloader");
         setActionBarSubtitle(String.format("https://github.com/%s/%s", author, repo));
-    }
 
-    @Override
-    @SuppressLint("SetTextI18n")
-    public void onViewBound(View view) {
-        super.onViewBound(view);
         var ctx = view.getContext();
         var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
         int p = Utils.getDefaultPadding();
