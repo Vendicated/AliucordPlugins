@@ -38,10 +38,21 @@ jobs:
         run: |
           echo "$ANDROID_HOME/build-tools/30.0.3" >> $GITHUB_PATH
           mkdir -p ~/bin
-          wget https://github.com/Aliucord/buildtool/releases/download/v0.1.0/buildtool -P ~/bin
+          wget https://github.com/Aliucord/buildtool/releases/latest/download/buildtool -P ~/bin
           chmod +x ~/bin/buildtool
           chmod +x $GITHUB_WORKSPACE/src/gradlew
-          echo "{\"aliucord\":\"$GITHUB_WORKSPACE/Aliucord\",\"plugins\":\"$GITHUB_WORKSPACE/src\",\"androidSDK\":\"$ANDROID_HOME\",\"outputsPlugins\":\"$GITHUB_WORKSPACE/builds\"}" > ~/config.json
+          jq \
+            --arg ALIUCORD "$GITHUB_WORKSPACE/repo" \
+            --arg PLUGINS "$GITHUB_WORKSPACE/src" \
+            --arg SDK "$ANDROID_HOME" \
+            --arg OUTPUT_PLUGINS "$GITHUB_WORKSPACE/builds" \
+            '{
+              aliucord: $ALIUCORD,
+              plugins: $PLUGINS,
+              androidSDK: $SDK,
+              androidSDKVersion: "30",
+              outputsPlugins: $OUTPUT_PLUGINS
+            }' <<< "{}" > ~/config.json
 
       - name: Build Plugins
         run: ~/bin/buildtool --config ~/config.json -p \*
@@ -55,3 +66,4 @@ jobs:
           git add *
           git commit -m "Build $GITHUB_SHA"
           git push
+
