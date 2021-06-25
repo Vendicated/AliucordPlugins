@@ -15,7 +15,7 @@
     "minimumDiscordVersion": 81110
   },
   "MessageLinkEmbeds": {
-    "version": "1.1.0",
+    "version": "1.1.1",
     "minimumDiscordVersion": 81110
   }
 }
