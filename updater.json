@@ -11,9 +11,11 @@
     "version": "1.0.1"
   },
   "PluginDownloader": {
-    "version": "1.0.4"
+    "version": "1.1.0",
+    "minimumDiscordVersion": 81110
   },
   "MessageLinkEmbeds": {
-    "version": "1.0.7"
+    "version": "1.1.0",
+    "minimumDiscordVersion": 81110
   }
 }
