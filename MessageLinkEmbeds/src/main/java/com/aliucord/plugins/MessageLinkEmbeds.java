@@ -34,7 +34,7 @@ import com.discord.utilities.SnowflakeUtils;
 import com.discord.utilities.icon.IconUtils;
 import com.discord.utilities.permissions.PermissionUtils;
 import com.discord.utilities.rest.RestAPI;
-import com.discord.widgets.chat.list.entries.ChatListEntry;
+import com.discord.utilities.view.text.SimpleDraweeSpanTextView;
 import com.discord.widgets.chat.list.entries.MessageEntry;
 
 import java.util.HashMap;
@@ -60,7 +60,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.1.1";
+        manifest.version = "1.1.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -68,7 +68,7 @@ public class MessageLinkEmbeds extends Plugin {
     private static final String className = "com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage";
     @Override
     public void start(Context context) {
-        patcher.patch(className, "onConfigure", new Class<?>[]{int.class, ChatListEntry.class}, new PinePatchFn(callFrame -> {
+        patcher.patch(className, "processMessageText", new Class<?>[]{SimpleDraweeSpanTextView.class, MessageEntry.class}, new PinePatchFn(callFrame -> {
             var msg = new MessageWrapper(((MessageEntry) callFrame.args[1]).getMessage());
             if (msg.getType() == -1 /* isSending */) return;
             var embeds = msg.getEmbeds();
