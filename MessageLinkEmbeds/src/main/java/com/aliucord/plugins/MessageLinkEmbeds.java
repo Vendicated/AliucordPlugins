@@ -22,6 +22,7 @@ import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.utils.RxUtils;
 import com.aliucord.wrappers.ChannelWrapper;
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper;
+import com.aliucord.wrappers.messages.AttachmentWrapper;
 import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.api.message.Message;
 import com.discord.api.message.embed.EmbedType;
@@ -59,7 +60,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.1.0";
+        manifest.version = "1.1.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -121,8 +122,7 @@ public class MessageLinkEmbeds extends Plugin {
     @SuppressWarnings("ConstantConditions")
     public void addEmbed(MessageWrapper originalMsg, List<MessageEmbed> embeds, MessageWrapper msg, String url, long messageId, long channelId) {
         var author = new CoreUser(msg.getAuthor());
-        String avatar = author.getAvatar();
-        String avatarUrl = IconUtils.getForUser(author.getId(), avatar, author.getDiscriminator(), avatar != null && avatar.startsWith("a_"));
+        String avatarUrl = IconUtils.getForUser(author.getId(), author.getAvatar(), author.getDiscriminator(), true, 256);
         var eb = new MessageEmbedBuilder()
                 .setUrl(url)
                 .setAuthor(author.getUsername() + "#" + author.getDiscriminator(), avatarUrl, avatarUrl)
@@ -130,9 +130,13 @@ public class MessageLinkEmbeds extends Plugin {
                 .setTimestamp(new UtcDateTime(SnowflakeUtils.toTimestamp(messageId)));
 
         var mEmbeds = MessageEmbedWrapper.wrapList(msg.getEmbeds());
+        boolean setColor = false;
         if (mEmbeds.size() != 0) {
             var color = CollectionUtils.find(mEmbeds, e -> e.getColor() != null);
-            if (color != null) eb.setColor(color.getColor());
+            if (color != null) {
+                setColor = true;
+                eb.setColor(color.getColor());
+            }
 
             var media = CollectionUtils.find(mEmbeds, e -> e.getImage() != null);
             if (media != null) {
@@ -155,23 +159,32 @@ public class MessageLinkEmbeds extends Plugin {
 
         var attachments = msg.getAttachments();
         if (attachments.size() != 0) {
-            var attachment = attachments.get(0);
-            String imgUrl = attachment.f();
+            var attachment = new AttachmentWrapper(attachments.get(0));
+            String imgUrl = attachment.getUrl();
             if (imgUrl != null) {
                 if (videoLinkPattern.matcher((imgUrl)).find()) {
                     eb.setType(EmbedType.VIDEO);
-                    eb.setVideo(imgUrl, attachment.c(), attachment.b(), attachment.g());
+                    eb.setVideo(imgUrl, attachment.getProxyUrl(), attachment.getHeight(), attachment.getWidth());
                 } else {
-                    eb.setImage(imgUrl, attachment.c(), attachment.b(), attachment.g());
+                    eb.setImage(imgUrl, attachment.getProxyUrl(), attachment.getHeight(), attachment.getWidth());
                 }
             }
         }
 
         var channel = StoreStream.getChannels().getChannel(channelId);
         if (channel != null) {
-            var guild = StoreStream.getGuilds().getGuild(ChannelWrapper.getGuildId(channel));
-            if (guild != null)
+            var guildStore = StoreStream.getGuilds();
+            long guildId = ChannelWrapper.getGuildId(channel);
+            var guild = guildStore.getGuild(guildId);
+            if (guild != null) {
                 eb.setFooter(String.format("#%s (%s)", ChannelWrapper.getName(channel), guild.getName()), null, null);
+                if (!setColor) {
+                    var member = guildStore.getMember(guildId, author.getId());
+                    if (member != null && member.getColor() != 0) {
+                        eb.setColor(member.getColor());
+                    }
+                }
+            }
         }
 
         embeds.add(eb.build());
