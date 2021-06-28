@@ -11,13 +11,11 @@
 package com.aliucord.plugins.hastebin;
 
 import android.annotation.SuppressLint;
-import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.LinearLayout;
 
-import androidx.annotation.Nullable;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.widget.NestedScrollView;
 
@@ -26,7 +24,6 @@ import com.aliucord.Utils;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.views.Button;
 import com.aliucord.views.TextInput;
-import com.lytefast.flexinput.R$c;
 
 import java.util.regex.Pattern;
 
@@ -37,18 +34,14 @@ public final class PluginSettings extends SettingsPage {
     private static final Pattern re = Pattern.compile("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}");
 
     @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        setActionBarTitle(plugin);
-    }
-
-    @Override
     public void onViewBound(View view) {
         super.onViewBound(view);
 
+        //noinspection ResultOfMethodCallIgnored
+        setActionBarTitle(plugin);
+
         var plug = PluginManager.plugins.get(plugin);
-        assert(plug != null);
+        assert plug != null;
         var settings = plug.sets;
 
         var ctx = view.getContext();
@@ -61,14 +54,17 @@ public final class PluginSettings extends SettingsPage {
         input.setHint("Hastebin Mirror");
 
         var editText = input.getEditText();
-        assert(editText != null);
+        assert editText != null;
 
-        var button = new Button(ctx, false);
+        var button = new Button(ctx);
         button.setText("Save");
         button.setOnClickListener(v -> {
-            String text = editText.getText().toString();
-            while (text.endsWith("/")) text = text.substring(0, text.length() -1);
-            if (isValid(text)) settings.setString("mirror", text);
+            String text = editText.getText().toString().replaceFirst("/+$", "");
+            settings.setString("mirror", text);
+            Utils.showToast(ctx, "Saved!");
+            var activity = getActivity();
+            if (activity == null) return;
+            activity.onBackPressed();
         });
 
         editText.setMaxLines(1);
@@ -77,8 +73,13 @@ public final class PluginSettings extends SettingsPage {
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             public void onTextChanged(CharSequence s, int start, int before, int count) { }
             public void afterTextChanged(Editable s) {
-                if (!isValid(s.toString())) button.setBackgroundColor(res.getColor(R$c.uikit_btn_bg_color_selector_red));
-                else button.setBackgroundColor(res.getColor(R$c.brand));
+                if (!isValid(s.toString())) {
+                    button.setAlpha(0.5f);
+                    button.setClickable(false);
+                } else {
+                    button.setAlpha(1f);
+                    button.setClickable(true);
+                }
             }
         });
 
