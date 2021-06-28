@@ -25,6 +25,7 @@ public final class PDUtil {
     private static File openPluginFile(String plugin) {
         return new File(String.format("%s/plugins/%s.zip", Constants.BASE_PATH, plugin));
     }
+
     public static void downloadPlugin(Context ctx, String author, String repo, String name, Runnable callback) {
         Utils.threadPool.execute(() -> {
             var url = String.format("https://github.com/%s/%s/raw/builds/%s.zip", author, repo, name);

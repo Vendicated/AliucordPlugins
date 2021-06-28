@@ -67,19 +67,17 @@ public final class Modal extends SettingsPage {
             var sw = new StringWriter();
             var pw = new PrintWriter(sw);
             ex.printStackTrace(pw);
-            exView.setText("An error:\n\n" + sw.toString());
+            exView.setText("An error occurred:\n\n" + sw.toString());
             exView.setTextIsSelectable(true);
             layout.addView(exView);
         } else if (plugins == null) {
             Utils.threadPool.execute(() -> {
                 try {
-                    plugins = Http.simpleJsonGet(getUpdaterUrl(), resType);
+                    plugins = Http.simpleJsonGet(String.format("https://raw.githubusercontent.com/%s/%s/builds/updater.json", author, repo), resType);
                 } catch (IOException e) {
                     ex = e;
                 }
-                Utils.mainThread.post(() -> {
-                    onViewBound(view);
-                });
+                Utils.mainThread.post(() -> onViewBound(view));
             });
         } else {
             var list = new ArrayList<Plugin.CardInfo>();
@@ -107,7 +105,4 @@ public final class Modal extends SettingsPage {
         }
     }
 
-    private String getUpdaterUrl() {
-        return String.format("https://raw.githubusercontent.com/%s/%s/builds/updater.json", author, repo);
-    }
 }

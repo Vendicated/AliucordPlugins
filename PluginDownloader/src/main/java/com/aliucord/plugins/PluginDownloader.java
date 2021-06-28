@@ -13,7 +13,6 @@ package com.aliucord.plugins;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -34,7 +33,6 @@ import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R$b;
 import com.lytefast.flexinput.R$h;
 
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 
@@ -56,7 +54,7 @@ public class PluginDownloader extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.1.0";
+        manifest.version = "1.1.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -70,10 +68,12 @@ public class PluginDownloader extends Plugin {
                         "drawable",
                         "com.aliucord.plugins"),
                 null);
-        AtomicReference<LinearLayout> layoutRef = new AtomicReference<>();
 
         patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new PinePatchFn(callFrame -> {
-            var layout = layoutRef.get();
+            var _this = (WidgetChatListActions) callFrame.thisObject;
+            var rootView = (NestedScrollView) _this.getView();
+            if (rootView == null) return;
+            var layout = (LinearLayout) rootView.getChildAt(0);
             if (layout == null || layout.findViewById(id) != null) return;
             var ctx = layout.getContext();
             var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
@@ -90,9 +90,11 @@ public class PluginDownloader extends Plugin {
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Download " + name);
-                    if (icon != null) icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
-                    view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                    view.setOnClickListener(e -> PDUtil.downloadPlugin(ctx, author, repo, name, () -> {}));
+                    if (icon != null) {
+                        icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
+                        view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    }
+                    view.setOnClickListener(e -> PDUtil.downloadPlugin(e.getContext(), author, repo, name, _this::dismiss));
                     layout.addView(view, 1);
                 }
             } else if (channelId == Constants.PLUGIN_LINKS_CHANNEL_ID) {
@@ -105,15 +107,16 @@ public class PluginDownloader extends Plugin {
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Open Plugin Downloader");
-                    if (icon != null) icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
-                    view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                    view.setOnClickListener(e -> Utils.openPageWithProxy(e.getContext(), modal));
+                    if (icon != null) {
+                        icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
+                        view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    }
+                    view.setOnClickListener(e -> {
+                        Utils.openPageWithProxy(e.getContext(), modal);
+                        _this.dismiss();
+                    });
                     layout.addView(view, 1);
             }
-        }));
-
-        patcher.patch(WidgetChatListActions.class, "onViewCreated", new Class<?>[] {View.class, Bundle.class}, new PinePatchFn(callFrame -> {
-            layoutRef.set((LinearLayout) ((NestedScrollView) callFrame.args[0]).getChildAt(0));
         }));
     }
 
