@@ -8,11 +8,8 @@
  * http://www.apache.org/licenses/LICENSE-2.0
 */
 
-package com.airbnb.lottie.parser;
+package com.discord.stores;
 
-import com.discord.api.channel.Channel;
-
-public class AnimatableValueParser {
-    /** Channel.isPrivate */
-    public static boolean r1(Channel channel) { return false; }
+public class StoreMessagesLoader {
+    public final synchronized void jumpToMessage(long j, long j2) { }
 }

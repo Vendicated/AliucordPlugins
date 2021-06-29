@@ -1,6 +1,6 @@
 {
   "default": {
-    "minimumDiscordVersion": 79201,
+    "minimumDiscordVersion": 81110,
     "version": "1.0.0",
     "build": "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/%s.zip"
   },
@@ -19,6 +19,6 @@
     "minimumDiscordVersion": 81110
   },
   "TapTap": {
-    "version": "1.0.0"
+    "version": "1.0.1"
   }
 }

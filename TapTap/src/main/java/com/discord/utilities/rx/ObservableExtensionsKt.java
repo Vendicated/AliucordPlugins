@@ -20,6 +20,4 @@ public class ObservableExtensionsKt {
     public static <T> Observable<T> takeSingleUntilTimeout$default(Observable<T> observable, long j, boolean z2, int i, Object obj) { return new Observable<>(); }
     public static <T> Observable<T> computationBuffered(Observable<T> observable) { return new Observable<>(); }
     public static <T> void appSubscribe$default(Observable<T> observable, Context context, String str, Function1 function1, Function1 function12, Function1 function13, Function0 function0, Function0 function02, int i, Object obj) { }
-
-
 }

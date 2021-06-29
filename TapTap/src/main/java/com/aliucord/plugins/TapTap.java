@@ -12,13 +12,11 @@ package com.aliucord.plugins;
 
 import android.content.Context;
 import android.os.Handler;
-import android.view.View;
 
 import androidx.annotation.NonNull;
 
 import com.airbnb.lottie.parser.AnimatableValueParser;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.wrappers.messages.MessageWrapper;
 import com.discord.api.message.Message;
 import com.discord.models.user.CoreUser;
@@ -27,16 +25,17 @@ import com.discord.utilities.message.MessageUtils;
 import com.discord.utilities.rx.ObservableExtensionsKt;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions$editMessage$1;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions$editMessage$2;
-import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemMessage;
-import com.discord.widgets.chat.list.entries.ChatListEntry;
-import com.discord.widgets.chat.list.entries.MessageEntry;
 
 import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
+import top.canyie.pine.Pine;
+import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressWarnings("unused")
 public class TapTap extends Plugin {
     private static final Handler handler = new Handler();
+    private boolean busy = false;
+    private int clicks = 0;
 
     @NonNull
     @Override
@@ -44,54 +43,42 @@ public class TapTap extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Double tap someone else's message to quick reply, double tap your own to quick edit";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
-    private static class DoubleClickListener implements View.OnClickListener {
-        private final Runnable onClick;
-        private boolean busy = false;
-        private int clicks = 0;
-
-        public DoubleClickListener(Runnable onClickListener) {
-            onClick = onClickListener;
-        }
-
-        public void onClick(View view) {
-            if (busy) return;
-            busy = true;
-            clicks++;
-            handler.postDelayed(() -> {
-                if (clicks >= 2) {
-                    onClick.run();
-                }
-                clicks = 0;
-            }, 200);
-            busy = false;
-        }
-    }
-
     @Override
     public void start(Context ctx) {
-        patcher.patch(WidgetChatListAdapterItemMessage.class, "onConfigure", new Class<?>[]{ int.class, ChatListEntry.class }, new PinePatchFn(callFrame -> {
-            var _this = (WidgetChatListAdapterItemMessage) callFrame.thisObject;
-            var msg = ((MessageEntry) callFrame.args[1]).getMessage();
-            if (msg == null) return;
-            _this.itemView.setOnClickListener(new DoubleClickListener(() -> {
-                long myId = StoreStream.getUsers().getMe().getId();
-                long id = new CoreUser(MessageWrapper.getAuthor(msg)).getId();
-                if (id == myId) {
-                    editMessage(msg);
-                } else {
-                    replyMessage(msg);
-                }
-            }));
-        }));
+        patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler", "onMessageClicked", new Class<?>[] { Message.class, boolean.class}, new MethodReplacement() {
+            @Override
+            protected Object replaceCall(Pine.CallFrame callFrame) {
+                if (busy) return null;
+                var msg = (Message) callFrame.args[0];
+                busy = true;
+                clicks++;
+                handler.postDelayed(() -> {
+                    if (clicks >= 2) {
+                        long myId = StoreStream.getUsers().getMe().getId();
+                        long id = new CoreUser(MessageWrapper.getAuthor(msg)).getId();
+                        if (id == myId) {
+                            editMessage(msg);
+                        } else {
+                            replyMessage(msg);
+                        }
+                    } else {
+                        if ((boolean) callFrame.args[1]) StoreStream.Companion.getMessagesLoader().jumpToMessage(MessageWrapper.getChannelId(msg), MessageWrapper.getId(msg));
+                    }
+                    clicks = 0;
+                }, 200);
+                busy = false;
+                return null;
+            }
+        });
     }
 
     /** WidgetChatListActions.replyMessage */
-    private void replyMessage(Message msg) {
+    private synchronized void replyMessage(Message msg) {
         var channel = StoreStream.getChannels().getChannel(MessageWrapper.getChannelId(msg));
         boolean isPrivateChannel = AnimatableValueParser.r1(channel);
         boolean isWebhook = MessageUtils.INSTANCE.isWebhook(msg);
@@ -102,22 +89,22 @@ public class TapTap extends Plugin {
 
     /** WidgetChatListActions.editMessage */
     @SuppressWarnings("rawtypes")
-    private void editMessage(Message msg) {
+    private synchronized void editMessage(Message msg) {
         var obs = StoreStream.getChannels().observeGuildAndPrivateChannels().Z(new WidgetChatListActions$editMessage$1<>(msg));
         // how come discord can pass null for these but i cant...
         Function1 doNothing = o -> null;
-        Function0 alsoDoNothing = () -> null;
+        Function0 doNothing2ElectricBoogaloo = () -> null;
         ObservableExtensionsKt.appSubscribe$default(
                 ObservableExtensionsKt.takeSingleUntilTimeout$default(ObservableExtensionsKt.computationBuffered(obs), 0, false, 3, null),
-                (Context) null,
+                null,
                 "editMessage",
                 doNothing,
                 new WidgetChatListActions$editMessage$2(msg),
                 doNothing,
-                alsoDoNothing,
-                alsoDoNothing,
+                doNothing2ElectricBoogaloo,
+                doNothing2ElectricBoogaloo,
                 177,
-                (Object) null);
+                null);
     }
 
     @Override

@@ -8,11 +8,11 @@
  * http://www.apache.org/licenses/LICENSE-2.0
 */
 
-package com.airbnb.lottie.parser;
+package com.discord.widgets.chat.list.adapter;
 
-import com.discord.api.channel.Channel;
+import rx.functions.Action0;
 
-public class AnimatableValueParser {
-    /** Channel.isPrivate */
-    public static boolean r1(Channel channel) { return false; }
+@SuppressWarnings("unused")
+public class WidgetChatListAdapter  {
+    public final void scrollToMessageId(long id, Action0 onCompleted) { }
 }

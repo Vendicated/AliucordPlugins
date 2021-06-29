@@ -15,7 +15,6 @@ import com.discord.api.message.Message;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
-@SuppressWarnings("unused")
 public class WidgetChatListActions$editMessage$2 implements Function1<CharSequence, Unit> {
     public WidgetChatListActions$editMessage$2(Message msg) {}
     public Unit invoke(CharSequence charSequence) { return null; }
