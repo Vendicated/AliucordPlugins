@@ -50,12 +50,12 @@ public class TapTap extends Plugin {
 
     @Override
     public void start(Context ctx) {
-        patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler", "onMessageClicked", new Class<?>[] { Message.class, boolean.class}, new MethodReplacement() {
+        patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler", "onMessageClicked", new Class<?>[] { Message.class, boolean.class }, new MethodReplacement() {
             @Override
             protected Object replaceCall(Pine.CallFrame callFrame) {
                 if (busy) return null;
-                var msg = (Message) callFrame.args[0];
                 busy = true;
+                var msg = (Message) callFrame.args[0];
                 clicks++;
                 handler.postDelayed(() -> {
                     if (clicks >= 2) {
@@ -95,16 +95,16 @@ public class TapTap extends Plugin {
         Function1 doNothing = o -> null;
         Function0 doNothing2ElectricBoogaloo = () -> null;
         ObservableExtensionsKt.appSubscribe$default(
-                ObservableExtensionsKt.takeSingleUntilTimeout$default(ObservableExtensionsKt.computationBuffered(obs), 0, false, 3, null),
-                null,
-                "editMessage",
-                doNothing,
-                new WidgetChatListActions$editMessage$2(msg),
-                doNothing,
-                doNothing2ElectricBoogaloo,
-                doNothing2ElectricBoogaloo,
-                177,
-                null);
+            ObservableExtensionsKt.takeSingleUntilTimeout$default(ObservableExtensionsKt.computationBuffered(obs), 0, false, 3, null),
+            null,
+            "editMessage",
+            doNothing,
+            new WidgetChatListActions$editMessage$2(msg),
+            doNothing,
+            doNothing2ElectricBoogaloo,
+            doNothing2ElectricBoogaloo,
+            177,
+            null);
     }
 
     @Override
