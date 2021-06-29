@@ -11,14 +11,12 @@
     "version": "1.0.2"
   },
   "PluginDownloader": {
-    "version": "1.1.1",
-    "minimumDiscordVersion": 81110
+    "version": "1.1.1"
   },
   "MessageLinkEmbeds": {
-    "version": "1.1.2",
-    "minimumDiscordVersion": 81110
+    "version": "1.1.2"
   },
   "TapTap": {
-    "version": "1.0.1"
+    "version": "1.0.2"
   }
 }
