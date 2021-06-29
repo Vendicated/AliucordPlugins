@@ -17,5 +17,8 @@
   "MessageLinkEmbeds": {
     "version": "1.1.2",
     "minimumDiscordVersion": 81110
+  },
+  "TapTap": {
+    "version": "1.0.0"
   }
 }
