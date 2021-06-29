@@ -1,3 +1,4 @@
+include ':TapTap'
 include ':MessageLinkEmbeds'
 include ':EmojiUtility'
 include ':PluginDownloader'
