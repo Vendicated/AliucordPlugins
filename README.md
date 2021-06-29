@@ -1,23 +1,17 @@
-## Aliucord Plugins
+# Ven's Aliucord Plugins
 
-Ven's [Aliucord](https://github.com/Aliucord) Plugin repo
-
-You can find plugin builds in the `builds` branch.
-
-### [MessageLinkEmbeds](https://github.com/Vendicated/AliucordPlugins/blob/builds/MessageLinkEmbeds.zip?raw=true)
-
+Click a Plugin's name to open a more detailed description & instructions if applicable
+- ### [MessageLinkEmbeds](MessageLinkEmbeds/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/MessageLinkEmbeds.zip?raw=true)
 Embeds message links
 
-![Screenshot](https://media.discordapp.net/attachments/852330877966614589/852330896047603732/Screenshot_20210610-013817.jpg)
+- ### [PluginDownloader](PluginDownloader/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/PluginDownloader.zip?raw=true)
+Download and install plugins without ever leaving the Discord app
 
-### [PluginDownloader](https://github.com/Vendicated/AliucordPlugins/blob/builds/PluginDownloader.zip?raw=true)
+- ### [TapTap](TapTap/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/TapTap.zip?raw=true)
+Double-tap someone elses message to quick reply, double tap your own to quick edit
 
-Adds Plugin downloader button & modal to messages in #plugin-links and #plugin-links-updates
+- ### [UrbanDictionary](UrbanDictionary/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/UrbanDictionary.zip?raw=true)
+Query the Urban Dictionary for definitions
 
-### [UrbanDictionary](https://github.com/Vendicated/AliucordPlugins/blob/builds/UrbanDictionary.zip?raw=true)
-
-Adds `urban` slash command to query the urban dictionary api
-
-### [Hastebin](https://github.com/Vendicated/AliucordPlugins/blob/builds/Hastebin.zip?raw=true)
-
-Adds `haste` slash command to create pastes
+- ### [Hastebin](Hastebin/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/Hastebin.zip?raw=true)
+Create pastes on your favourite Hastebin Mirror
