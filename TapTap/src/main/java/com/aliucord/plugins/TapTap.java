@@ -35,7 +35,7 @@ import kotlin.jvm.functions.Function0;
 import kotlin.jvm.functions.Function1;
 
 @SuppressWarnings("unused")
-public class DoubleTap extends Plugin {
+public class TapTap extends Plugin {
     private static final Handler handler = new Handler();
 
     @NonNull
@@ -43,7 +43,7 @@ public class DoubleTap extends Plugin {
     public Manifest getManifest() {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
-        manifest.description = "";
+        manifest.description = "Double tap someone else's message to quick reply, double tap your own to quick edit";
         manifest.version = "1.0.0";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
