@@ -34,6 +34,7 @@ import com.discord.utilities.SnowflakeUtils;
 import com.discord.utilities.icon.IconUtils;
 import com.discord.utilities.permissions.PermissionUtils;
 import com.discord.utilities.rest.RestAPI;
+import com.discord.utilities.user.UserUtils;
 import com.discord.utilities.view.text.SimpleDraweeSpanTextView;
 import com.discord.widgets.chat.list.entries.MessageEntry;
 
@@ -60,7 +61,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.1.2";
+        manifest.version = "1.1.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -125,7 +126,7 @@ public class MessageLinkEmbeds extends Plugin {
         String avatarUrl = IconUtils.getForUser(author.getId(), author.getAvatar(), author.getDiscriminator(), true, 256);
         var eb = new MessageEmbedBuilder()
                 .setUrl(url)
-                .setAuthor(author.getUsername() + "#" + author.getDiscriminator(), avatarUrl, avatarUrl)
+                .setAuthor(author.getUsername() + UserUtils.INSTANCE.getDiscriminatorWithPadding(author), avatarUrl, avatarUrl)
                 .setDescription(msg.getContent())
                 .setTimestamp(new UtcDateTime(SnowflakeUtils.toTimestamp(messageId)));
 
