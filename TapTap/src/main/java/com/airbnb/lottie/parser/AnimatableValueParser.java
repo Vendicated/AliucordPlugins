@@ -14,5 +14,5 @@ import com.discord.api.channel.Channel;
 
 public class AnimatableValueParser {
     /** Channel.isPrivate */
-    public static boolean r1(Channel channel) { return false; }
+    public static boolean s1(Channel channel) { return false; }
 }

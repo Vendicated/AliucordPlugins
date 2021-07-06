@@ -23,7 +23,8 @@ jobs:
       - name: Checkout Aliucord
         uses: actions/checkout@master
         with:
-          repository: "Aliucord/Aliucord"
+          repository: "Vendicated/Aliucord"
+          ref: "v8310"
           path: "repo"
 
       - name: Setup JDK 11

@@ -12,11 +12,7 @@ package com.aliucord.plugins.plugindownloader;
 
 import android.annotation.SuppressLint;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Http;
 import com.aliucord.Utils;
@@ -57,10 +53,7 @@ public final class Modal extends SettingsPage {
         setActionBarTitle("Plugin downloader");
         setActionBarSubtitle(String.format("https://github.com/%s/%s", author, repo));
 
-        var ctx = view.getContext();
-        var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
-        int p = Utils.getDefaultPadding();
-        layout.setPadding(p, p, p, p);
+        var ctx = requireContext();
 
         if (ex != null) {
             var exView = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_SubText);
@@ -69,7 +62,7 @@ public final class Modal extends SettingsPage {
             ex.printStackTrace(pw);
             exView.setText("An error occurred:\n\n" + sw.toString());
             exView.setTextIsSelectable(true);
-            layout.addView(exView);
+            addView(exView);
         } else if (plugins == null) {
             Utils.threadPool.execute(() -> {
                 try {
@@ -91,16 +84,12 @@ public final class Modal extends SettingsPage {
             list.sort(Comparator.comparing(a -> a.title));
             for (var plugin: list) {
                 var button = plugin.exists ? new DangerButton(ctx) : new Button(ctx);
-                button.setText(plugin.title);
-                Runnable callback = () -> {
-                    layout.removeAllViews();
-                    onViewBound(view);
-                };
-                if (!plugin.exists) button.setOnClickListener(e -> {
-                    PDUtil.downloadPlugin(ctx, author, repo, plugin.name, callback);
-                });
-                else button.setOnClickListener(e -> PDUtil.deletePlugin(ctx, plugin.name, callback));
-                layout.addView(button);
+                button.setText(plugin.title);;
+                if (!plugin.exists)
+                    button.setOnClickListener(e -> PDUtil.downloadPlugin(ctx, author, repo, plugin.name, this::reRender));
+                else
+                    button.setOnClickListener(e -> PDUtil.deletePlugin(ctx, plugin.name, this::reRender));
+                addView(button);
             }
         }
     }

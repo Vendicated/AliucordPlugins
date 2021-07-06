@@ -12,5 +12,5 @@ package rx;
 import j0.k.b;
 
 public class Observable<T> {
-    public final <R> Observable<R> Z(b<T, R> b) { return new Observable<>(); }
+    public final <R> Observable<R> Y(b<T, R> b) { return new Observable<>(); }
 }

@@ -11,7 +11,7 @@
 package com.discord.widgets.chat.list.actions;
 
 import com.discord.api.channel.Channel;
-import com.discord.api.message.Message;
+import com.discord.models.message.Message;
 
 import java.util.Map;
 

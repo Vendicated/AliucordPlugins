@@ -11,7 +11,7 @@
 package com.discord.stores;
 
 import com.discord.api.channel.Channel;
-import com.discord.api.message.Message;
+import com.discord.models.message.Message;
 
 public class StorePendingReplies {
     public void onCreatePendingReply(Channel channel, Message message, boolean shouldMention, boolean showMentionToggle) { }

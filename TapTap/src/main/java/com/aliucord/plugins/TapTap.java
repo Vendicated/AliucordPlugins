@@ -19,7 +19,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.widget.NestedScrollView;
 
 import com.airbnb.lottie.parser.AnimatableValueParser;
@@ -31,11 +30,9 @@ import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.views.Button;
 import com.aliucord.views.Divider;
 import com.aliucord.views.TextInput;
-import com.aliucord.wrappers.messages.MessageWrapper;
-import com.discord.api.message.Message;
+import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
-import com.discord.utilities.message.MessageUtils;
 import com.discord.utilities.rx.ObservableExtensionsKt;
 import com.discord.views.CheckedSetting;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
@@ -49,9 +46,12 @@ import top.canyie.pine.callback.MethodReplacement;
 
 @SuppressWarnings("unused")
 public class TapTap extends Plugin {
-    private static SettingsAPI leSettings;
-
     public static class TapTapSettings extends SettingsPage {
+        private final SettingsAPI settings;
+        public TapTapSettings(SettingsAPI settings) {
+            this.settings = settings;
+        }
+
         @SuppressLint("SetTextI18n")
         @SuppressWarnings("ResultOfMethodCallIgnored")
         @Override
@@ -60,9 +60,6 @@ public class TapTap extends Plugin {
             setActionBarTitle("TapTap");
 
             var ctx = requireContext();
-            var layout = (LinearLayout) ((NestedScrollView) ((CoordinatorLayout) view).getChildAt(1)).getChildAt(0);
-            int p = Utils.getDefaultPadding();
-            layout.setPadding(p, p, p, p);
 
             var input = new TextInput(ctx);
             input.setHint("Double Tap Window (in ms)");
@@ -74,12 +71,12 @@ public class TapTap extends Plugin {
             button.setText("Save");
             button.setOnClickListener(v -> {
                 String text = editText.getText().toString().replaceFirst("/+$", "");
-                leSettings.setInt("doubleTapWindow", Integer.parseInt(text));
+                settings.setInt("doubleTapWindow", Integer.parseInt(text));
                 Utils.showToast(ctx, "Saved!");
             });
 
             editText.setMaxLines(1);
-            editText.setText(String.valueOf(leSettings.getInt("doubleTapWindow", 200)));
+            editText.setText(String.valueOf(settings.getInt("doubleTapWindow", 200)));
             editText.addTextChangedListener(new TextWatcher() {
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
                 public void onTextChanged(CharSequence s, int start, int before, int count) { }
@@ -101,27 +98,23 @@ public class TapTap extends Plugin {
                     "Hide Buttons",
                     "Hides reply & edit buttons in the message actions menu. The reply button will still be shown on your own messages."
             );
-            checkbox.setChecked(leSettings.getBool("hideButtons", false));
-            checkbox.setOnCheckedListener(checked -> {
-                leSettings.setBool("hideButtons", checked);
-            });
+            checkbox.setChecked(settings.getBool("hideButtons", false));
+            checkbox.setOnCheckedListener(checked -> settings.setBool("hideButtons", checked));
 
-            layout.addView(input);
-            layout.addView(button);
-            layout.addView(new Divider(ctx));
-            layout.addView(checkbox);
+            addView(input);
+            addView(button);
+            addView(new Divider(ctx));
+            addView(checkbox);
         }
+    }
+
+    public TapTap() {
+        settingsTab = new SettingsTab(TapTapSettings.class).withArgs(settings);
     }
 
     private static final Handler handler = new Handler();
     private boolean busy = false;
     private int clicks = 0;
-
-    public TapTap() {
-        super();
-        leSettings = sets;
-        settings = new Settings(TapTapSettings.class);
-    }
 
     @NonNull
     @Override
@@ -129,7 +122,7 @@ public class TapTap extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Double tap someone else's message to quick reply, double tap your own to quick edit";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -140,7 +133,7 @@ public class TapTap extends Plugin {
         final int replyId = Utils.getResId("dialog_chat_actions_reply", "id");
 
         patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class}, new PinePatchFn(callFrame -> {
-            if (!sets.getBool("hideButtons", false)) return;
+            if (!settings.getBool("hideButtons", false)) return;
             var _this = (WidgetChatListActions) callFrame.thisObject;
             var rootView = (NestedScrollView) _this.requireView();
             var layout = (LinearLayout) rootView.getChildAt(0);
@@ -167,10 +160,10 @@ public class TapTap extends Plugin {
                             replyMessage(msg);
                         }
                     } else {
-                        if ((boolean) callFrame.args[1]) StoreStream.Companion.getMessagesLoader().jumpToMessage(MessageWrapper.getChannelId(msg), MessageWrapper.getId(msg));
+                        if ((boolean) callFrame.args[1]) StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
                     }
                     clicks = 0;
-                }, sets.getInt("doubleTapWindow", 200));
+                }, settings.getInt("doubleTapWindow", 200));
                 busy = false;
                 return null;
             }
@@ -178,16 +171,16 @@ public class TapTap extends Plugin {
     }
 
     private static boolean isMe(Message msg) {
-        long authorId = new CoreUser(MessageWrapper.getAuthor(msg)).getId();
+        long authorId = new CoreUser(msg.getAuthor()).getId();
         long myId = StoreStream.getUsers().getMe().getId();
         return authorId == myId;
     }
 
     /** WidgetChatListActions.replyMessage */
     private synchronized void replyMessage(Message msg) {
-        var channel = StoreStream.getChannels().getChannel(MessageWrapper.getChannelId(msg));
-        boolean isPrivateChannel = AnimatableValueParser.r1(channel);
-        boolean isWebhook = MessageUtils.INSTANCE.isWebhook(msg);
+        var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
+        boolean isPrivateChannel = AnimatableValueParser.s1(channel);
+        boolean isWebhook = msg.isWebhook();
         boolean shouldMention = !isWebhook;
         boolean shouldShowMentionToggle = !(isPrivateChannel || isWebhook);
         StoreStream.Companion.getPendingReplies().onCreatePendingReply(channel, msg, shouldMention, shouldShowMentionToggle);
@@ -196,7 +189,7 @@ public class TapTap extends Plugin {
     /** WidgetChatListActions.editMessage */
     @SuppressWarnings("rawtypes")
     private synchronized void editMessage(Message msg) {
-        var obs = StoreStream.getChannels().observeGuildAndPrivateChannels().Z(new WidgetChatListActions$editMessage$1<>(msg));
+        var obs = StoreStream.getChannels().observeGuildAndPrivateChannels().Y(new WidgetChatListActions$editMessage$1<>(msg));
         // how come discord can pass null for these but i cant...
         Function1 doNothing = o -> null;
         Function0 doNothing2ElectricBoogaloo = () -> null;

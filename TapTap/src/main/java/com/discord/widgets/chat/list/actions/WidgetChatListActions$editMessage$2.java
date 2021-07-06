@@ -10,7 +10,7 @@
 
 package com.discord.widgets.chat.list.actions;
 
-import com.discord.api.message.Message;
+import com.discord.models.message.Message;
 
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;

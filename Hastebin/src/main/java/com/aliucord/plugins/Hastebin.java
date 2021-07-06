@@ -29,7 +29,7 @@ import java.util.Arrays;
 public class Hastebin extends Plugin {
     public Hastebin() {
         super();
-        settings = new Settings(PluginSettings.class);
+        settingsTab = new SettingsTab(PluginSettings.class).withArgs(settings);
     }
 
     @NonNull
@@ -38,7 +38,7 @@ public class Hastebin extends Plugin {
         Manifest manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Create pastes on hastebin";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -54,12 +54,12 @@ public class Hastebin extends Plugin {
             "haste",
             "Create pastes on hastebin",
             arguments,
-            args -> {
-                var text = (String) args.get("text");
-                var send = args.get("send") == Boolean.TRUE;
+            ctx -> {
+                var text = ctx.getRequiredString("text");
+                var send = ctx.getBoolOrDefault("send", false);
 
                 String result;
-                String mirror = sets.getString("mirror", "https://haste.powercord.dev") + "/";
+                String mirror = settings.getString("mirror", "https://haste.powercord.dev") + "/";
 
                 try {
                     HasteResponse res = Http.simpleJsonPost(mirror + "documents", text, HasteResponse.class);

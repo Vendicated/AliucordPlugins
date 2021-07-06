@@ -18,16 +18,14 @@ import com.aliucord.Http;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.MessageEmbedBuilder;
 import com.aliucord.entities.Plugin;
-
 import com.aliucord.plugins.urban.ApiResponse;
-
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.models.commands.ApplicationCommandOption;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -44,27 +42,25 @@ public class UrbanDictionary extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Get definitions from urbandictionary.com";
-        manifest.version = "1.0.5";
+        manifest.version = "1.0.6";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
     @Override
     public void start(Context context) {
-        var arguments = new ArrayList<ApplicationCommandOption>();
-        arguments.add(new ApplicationCommandOption(ApplicationCommandType.STRING, "search", "The word to search for", null, true, true, null, null));
-        arguments.add(new ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether the result should be visible for everyone", null, false, true, null, null));
+        var arguments = Arrays.asList(
+                new ApplicationCommandOption(ApplicationCommandType.STRING, "search", "The word to search for", null, true, true, null, null),
+                new ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether the result should be visible for everyone", null, false, true, null, null)
+        );
 
         commands.registerCommand(
                 "urban",
                 "Get a definition from urbandictionary.com",
                 arguments,
-                args -> {
-                    String search = (String) args.get("search");
-                    Object _send = args.get("send");
-                    boolean send = _send != null && (boolean) _send;
-
-                    if (search == null) return new CommandsAPI.CommandResult("You did not specify a search term", null, false);
+                ctx -> {
+                    String search = ctx.getRequiredString("search");
+                    boolean send = ctx.getBoolOrDefault("send", false);
 
                     String url = new Http.QueryBuilder(baseUrl).append("term", search).toString();
 
