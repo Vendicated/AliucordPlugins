@@ -21,7 +21,6 @@ import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
 import androidx.core.widget.NestedScrollView;
 
-import com.airbnb.lottie.parser.AnimatableValueParser;
 import com.aliucord.Utils;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
@@ -33,14 +32,9 @@ import com.aliucord.views.TextInput;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
-import com.discord.utilities.rx.ObservableExtensionsKt;
 import com.discord.views.CheckedSetting;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
-import com.discord.widgets.chat.list.actions.WidgetChatListActions$editMessage$1;
-import com.discord.widgets.chat.list.actions.WidgetChatListActions$editMessage$2;
 
-import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function1;
 import top.canyie.pine.Pine;
 import top.canyie.pine.callback.MethodReplacement;
 
@@ -122,7 +116,7 @@ public class TapTap extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Double tap someone else's message to quick reply, double tap your own to quick edit";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -131,6 +125,8 @@ public class TapTap extends Plugin {
     public void start(Context ctx) {
         final int editId = Utils.getResId("dialog_chat_actions_edit", "id");
         final int replyId = Utils.getResId("dialog_chat_actions_reply", "id");
+
+        final var chatListActions = new WidgetChatListActions();
 
         patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class}, new PinePatchFn(callFrame -> {
             if (!settings.getBool("hideButtons", false)) return;
@@ -155,12 +151,13 @@ public class TapTap extends Plugin {
                 handler.postDelayed(() -> {
                     if (clicks >= 2) {
                         if (isMe(msg)) {
-                            editMessage(msg);
+                            WidgetChatListActions.access$editMessage(chatListActions, msg);
                         } else {
-                            replyMessage(msg);
+                            WidgetChatListActions.access$replyMessage(chatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
                         }
                     } else {
-                        if ((boolean) callFrame.args[1]) StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
+                        if ((boolean) callFrame.args[1])
+                            StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
                     }
                     clicks = 0;
                 }, settings.getInt("doubleTapWindow", 200));
@@ -174,36 +171,6 @@ public class TapTap extends Plugin {
         long authorId = new CoreUser(msg.getAuthor()).getId();
         long myId = StoreStream.getUsers().getMe().getId();
         return authorId == myId;
-    }
-
-    /** WidgetChatListActions.replyMessage */
-    private synchronized void replyMessage(Message msg) {
-        var channel = StoreStream.getChannels().getChannel(msg.getChannelId());
-        boolean isPrivateChannel = AnimatableValueParser.s1(channel);
-        boolean isWebhook = msg.isWebhook();
-        boolean shouldMention = !isWebhook;
-        boolean shouldShowMentionToggle = !(isPrivateChannel || isWebhook);
-        StoreStream.Companion.getPendingReplies().onCreatePendingReply(channel, msg, shouldMention, shouldShowMentionToggle);
-    }
-
-    /** WidgetChatListActions.editMessage */
-    @SuppressWarnings("rawtypes")
-    private synchronized void editMessage(Message msg) {
-        var obs = StoreStream.getChannels().observeGuildAndPrivateChannels().Y(new WidgetChatListActions$editMessage$1<>(msg));
-        // how come discord can pass null for these but i cant...
-        Function1 doNothing = o -> null;
-        Function0 doNothing2ElectricBoogaloo = () -> null;
-        ObservableExtensionsKt.appSubscribe$default(
-            ObservableExtensionsKt.takeSingleUntilTimeout$default(ObservableExtensionsKt.computationBuffered(obs), 0, false, 3, null),
-            null,
-            "editMessage",
-            doNothing,
-            new WidgetChatListActions$editMessage$2(msg),
-            doNothing,
-            doNothing2ElectricBoogaloo,
-            doNothing2ElectricBoogaloo,
-            177,
-            null);
     }
 
     @Override

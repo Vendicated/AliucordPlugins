@@ -13,8 +13,6 @@ package com.discord.stores;
 public class StoreStream {
     public static final Companion Companion = new Companion();
     public static final class Companion {
-        public final StorePendingReplies getPendingReplies() { return new StorePendingReplies(); }
-
         public StoreMessagesLoader getMessagesLoader() { return new StoreMessagesLoader(); }
     }
     public static StoreChannels getChannels() { return new StoreChannels(); }

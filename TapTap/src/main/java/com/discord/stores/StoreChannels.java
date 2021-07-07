@@ -12,11 +12,6 @@ package com.discord.stores;
 
 import com.discord.api.channel.Channel;
 
-import java.util.Map;
-
-import rx.Observable;
-
 public class StoreChannels {
     public Channel getChannel(long id) { return new Channel(); }
-    public Observable<Map<Long, Channel>> observeGuildAndPrivateChannels() { return new Observable<>(); }
 }
