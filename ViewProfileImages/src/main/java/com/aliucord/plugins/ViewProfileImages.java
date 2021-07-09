@@ -1,0 +1,168 @@
+/*
+ * Ven's Aliucord Plugins
+ * Copyright (C) 2021 Vendicated
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+*/
+
+package com.aliucord.plugins;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.net.Uri;
+
+import androidx.annotation.NonNull;
+import androidx.core.widget.NestedScrollView;
+
+import com.aliucord.Logger;
+import com.aliucord.Utils;
+import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.PinePrePatchFn;
+import com.discord.api.message.attachment.MessageAttachment;
+import com.discord.databinding.WidgetGuildProfileSheetBinding;
+import com.discord.utilities.SnowflakeUtils;
+import com.discord.utilities.icon.IconUtils;
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment;
+import com.discord.widgets.guilds.profile.WidgetGuildProfileSheet;
+import com.discord.widgets.guilds.profile.WidgetGuildProfileSheetViewModel;
+import com.discord.widgets.media.WidgetMedia;
+import com.discord.widgets.user.profile.UserProfileHeaderView;
+import com.discord.widgets.user.profile.UserProfileHeaderViewModel;
+
+import java.lang.reflect.Field;
+
+
+@SuppressWarnings("unused")
+public class ViewProfileImages extends Plugin {
+    private static final Logger logger = new Logger("ViewProfileImages");
+    private static Field fileNameField;
+    private static Field idField;
+    private static Field urlField;
+    private static Field proxyUrlField;
+
+    @NonNull
+    @Override
+    public Manifest getManifest() {
+        var manifest = new Manifest();
+        manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
+        manifest.description = "Allows opening avatars/icons and banners by clicking them in the user/server profile sheet";
+        manifest.version = "1.0.0";
+        manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
+        return manifest;
+    }
+
+    @SuppressWarnings("AccessStaticViaInstance")
+    private void openAttachment(Context ctx, String url, String hash, String name) {
+        var attachment = new MessageAttachment();
+        try {
+            fileNameField.set(attachment, String.format("%s.%s", name, hash.startsWith("a_") ? "gif" : "png"));
+            idField.set(attachment, SnowflakeUtils.fromTimestamp(System.currentTimeMillis()));
+            urlField.set(attachment, url);
+            proxyUrlField.set(attachment, url);
+        } catch (Throwable th) {
+            logger.error(ctx, "Failed to build fake attachment D:", th);
+            return;
+        }
+
+        WidgetChatListAdapterItemAttachment.Companion.access$navigateToAttachment(WidgetChatListAdapterItemAttachment.Companion, ctx, attachment);
+    }
+
+    @SuppressWarnings({"AccessStaticViaInstance", "JavaReflectionMemberAccess"})
+    @SuppressLint("SetTextI18n")
+    @Override
+    public void start(Context context) throws Throwable {
+        var c = MessageAttachment.class;
+        fileNameField = c.getDeclaredField("filename");
+        fileNameField.setAccessible(true);
+        idField = c.getDeclaredField("id");
+        idField.setAccessible(true);
+        urlField = c.getDeclaredField("url");
+        urlField.setAccessible(true);
+        proxyUrlField = c.getDeclaredField("proxyUrl");
+        proxyUrlField.setAccessible(true);
+
+        final var getBindingMethod = WidgetGuildProfileSheet.class.getDeclaredMethod("getBinding");
+        getBindingMethod.setAccessible(true);
+
+        final int avatarResId = Utils.getResId("avatar", "id");
+        final int bannerResId = Utils.getResId("banner", "id");
+        final int guildIconResId = Utils.getResId("guild_profile_sheet_icon", "id");
+        final int guildBannerResId = Utils.getResId("guild_profile_sheet_banner", "id");
+
+        // This patch is needed to allow size query parameter. This function naively adds ?width=x&height=x to the URI
+        // so avatar urls become https://cdn.discord.com/.../...?size=2048?width=... which breaks the size parameter
+        // so we end up with the 128x128 avatar. Enjoy your pixels ;)
+        patcher.patch(WidgetMedia.class.getDeclaredMethod("getFormattedUrl", Context.class, Uri.class), new PinePrePatchFn(callFrame -> {
+            var uri = ((Uri) callFrame.args[1]).toString();
+            if (uri.contains("?size=")) callFrame.setResult(uri);
+        }));
+
+        patcher.patch(UserProfileHeaderView.class.getDeclaredMethod("configureBanner", UserProfileHeaderViewModel.ViewState.Loaded.class), new PinePatchFn(callFrame -> {
+            var binding = UserProfileHeaderView.access$getBinding$p((UserProfileHeaderView) callFrame.thisObject);
+            var root = binding.getRoot();
+            var data = (UserProfileHeaderViewModel.ViewState.Loaded) callFrame.args[0];
+            var user = data.getUser();
+
+            final var avatarHash = user.getAvatar();
+            final var bannerHash = data.getBannerHash();
+            final var username = user.getUsername();
+            final var discriminator = user.getDiscriminator();
+            final var userId = user.getId();
+
+            var avatarView = root.findViewById(avatarResId);
+            if (avatarView != null && avatarHash != null) {
+                avatarView.setOnClickListener(e -> {
+                    var avi = IconUtils.INSTANCE.getForUser(userId, avatarHash, discriminator, true, 2048);
+                    openAttachment(e.getContext(), avi, avatarHash, username);
+                });
+            }
+
+            var bannerView = root.findViewById(bannerResId);
+            if (bannerView != null && bannerHash != null) {
+                bannerView.setOnClickListener(e -> {
+                    var banner = IconUtils.INSTANCE.getForUserBanner(userId, bannerHash, 2048, true);
+                    openAttachment(e.getContext(), banner, bannerHash, username);
+                });
+            }
+        }));
+
+        patcher.patch(WidgetGuildProfileSheet.class.getDeclaredMethod("configureUI", WidgetGuildProfileSheetViewModel.ViewState.Loaded.class), new PinePatchFn(callFrame -> {
+            try {
+                var data = (WidgetGuildProfileSheetViewModel.ViewState.Loaded) callFrame.args[0];
+                final var guildId = data.getGuildId();
+                final var guildName = data.getGuildName();
+                final var iconHash = data.getGuildIcon();
+                final var bannerHash = data.getBanner().getHash();
+
+                var binding = (WidgetGuildProfileSheetBinding) getBindingMethod.invoke(callFrame.thisObject);
+                if (binding == null) return;
+                var root = (NestedScrollView) binding.getRoot();
+
+                var iconView = root.findViewById(guildIconResId);
+                if (iconView != null && iconHash != null) {
+                    iconView.setOnClickListener(e -> {
+                        var icon = IconUtils.getForGuild(guildId, iconHash, "", true, 2048);
+                        openAttachment(e.getContext(), icon, iconHash, guildName);
+                    });
+                }
+
+                var bannerView = root.findViewById(guildBannerResId);
+                if (bannerView != null && bannerHash != null) {
+                    bannerView.setOnClickListener(e -> {
+                        var banner = IconUtils.INSTANCE.getBannerForGuild(guildId, bannerHash, 2048);
+                        openAttachment(e.getContext(), banner, bannerHash, guildName);
+                    });
+                }
+            } catch (Throwable ignored) {};
+        }));
+    }
+
+    @Override
+    public void stop(Context context) {
+        patcher.unpatchAll();
+    }
+}

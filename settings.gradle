@@ -1,3 +1,4 @@
+include ':ViewProfileImages'
 include ':TapTap'
 include ':MessageLinkEmbeds'
 include ':EmojiUtility'
