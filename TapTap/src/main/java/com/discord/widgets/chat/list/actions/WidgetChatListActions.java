@@ -21,6 +21,6 @@ public final class WidgetChatListActions extends AppBottomSheet {
         public final Message getMessage() { return getMessage(); }
     }
 
-    public static void access$editMessage(com.discord.widgets.chat.list.actions.WidgetChatListActions widgetChatListActions, Message message) { }
-    public static void access$replyMessage(com.discord.widgets.chat.list.actions.WidgetChatListActions widgetChatListActions, Message message, Channel channel) { }
+    public static void access$editMessage(WidgetChatListActions widgetChatListActions, Message message) { }
+    public static void access$replyMessage(WidgetChatListActions widgetChatListActions, Message message, Channel channel) { }
 }

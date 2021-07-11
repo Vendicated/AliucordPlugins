@@ -13,37 +13,40 @@ package com.aliucord.plugins;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Handler;
-import android.text.Editable;
-import android.text.TextWatcher;
+import android.text.*;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Utils;
-import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
-import com.aliucord.views.Button;
-import com.aliucord.views.Divider;
 import com.aliucord.views.TextInput;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
+import com.discord.utilities.color.ColorCompat;
 import com.discord.views.CheckedSetting;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
+import com.google.android.material.card.MaterialCardView;
+import com.lytefast.flexinput.R$b;
 
 import top.canyie.pine.Pine;
 import top.canyie.pine.callback.MethodReplacement;
 
-@SuppressWarnings("unused")
 public class TapTap extends Plugin {
+    private static final int defaultDelay = 200;
+    private Runnable unpatch;
+    public Runnable togglePatch;
+
     public static class TapTapSettings extends SettingsPage {
-        private final SettingsAPI settings;
-        public TapTapSettings(SettingsAPI settings) {
-            this.settings = settings;
+        private final TapTap plugin;
+        public TapTapSettings(TapTap plugin) {
+            this.plugin = plugin;
         }
 
         @SuppressLint("SetTextI18n")
@@ -61,49 +64,49 @@ public class TapTap extends Plugin {
             var editText = input.getEditText();
             assert editText != null;
 
-            var button = new Button(ctx);
-            button.setText("Save");
-            button.setOnClickListener(v -> {
-                String text = editText.getText().toString().replaceFirst("/+$", "");
-                settings.setInt("doubleTapWindow", Integer.parseInt(text));
-                Utils.showToast(ctx, "Saved!");
-            });
-
             editText.setMaxLines(1);
-            editText.setText(String.valueOf(settings.getInt("doubleTapWindow", 200)));
+            editText.setText(String.valueOf(plugin.settings.getInt("doubleTapWindow", defaultDelay)));
+            editText.setInputType(InputType.TYPE_CLASS_NUMBER);
             editText.addTextChangedListener(new TextWatcher() {
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
                 public void onTextChanged(CharSequence s, int start, int before, int count) { }
                 public void afterTextChanged(Editable s) {
-                    try {
-                        Integer.parseInt(s.toString());
-                        button.setAlpha(1f);
-                        button.setClickable(true);
-                    } catch (Throwable ignored) {
-                        button.setAlpha(0.5f);
-                        button.setClickable(false);
-                    }
+                    var str = s.toString();
+                    int i;
+                    try { i = Integer.parseInt(str);
+                    } catch (NumberFormatException ignored) { i = defaultDelay; }
+                    plugin.settings.setInt("doubleTapWindow", i);
                 }
             });
 
+            var card = new MaterialCardView(ctx);
+            card.setRadius(Utils.getDefaultCardRadius());
+            card.setCardBackgroundColor(ColorCompat.getThemedColor(ctx, R$b.colorBackgroundSecondary));
+            var params = new MaterialCardView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            params.setMargins(0, Utils.getDefaultPadding(), 0, 0);
+            card.setLayoutParams(params);
+
             var checkbox = Utils.createCheckedSetting(
                     ctx,
-                    CheckedSetting.ViewType.CHECK,
+                    CheckedSetting.ViewType.SWITCH,
                     "Hide Buttons",
                     "Hides reply & edit buttons in the message actions menu. The reply button will still be shown on your own messages."
             );
-            checkbox.setChecked(settings.getBool("hideButtons", false));
-            checkbox.setOnCheckedListener(checked -> settings.setBool("hideButtons", checked));
+            checkbox.setChecked(plugin.settings.getBool("hideButtons", false));
+            checkbox.setOnCheckedListener(checked -> {
+                plugin.settings.setBool("hideButtons", checked);
+                plugin.togglePatch.run();
+            });
+
+            card.addView(checkbox);
 
             addView(input);
-            addView(button);
-            addView(new Divider(ctx));
-            addView(checkbox);
+            addView(card);
         }
     }
 
     public TapTap() {
-        settingsTab = new SettingsTab(TapTapSettings.class).withArgs(settings);
+        settingsTab = new SettingsTab(TapTapSettings.class).withArgs(this);
     }
 
     private static final Handler handler = new Handler();
@@ -116,7 +119,7 @@ public class TapTap extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Double tap someone else's message to quick reply, double tap your own to quick edit";
-        manifest.version = "1.0.4";
+        manifest.version = "1.0.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -127,19 +130,6 @@ public class TapTap extends Plugin {
         final int replyId = Utils.getResId("dialog_chat_actions_reply", "id");
 
         final var chatListActions = new WidgetChatListActions();
-
-        patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class}, new PinePatchFn(callFrame -> {
-            if (!settings.getBool("hideButtons", false)) return;
-            var _this = (WidgetChatListActions) callFrame.thisObject;
-            var rootView = (NestedScrollView) _this.requireView();
-            var layout = (LinearLayout) rootView.getChildAt(0);
-            var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
-            if (isMe(msg)) {
-                layout.findViewById(editId).setVisibility(View.GONE);
-            } else {
-                layout.findViewById(replyId).setVisibility(View.GONE);
-            }
-        }));
 
         patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler", "onMessageClicked", new Class<?>[] { Message.class, boolean.class }, new MethodReplacement() {
             @Override
@@ -160,11 +150,32 @@ public class TapTap extends Plugin {
                             StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
                     }
                     clicks = 0;
-                }, settings.getInt("doubleTapWindow", 200));
+                }, settings.getInt("doubleTapWindow", defaultDelay));
                 busy = false;
                 return null;
             }
         });
+
+        togglePatch = () -> {
+            if (settings.getBool("hideButtons", false)) {
+                if (unpatch == null)
+                    unpatch = patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[]{WidgetChatListActions.Model.class}, new PinePatchFn(callFrame -> {
+                        var _this = (WidgetChatListActions) callFrame.thisObject;
+                        var rootView = (NestedScrollView) _this.requireView();
+                        var layout = (LinearLayout) rootView.getChildAt(0);
+                        var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
+                        if (isMe(msg)) {
+                            layout.findViewById(editId).setVisibility(View.GONE);
+                        } else {
+                            layout.findViewById(replyId).setVisibility(View.GONE);
+                        }
+                    }));
+            } else {
+                if (unpatch != null) unpatch.run();
+                unpatch = null;
+            }
+        };
+        togglePatch.run();
     }
 
     private static boolean isMe(Message msg) {
