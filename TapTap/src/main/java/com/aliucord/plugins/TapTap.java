@@ -86,6 +86,7 @@ public class TapTap extends Plugin {
             params.setMargins(0, Utils.getDefaultPadding(), 0, 0);
             card.setLayoutParams(params);
 
+
             var checkbox = Utils.createCheckedSetting(
                     ctx,
                     CheckedSetting.ViewType.SWITCH,
@@ -109,6 +110,7 @@ public class TapTap extends Plugin {
         settingsTab = new SettingsTab(TapTapSettings.class).withArgs(this);
     }
 
+    private WidgetChatListActions widgetChatListActions;
     private static final Handler handler = new Handler();
     private boolean busy = false;
     private int clicks = 0;
@@ -119,7 +121,7 @@ public class TapTap extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Double tap someone else's message to quick reply, double tap your own to quick edit";
-        manifest.version = "1.0.5";
+        manifest.version = "1.0.6";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -129,7 +131,7 @@ public class TapTap extends Plugin {
         final int editId = Utils.getResId("dialog_chat_actions_edit", "id");
         final int replyId = Utils.getResId("dialog_chat_actions_reply", "id");
 
-        final var chatListActions = new WidgetChatListActions();
+        Utils.mainThread.post(() -> widgetChatListActions = new WidgetChatListActions());
 
         patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler", "onMessageClicked", new Class<?>[] { Message.class, boolean.class }, new MethodReplacement() {
             @Override
@@ -141,9 +143,9 @@ public class TapTap extends Plugin {
                 handler.postDelayed(() -> {
                     if (clicks >= 2) {
                         if (isMe(msg)) {
-                            WidgetChatListActions.access$editMessage(chatListActions, msg);
+                            WidgetChatListActions.access$editMessage(widgetChatListActions, msg);
                         } else {
-                            WidgetChatListActions.access$replyMessage(chatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
+                            WidgetChatListActions.access$replyMessage(widgetChatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
                         }
                     } else {
                         if ((boolean) callFrame.args[1])
