@@ -1,3 +1,4 @@
+include ':Themer'
 include ':ViewProfileImages'
 include ':TapTap'
 include ':MessageLinkEmbeds'
