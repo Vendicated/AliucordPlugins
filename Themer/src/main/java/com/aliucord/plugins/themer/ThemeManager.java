@@ -13,6 +13,8 @@ package com.aliucord.plugins.themer;
 import android.content.Context;
 import android.graphics.Color;
 
+import androidx.appcompat.content.res.AppCompatResources;
+
 import com.aliucord.Constants;
 import com.aliucord.Utils;
 import com.aliucord.api.SettingsAPI;
@@ -24,6 +26,37 @@ import java.io.*;
 import java.util.*;
 
 public class ThemeManager {
+    public static final String[] ACCENT_NAMES = new String[] {
+            "link",
+            "link_light",
+            "brand",
+            "brand_360",
+            "brand_500",
+            "brand_600",
+            "brand_new",
+            "brand_new_360",
+            "brand_new_500",
+            "brand_new_530",
+            "brand_new_560",
+            "brand_new_600"
+    };
+    public static final String[] BACKGROUND_NAMES = new String[] {
+            "dark_grey_2",
+            "primary_600",
+            "primary_660",
+            "primary_800",
+            "primary_dark_600",
+            "primary_dark_630",
+            "primary_dark_800"
+    };
+    public static final String[] BACKGROUND_SECONDARY_NAMES = new String[] {
+            "primary_500",
+            "primary_630",
+            "primary_700",
+            "primary_dark_660",
+            "primary_dark_700"
+    };
+
     public static final class ThemeInfo {
         public final File file;
         public final String name;
@@ -38,8 +71,8 @@ public class ThemeManager {
             settings.setBool(getPrefKey(), true);
         }
 
-        public boolean load() {
-            return loadTheme(this, true);
+        public boolean load(Context ctx) {
+            return loadTheme(ctx, this, true);
         }
 
         public void disable() {
@@ -73,7 +106,7 @@ public class ThemeManager {
             if (file.getName().equals("default.json")) continue;
             var theme = new ThemeInfo(file);
             if (shouldLoad && theme.isEnabled()) {
-                boolean success = loadTheme(theme, shouldRerender);
+                boolean success = loadTheme(ctx, theme, shouldRerender);
                 Utils.showToast(ctx, (success ? "Successfully loaded theme " : "Failed to load theme ") + theme.name);
                 if (!success) continue;
             }
@@ -85,7 +118,7 @@ public class ThemeManager {
     private static final int colorPrefixLength = "color_".length();
     private static final int drawableColorPrefixLength = "drawablecolor_".length();
 
-    public static boolean loadTheme(ThemeInfo theme, boolean shouldRerender) {
+    public static boolean loadTheme(Context ctx, ThemeInfo theme, boolean shouldRerender) {
         int size = Math.toIntExact(theme.file.length());
         var bytes = new byte[size];
         try (var fis = new FileInputStream(theme.file)) {
@@ -100,43 +133,59 @@ public class ThemeManager {
             var json = new JSONObject(new JSONTokener(content));
             var it = json.keys();
 
-            // TODO: -- support active_channel_color: https://github.com/Aliucord/DiscordThemer/blob/7e194cbf9c24e85004287332a8813ce9e395ef82/app/src/main/java/com/aliucord/themer/Main.java#L134-L137
-            // TODO: -- Support accent colours (patch attributes)
-            // TODO: -- Background image ???
-            // TODO: -- Add button to generate theme boilerplate json to make your own themes
-
             activeTheme = new HashMap<>();
+            AttributeManager.activeTheme = new HashMap<>();
 
             while (it.hasNext()) {
                 var key = it.next();
-                if (key.equals("name") || key.equals("author") || key.equalsIgnoreCase("copyright") || key.equalsIgnoreCase("license")) continue;
+                if (key.equals("name") || key.equals("author") || key.equalsIgnoreCase("copyright") || key.equalsIgnoreCase("license") || key.equalsIgnoreCase("licence")) continue;
 
                 var val = json.getInt(key);
+
+                if (AttributeManager.mappings.containsKey(key)) {
+                    AttributeManager.loadAttr(key, val);
+                }
+
                 switch (key) {
+                    case "simple_accent_color":
+                        themeAll(ACCENT_NAMES, val);
+                        AttributeManager.loadAll(AttributeManager.simpleAccentAttrs, val);
+                        tintDrawable(ctx, "ic_nitro_rep", val);
+                        continue;
                     case "simple_bg_color":
-                        themeAll(Themer.BACKGROUND_NAMES, val);
+                        themeAll(BACKGROUND_NAMES, val);
+                        AttributeManager.loadAll(AttributeManager.simpleBackgroundAttrs, val);
                         continue;
                     case "simple_bg_secondary_color":
-                        themeAll(Themer.BACKGROUND_SECONDARY_NAMES, val);
+                        themeAll(BACKGROUND_SECONDARY_NAMES, val);
+                        AttributeManager.loadAll(AttributeManager.simpleBackgroundSecondaryAttrs, val);
                         activeTheme.put("input_background_color", val);
                         activeTheme.put("statusbar_color", val);
-                        // TODO: -- Tint active channels: https://github.com/Aliucord/DiscordThemer/blob/7e194cbf9c24e85004287332a8813ce9e395ef82/app/src/main/java/com/aliucord/themer/Main.java#L134-L137
-                        continue;
-                    case "simple_accent_color":
-                        themeAll(Themer.ACCENT_NAMES, val);
-                        // TODO: -- Fix nitro icon: https://github.com/Aliucord/DiscordThemer/blob/7e194cbf9c24e85004287332a8813ce9e395ef82/app/src/main/java/com/aliucord/themer/Main.java#L130
+                        tintDrawable(ctx, "drawable_overlay_channels_active_dark", val);
+                        tintDrawable(ctx, "drawable_overlay_channels_active_light", val);
                         continue;
                     case "mention_highlight":
-                        activeTheme.put("status_yellow_500", Color.parseColor("#ff" + Integer.toHexString(val).substring(2)));
+                        activeTheme.put("status_yellow_500", getColorWithAlpha("ff", val));
                         continue;
+                    case "active_channel_color":
+                        tintDrawable(ctx, "drawable_overlay_channels_active_dark", val);
+                        tintDrawable(ctx, "drawable_overlay_channels_active_light", val);
+                    case "statusbar_color":
+                    case "input_background_color":
+                        activeTheme.put(key, val);
+                        continue;
+                    case "color_brand_500":
+                        tintDrawable(ctx, "ic_nitro_rep", val);
+                        break;
                 }
+
                 if (key.startsWith("color_")) {
                     activeTheme.put(key.substring(colorPrefixLength), val);
                 } else if (key.startsWith("drawablecolor_")) {
-                    // TODO: -- support drawable_color: https://github.com/Aliucord/DiscordThemer/blob/7e194cbf9c24e85004287332a8813ce9e395ef82/app/src/main/java/com/aliucord/themer/Main.java#L139-L147
-                    Themer.logger.warn("Drawable colors are not supported yet, skipped " + key);
+                    boolean success = tintDrawable(ctx, key.substring(drawableColorPrefixLength), val);
+                    if (!success) Themer.logger.warn("Failed to tint drawable " + key.substring(drawableColorPrefixLength));
                 } else {
-                    Themer.logger.warn("Unrecognized key " + key);
+                    Themer.logger.warn("Unrecognised key " + key);
                 }
             }
         } catch (JSONException ex) {
@@ -153,8 +202,24 @@ public class ThemeManager {
         return activeTheme.get(key);
     }
 
+    public static Integer getColorWithAlpha(String alpha, int color) {
+        return Color.parseColor("#" + alpha + Integer.toHexString(color).substring(2));
+    }
+
     private static void themeAll(String[] colors, int color) {
         for (var name : colors)
             activeTheme.put(name, color);
+    }
+
+    /**
+     * Todo: Find way to undo this once theme is unloaded
+     */
+    private static boolean tintDrawable(Context ctx, String name, int color) {
+        int id = Utils.getResId(name, "drawable");
+        if (id == 0) return false;
+        var drawable = AppCompatResources.getDrawable(ctx, id);
+        var found = drawable != null;
+        if (found) drawable.setTint(color);
+        return found;
     }
 }

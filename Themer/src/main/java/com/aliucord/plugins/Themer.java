@@ -11,8 +11,10 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
 
@@ -22,8 +24,7 @@ import com.aliucord.*;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
-import com.aliucord.plugins.themer.ThemeManager;
-import com.aliucord.plugins.themer.ThemerSettings;
+import com.aliucord.plugins.themer.*;
 import com.discord.utilities.color.ColorCompat;
 import com.google.android.material.textfield.TextInputLayout;
 import com.lytefast.flexinput.R$c;
@@ -35,16 +36,6 @@ import top.canyie.pine.Pine;
 import top.canyie.pine.callback.MethodHook;
 
 public class Themer extends Plugin {
-    public static final String[] ACCENT_NAMES = new String[] {
-            "link", "link_light", "brand", "brand_360", "brand_500", "brand_600", "brand_new", "brand_new_360", "brand_new_500", "brand_new_530", "brand_new_560", "brand_new_600"
-    };
-    public static final String[] BACKGROUND_NAMES = new String[] {
-            "dark_grey_2", "primary_600", "primary_660", "primary_800", "primary_dark_600", "primary_dark_630", "primary_dark_800"
-    };
-    public static final String[] BACKGROUND_SECONDARY_NAMES = new String[] {
-            "primary_500", "primary_630", "primary_700", "primary_dark_660", "primary_dark_700"
-    };
-
     public static final Logger logger = new Logger("Themer");
 
     public Themer() {
@@ -90,13 +81,13 @@ public class Themer extends Plugin {
                 @Override
                 public void afterCall(Pine.CallFrame callFrame) {
                     if (busy) return;
-                    var background = ((View) callFrame.thisObject).getBackground();
+                    var view = (View) callFrame.thisObject;
+                    var background = view.getBackground();
 
                     if (background instanceof ColorDrawable) {
                         int color = ((ColorDrawable) background).getColor();
                         var colorName = colorToName.get(color);
                         if (colorName == null) return;
-                        colorName = colorName.replace("brand_new", "brand"); //this trash
                         var customColor = ThemeManager.getColor(colorName);
                         if (customColor == null) return;
                         busy = true;
@@ -118,6 +109,12 @@ public class Themer extends Plugin {
                 if (customColor != null) callFrame.setResult(customColor);
             }));
 
+            patcher.patch(Resources.Theme.class.getDeclaredMethod("resolveAttribute", int.class, TypedValue.class, boolean.class), new PinePatchFn(callFrame -> {
+                int attr = (int) callFrame.args[0];
+                var color = AttributeManager.getAttr(attr);
+                if (color != null) ((TypedValue) callFrame.args[1]).data = color;
+            }));
+
             patcher.patch(ColorCompat.class.getDeclaredMethod("setStatusBarColor", Window.class, int.class, boolean.class), new PinePrePatchFn(callFrame -> {
                 var color = ThemeManager.getColor("statusbar_color");
                 if (color != null) callFrame.args[1] = color;
@@ -136,6 +133,7 @@ public class Themer extends Plugin {
         patcher.unpatchAll();
         colorToName.clear();
         ThemeManager.activeTheme = null;
+        AttributeManager.activeTheme = null;
         Utils.appActivity.recreate();
     }
 }

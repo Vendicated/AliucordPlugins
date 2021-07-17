@@ -13,12 +13,10 @@ package com.aliucord.plugins.themer;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.View;
 import android.webkit.MimeTypeMap;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -26,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.aliucord.*;
+import com.aliucord.fragments.InputDialog;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.plugins.Themer;
 import com.aliucord.views.Button;
@@ -33,9 +32,6 @@ import com.aliucord.views.Divider;
 import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
 import com.lytefast.flexinput.R$h;
-
-import org.json.JSONObject;
-import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -45,21 +41,21 @@ public class ThemerSettings extends SettingsPage {
 
     public void importTheme(Uri uri, String name) throws Throwable {
         if (!name.endsWith(".json")) name += ".json";
-        try (var is = requireActivity().getContentResolver().openInputStream(uri)) {
-            try (var os = new FileOutputStream(new File(Constants.BASE_PATH, "themes/" + name))) {
-                int n;
-                byte[] buf = new byte[16384]; // 16 KB
-                while ((n = is.read(buf)) > -1) {
-                    os.write(buf, 0, n);
-                }
-                os.flush();
+        try (var is = requireActivity().getContentResolver().openInputStream(uri);
+             var os = new FileOutputStream(new File(Constants.BASE_PATH, "themes/" + name))
+        ) {
+            int n;
+            byte[] buf = new byte[16384]; // 16 KB
+            while ((n = is.read(buf)) > -1) {
+                os.write(buf, 0, n);
             }
-            var ctx = requireContext();
-            Utils.showToast(ctx, "Successfully imported theme " + name);
-            ThemeManager.themes.clear();
-            ThemeManager.loadThemes(ctx, false, false);
-            reRender();
+            os.flush();
         }
+        var ctx = requireContext();
+        Utils.showToast(ctx, "Successfully imported theme " + name);
+        ThemeManager.themes.clear();
+        ThemeManager.loadThemes(ctx, false, false);
+        reRender();
     }
 
     @SuppressLint("SetTextI18n")
@@ -77,28 +73,25 @@ public class ThemerSettings extends SettingsPage {
                         var data = res.getData();
                         if (data == null) return;
                         var contentUri = data.getData();
-
-                        try (var is = act.getContentResolver().openInputStream(contentUri)) {
-                            var json = new JSONObject(new JSONTokener(new String(Utils.readBytes(is))));
-                            if (json.has("name")) importTheme(contentUri, json.getString("name"));
-                            else if (contentUri.toString().endsWith(".json")) importTheme(contentUri, contentUri.getLastPathSegment());
+                        try {
+                            if (contentUri.toString().endsWith(".json")) importTheme(contentUri, new File(contentUri.getPath()).getName());
                             else {
-                                var input = new EditText(ctx);
-                                var db = new AlertDialog.Builder(ctx)
-                                        .setTitle("Please specify a name for this theme")
-                                        .setView(input)
-                                        .setPositiveButton("OK", (dialog, which) -> {
-                                            var text = input.getText().toString();
-                                            if (text.length() > 0) {
-                                                try {
-                                                    importTheme(contentUri, text);
-                                                } catch (Throwable ex) {
-                                                    Themer.logger.error(requireContext(), "Failed to import theme.", ex);
-                                                }
-                                            }
-                                        }).setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
-                                db.show();
+                                var dialog = new InputDialog()
+                                        .setPlaceholderText("Filename")
+                                        .setTitle("Filename")
+                                        .setDescription("Please specify a name for this theme");
+                                dialog.setOnOkListener(e -> {
+                                    var text = dialog.getInput();
+                                    if (text.length() > 0) {
+                                        try {
+                                            importTheme(contentUri, text);
+                                        } catch (Throwable ex) {
+                                            Themer.logger.error(requireContext(), "Failed to import theme.", ex);
+                                        }
+                                        dialog.dismiss();
+                                    }
+                                });
+                                dialog.show(getParentFragmentManager(), "Themer");
                             }
                         } catch (Throwable ex) {
                             Themer.logger.error(requireContext(), "Failed to import theme.", ex);
@@ -168,7 +161,7 @@ public class ThemerSettings extends SettingsPage {
                 final int idx = i;
                 item.e(e -> {
                     if (manager.b() != idx) {
-                        if (theme.load()) {
+                        if (theme.load(ctx)) {
                             theme.enable();
                             manager.a(item);
                             requireActivity().onBackPressed();
