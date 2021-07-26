@@ -36,6 +36,7 @@ import com.discord.databinding.WidgetSettingsBinding;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.settings.WidgetSettings;
 import com.lytefast.flexinput.*;
+import com.yalantis.ucrop.R$c;
 
 import java.util.*;
 
@@ -44,18 +45,28 @@ public class DedicatedPluginSettings extends Plugin {
     private static final Map<String, Integer> drawableIds = new HashMap<>() {{
         put("fallback", R$d.ic_slash_command_24dp);
 
-        // Ven
-        put("TapTap", R$d.ic_raised_hand_action_24dp);
-        put("Themer", R$d.ic_theme_24dp);
-        put("Hastebin", R$d.ic_link_white_24dp);
-        put("ImageUploader", R$d.ic_uploads_image_dark);
+        try {
+            // Ven
+            put("TapTap", R$d.ic_raised_hand_action_24dp);
+            put("Themer", R$d.ic_theme_24dp);
+            put("Hastebin", R$d.ic_link_white_24dp);
+            put("ImageUploader", R$d.ic_uploads_image_dark);
 
-        // Juby
-        put("UserDetails", R$d.ic_my_account_24dp);
-        put("PronounDB", R$d.ic_accessibility_24dp);
+            // Juby
+            put("UserDetails", R$d.ic_my_account_24dp);
+            put("PronounDB", R$d.ic_accessibility_24dp);
+            put("CustomTimestamps", R$d.ic_clock_black_24dp);
+            put("CustomNicknameFormat", R$d.ic_account_circle_white_24dp);
+
+            // Moth
+            put("RotatedChat", R$c.ucrop_rotate); // This is from https://github.com/Yalantis/uCrop lmao
+
+            // Xinto
+            put("HideBloat", R$d.design_ic_visibility_off);
+        } catch (Throwable th) { logger.error("Failed to retrieve some drawables", th); }
     }};
 
-    private final Logger logger = new Logger(this.getClass().getSimpleName());
+    private static final Logger logger = new Logger("DedicatedPluginSettings");
 
     @NonNull
     @Override
@@ -63,7 +74,7 @@ public class DedicatedPluginSettings extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds a dedicated plugin settings category to the settings page";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -124,8 +135,7 @@ public class DedicatedPluginSettings extends Plugin {
 
             int i = 2;
             var plugins = PluginManager.plugins.values();
-            for (var p : PluginManager.plugins.values()) {
-                if (p.settingsTab == null) continue;
+            for (var p : PluginManager.plugins.values()) if (p.settingsTab != null) {
                 int hashcode = p.name.hashCode();
                 if (layout.findViewById(hashcode) == null) {
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
@@ -134,7 +144,14 @@ public class DedicatedPluginSettings extends Plugin {
                     view.setTypeface(font);
 
                     var icon = drawables.get(p.name);
-                    if (icon == null) icon = Objects.requireNonNull(drawables.get("fallback"), "Fallback icon was somehow null");
+                    if (icon == null) {
+                        try {
+                            var iconField = p.getClass().getDeclaredField("pluginIcon");
+                            iconField.setAccessible(true);
+                            icon = (Drawable) iconField.get(p);
+                        } catch (Throwable ignored) { }
+                        if (icon == null) icon = Objects.requireNonNull(drawables.get("fallback"), "Fallback icon was somehow null");
+                    }
                     icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
                     view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
 
