@@ -9,7 +9,7 @@ Adds a dedicated plugin settings category in the settings page right below Aliuc
 
 If you would like to submit an icon for your plugin (Must be a discord drawable), please just dm me on Discord or something.
 
-Alternatively, you may declare a field of type Drawable `pluginIcon` on your plugin and that will be used, e.g.:
+Alternatively, you may declare a field `pluginIcon` of type Drawable on your plugin and that will be used, e.g.:
 
 ```java
 public class DedicatedPluginSettings extends Plugin {
