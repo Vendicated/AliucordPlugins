@@ -27,7 +27,6 @@ import androidx.fragment.app.FragmentManager;
 
 import com.aliucord.*;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.Patcher;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.utils.ReflectUtils;
 import com.aliucord.views.Divider;
@@ -67,6 +66,7 @@ public class DedicatedPluginSettings extends Plugin {
     }};
 
     private static final Logger logger = new Logger("DedicatedPluginSettings");
+    private final int id = View.generateViewId();
 
     @NonNull
     @Override
@@ -74,7 +74,7 @@ public class DedicatedPluginSettings extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds a dedicated plugin settings category to the settings page";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -100,12 +100,10 @@ public class DedicatedPluginSettings extends Plugin {
             }
         }};
 
-        final int id = View.generateViewId();
-
         final var getBinding = WidgetSettings.class.getDeclaredMethod("getBinding");
         getBinding.setAccessible(true);
 
-        Patcher.addPatch(WidgetSettings.class.getDeclaredMethod("configureUI", WidgetSettings.Model.class), new PinePatchFn(callFrame -> {
+        patcher.patch(WidgetSettings.class.getDeclaredMethod("configureUI", WidgetSettings.Model.class), new PinePatchFn(callFrame -> {
             var widgetSettings = (WidgetSettings) callFrame.thisObject;
             WidgetSettingsBinding binding;
             try {
@@ -135,7 +133,7 @@ public class DedicatedPluginSettings extends Plugin {
 
             int i = 2;
             var plugins = PluginManager.plugins.values();
-            for (var p : PluginManager.plugins.values()) if (p.settingsTab != null) {
+            for (var p : PluginManager.plugins.values()) if (p.settingsTab != null && PluginManager.isPluginEnabled(p.name)) {
                 int hashcode = p.name.hashCode();
                 if (layout.findViewById(hashcode) == null) {
                     var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
@@ -152,6 +150,7 @@ public class DedicatedPluginSettings extends Plugin {
                         } catch (Throwable ignored) { }
                         if (icon == null) icon = Objects.requireNonNull(drawables.get("fallback"), "Fallback icon was somehow null");
                     }
+                    icon = icon.mutate();
                     icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
                     view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
 
