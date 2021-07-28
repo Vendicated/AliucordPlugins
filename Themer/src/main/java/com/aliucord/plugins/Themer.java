@@ -14,11 +14,14 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 
 import com.aliucord.*;
 import com.aliucord.entities.Plugin;
@@ -50,7 +53,7 @@ public class Themer extends Plugin {
                 new Manifest.Author("Vendicated", 343383572805058560L),
                 new Manifest.Author("AAGaming", 373833473091436546L),
         };
-        manifest.description = "Custom themes.";
+        manifest.description = "Adds support for custom themes & fonts";
         manifest.version = "1.0.0";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
@@ -90,12 +93,27 @@ public class Themer extends Plugin {
                         if (colorName == null) return;
                         var customColor = ThemeManager.getColor(colorName);
                         if (customColor == null) return;
-                        busy = true;
+                        busy = true; // prevent infinite loop
                         ((View) callFrame.thisObject).setBackground(new ColorDrawable(customColor));
                         busy = false;
                     }
+
+                    if (ThemeManager.font != null && view instanceof TextView) {
+                        ((TextView) view).setTypeface(ThemeManager.font);
+                    }
                 }
             };
+
+            MethodHook fontHook = new MethodHook() {
+                @Override public void beforeCall(Pine.CallFrame callFrame) {
+                    if (ThemeManager.font != null) callFrame.setResult(ThemeManager.font);
+                }
+            };
+
+             // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
+            patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class), fontHook);
+            patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, ResourcesCompat.FontCallback.class, Handler.class), fontHook);
+            patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, TypedValue.class, int.class, ResourcesCompat.FontCallback.class), fontHook);
 
             patcher.patch(View.class.getDeclaredMethod("onFinishInflate"), viewHook);
             patcher.patch(View.class.getDeclaredMethod("setBackground", Drawable.class), viewHook);

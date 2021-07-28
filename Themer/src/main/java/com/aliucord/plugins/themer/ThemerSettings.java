@@ -36,13 +36,20 @@ import com.lytefast.flexinput.R$h;
 import java.io.File;
 import java.io.FileOutputStream;
 
-public class ThemerSettings extends SettingsPage {
-    private ActivityResultLauncher<Intent> launcher;
+import kotlin.jvm.functions.Function1;
 
-    public void importTheme(Uri uri, String name) throws Throwable {
-        if (!name.endsWith(".json")) name += ".json";
+public class ThemerSettings extends SettingsPage {
+    private static final String THEME = "theme";
+    private static final String FONT = "font";
+
+    private ActivityResultLauncher<Intent> launcher;
+    private String intentType;
+
+    private File importComponent(Uri uri, String name, String ext) throws Throwable {
+        if (!name.endsWith(ext)) name += ext;
+        var file = new File(Constants.BASE_PATH, "themes/" + name);
         try (var is = requireActivity().getContentResolver().openInputStream(uri);
-             var os = new FileOutputStream(new File(Constants.BASE_PATH, "themes/" + name))
+             var os = new FileOutputStream(file)
         ) {
             int n;
             byte[] buf = new byte[16384]; // 16 KB
@@ -51,11 +58,15 @@ public class ThemerSettings extends SettingsPage {
             }
             os.flush();
         }
-        var ctx = requireContext();
-        Utils.showToast(ctx, "Successfully imported theme " + name);
-        ThemeManager.themes.clear();
-        ThemeManager.loadThemes(ctx, false, false);
-        reRender();
+        return file;
+    }
+
+    private void handleImport(String ext, String kind) {
+        var type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+        var intent = new Intent(Intent.ACTION_GET_CONTENT).setType(type);
+        intent = Intent.createChooser(intent, "Choose a file");
+        intentType = kind;
+        launcher.launch(intent);
     }
 
     @SuppressLint("SetTextI18n")
@@ -69,32 +80,45 @@ public class ThemerSettings extends SettingsPage {
             launcher = act.registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 res -> {
-                    if (res.getResultCode() == Activity.RESULT_OK) {
+                    if (res.getResultCode() == Activity.RESULT_OK && res.getData() != null) {
                         var data = res.getData();
-                        if (data == null) return;
                         var contentUri = data.getData();
-                        try {
-                            if (contentUri.toString().endsWith(".json")) importTheme(contentUri, new File(contentUri.getPath()).getName());
-                            else {
-                                var dialog = new InputDialog()
-                                        .setPlaceholderText("Filename")
-                                        .setTitle("Filename")
-                                        .setDescription("Please specify a name for this theme");
-                                dialog.setOnOkListener(e -> {
-                                    var text = dialog.getInput();
-                                    if (text.length() > 0) {
-                                        try {
-                                            importTheme(contentUri, text);
-                                        } catch (Throwable ex) {
-                                            Themer.logger.error(requireContext(), "Failed to import theme.", ex);
-                                        }
-                                        dialog.dismiss();
-                                    }
-                                });
-                                dialog.show(getParentFragmentManager(), "Themer");
+
+                        var isFont = intentType.equals(FONT);
+                        var ext = isFont ? ".ttf" : ".json";
+
+                        Function1<String, Object> doImport = name -> {
+                            try {
+                                var file = importComponent(contentUri, name, ext);
+                                Utils.showToast(ctx, "Successfully imported " + intentType);
+                                if (!isFont)         {
+                                    ThemeManager.themes.clear();
+                                    ThemeManager.loadThemes(ctx, false, false);
+                                } else {
+                                    ThemeManager.settings.setString("font", file.getAbsolutePath());
+                                    ThemeManager.loadFont(file, true);
+                                }
+                                reRender();
+                            } catch (Throwable th) {
+                                Themer.logger.error(ctx, "Failed to import " + intentType, th);
                             }
-                        } catch (Throwable ex) {
-                            Themer.logger.error(requireContext(), "Failed to import theme.", ex);
+                            return null;
+                        };
+
+                        if (contentUri.toString().endsWith(ext)) doImport.invoke(new File(contentUri.getPath()).getName());
+                        else {
+                            var dialog = new InputDialog()
+                                    .setPlaceholderText("Filename")
+                                    .setTitle("Filename")
+                                    .setDescription("Please specify a name for this " + (isFont ? "Font" : "Theme"));
+                            dialog.setOnOkListener(e -> {
+                                var text = dialog.getInput();
+                                if (text.length() > 0) {
+                                    doImport.invoke(text);
+                                    dialog.dismiss();
+                                }
+                            });
+                            dialog.show(getParentFragmentManager(), "Themer");
                         }
                     }
                 }
@@ -102,14 +126,13 @@ public class ThemerSettings extends SettingsPage {
 
         setActionBarTitle("Themer");
 
+        var fontBtn = new Button(ctx);
+        fontBtn.setText("Choose font");
+        fontBtn.setOnClickListener(e -> handleImport("ttf", FONT));
+
         var importBtn = new Button(ctx);
         importBtn.setText("Import theme");
-        importBtn.setOnClickListener(e -> {
-            var type = MimeTypeMap.getSingleton().getMimeTypeFromExtension("json");
-            var intent = new Intent(Intent.ACTION_GET_CONTENT).setType(type);
-            intent = Intent.createChooser(intent, "Choose a json file");
-            launcher.launch(intent);
-        });
+        importBtn.setOnClickListener(e -> handleImport("json", THEME));
 
         var refreshBtn = new Button(ctx);
         refreshBtn.setText("Load missing themes");
@@ -119,6 +142,7 @@ public class ThemerSettings extends SettingsPage {
             reRender();
         });
 
+        addView(fontBtn);
         addView(importBtn);
         addView(refreshBtn);
         addView(new Divider(ctx));

@@ -12,6 +12,7 @@ package com.aliucord.plugins.themer;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.Typeface;
 
 import androidx.appcompat.content.res.AppCompatResources;
 
@@ -89,6 +90,7 @@ public class ThemeManager {
     }
 
 
+    public static Typeface font;
     public static final List<ThemeInfo> themes = new ArrayList<>();
     public static SettingsAPI settings;
 
@@ -96,6 +98,15 @@ public class ThemeManager {
 
     public static void init(Context ctx, SettingsAPI sets, boolean shouldRerender) {
         settings = sets;
+        var fontPath = sets.getString("font", null);
+        if (fontPath != null) {
+            var file = new File(fontPath);
+            if (file.exists()) loadFont(file, shouldRerender);
+            else {
+                Themer.logger.warn("No such font: " + fontPath);
+                sets.setString("font", null);
+            }
+        }
         loadThemes(ctx, true, shouldRerender);
     }
 
@@ -103,7 +114,7 @@ public class ThemeManager {
         var files = new File(Constants.BASE_PATH, "themes").listFiles();
         if (files == null) return;
         for (var file : files) {
-            if (file.getName().equals("default.json")) continue;
+            if (file.getName().equals("default.json") || !file.getName().endsWith(".json")) continue;
             var theme = new ThemeInfo(file);
             if (shouldLoad && theme.isEnabled()) {
                 boolean success = loadTheme(ctx, theme, shouldRerender);
@@ -117,6 +128,21 @@ public class ThemeManager {
 
     private static final int colorPrefixLength = "color_".length();
     private static final int drawableColorPrefixLength = "drawablecolor_".length();
+
+    public static boolean loadFont(File file, boolean shouldRerender) {
+        int size = Math.toIntExact(file.length());
+        var bytes = new byte[size];
+        try (var fis = new FileInputStream(file)) {
+            fis.read(bytes);
+        } catch (IOException ex) {
+            Themer.logger.error("Failed to load font " + file, ex);
+            return false;
+        }
+
+        font = Typeface.createFromFile(file);
+        if (shouldRerender) Utils.appActivity.recreate();
+        return true;
+    }
 
     public static boolean loadTheme(Context ctx, ThemeInfo theme, boolean shouldRerender) {
         int size = Math.toIntExact(theme.file.length());
