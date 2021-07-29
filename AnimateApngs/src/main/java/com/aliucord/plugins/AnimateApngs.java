@@ -34,14 +34,17 @@ public class AnimateApngs extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Makes apngs embeds animate properly";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
     private void initApng(ImageView view, String mediaUrl, Integer w, Integer h) {
-        // media server serves them as regular pngs, only cdn serves actual apngs
-        final var url = mediaUrl.replace("media.discordapp.net", "cdn.discordapp.com");
+        final var url = mediaUrl
+                // Strip proxy but only if they're discord domains
+                .replaceFirst("https://images-ext-1\\.discordapp.net/external/.*?/https/(media|cdn)\\.discordapp\\.(net|com)", "https://cdn.discordapp.com")
+                // media server serves them as regular pngs, only cdn serves actual apngs
+                .replace("media.discordapp.net", "cdn.discordapp.com");
 
         Utils.threadPool.execute(() -> {
             try (var is = new Http.Request(url).execute().stream()){
