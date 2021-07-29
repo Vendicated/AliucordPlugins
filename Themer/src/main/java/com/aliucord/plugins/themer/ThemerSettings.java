@@ -185,7 +185,7 @@ public class ThemerSettings extends SettingsPage {
                 final int idx = i;
                 item.e(e -> {
                     if (manager.b() != idx) {
-                        if (theme.load(ctx)) {
+                        if (theme.load()) {
                             theme.enable();
                             manager.a(item);
                             requireActivity().onBackPressed();

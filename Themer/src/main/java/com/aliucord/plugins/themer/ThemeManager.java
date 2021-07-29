@@ -14,8 +14,6 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 
-import androidx.appcompat.content.res.AppCompatResources;
-
 import com.aliucord.Constants;
 import com.aliucord.Utils;
 import com.aliucord.api.SettingsAPI;
@@ -72,8 +70,8 @@ public class ThemeManager {
             settings.setBool(getPrefKey(), true);
         }
 
-        public boolean load(Context ctx) {
-            return loadTheme(ctx, this, true);
+        public boolean load() {
+            return loadTheme(this, true);
         }
 
         public void disable() {
@@ -94,7 +92,8 @@ public class ThemeManager {
     public static final List<ThemeInfo> themes = new ArrayList<>();
     public static SettingsAPI settings;
 
-    public static Map<String, Integer> activeTheme = new HashMap<>();
+    public static Map<String, Integer> activeTheme;
+    public static Map<Integer, Integer> drawableTints;
 
     public static void init(Context ctx, SettingsAPI sets, boolean shouldRerender) {
         settings = sets;
@@ -117,7 +116,7 @@ public class ThemeManager {
             if (file.getName().equals("default.json") || !file.getName().endsWith(".json")) continue;
             var theme = new ThemeInfo(file);
             if (shouldLoad && theme.isEnabled()) {
-                boolean success = loadTheme(ctx, theme, shouldRerender);
+                boolean success = loadTheme(theme, shouldRerender);
                 Utils.showToast(ctx, (success ? "Successfully loaded theme " : "Failed to load theme ") + theme.name);
                 if (!success) continue;
             }
@@ -144,7 +143,7 @@ public class ThemeManager {
         return true;
     }
 
-    public static boolean loadTheme(Context ctx, ThemeInfo theme, boolean shouldRerender) {
+    public static boolean loadTheme(ThemeInfo theme, boolean shouldRerender) {
         int size = Math.toIntExact(theme.file.length());
         var bytes = new byte[size];
         try (var fis = new FileInputStream(theme.file)) {
@@ -160,6 +159,7 @@ public class ThemeManager {
             var it = json.keys();
 
             activeTheme = new HashMap<>();
+            drawableTints = new HashMap<>();
             AttributeManager.activeTheme = new HashMap<>();
 
             while (it.hasNext()) {
@@ -176,7 +176,7 @@ public class ThemeManager {
                     case "simple_accent_color":
                         themeAll(ACCENT_NAMES, val);
                         AttributeManager.loadAll(AttributeManager.simpleAccentAttrs, val);
-                        tintDrawable(ctx, "ic_nitro_rep", val);
+                        tintDrawable("ic_nitro_rep", val);
                         continue;
                     case "simple_bg_color":
                         themeAll(BACKGROUND_NAMES, val);
@@ -187,28 +187,28 @@ public class ThemeManager {
                         AttributeManager.loadAll(AttributeManager.simpleBackgroundSecondaryAttrs, val);
                         activeTheme.put("input_background_color", val);
                         activeTheme.put("statusbar_color", val);
-                        tintDrawable(ctx, "drawable_overlay_channels_active_dark", val);
-                        tintDrawable(ctx, "drawable_overlay_channels_active_light", val);
+                        tintDrawable("drawable_overlay_channels_active_dark", val);
+                        tintDrawable("drawable_overlay_channels_active_light", val);
                         continue;
                     case "mention_highlight":
                         activeTheme.put("status_yellow_500", getColorWithAlpha("ff", val));
                         continue;
                     case "active_channel_color":
-                        tintDrawable(ctx, "drawable_overlay_channels_active_dark", val);
-                        tintDrawable(ctx, "drawable_overlay_channels_active_light", val);
+                        tintDrawable("drawable_overlay_channels_active_dark", val);
+                        tintDrawable("drawable_overlay_channels_active_light", val);
                     case "statusbar_color":
                     case "input_background_color":
                         activeTheme.put(key, val);
                         continue;
                     case "color_brand_500":
-                        tintDrawable(ctx, "ic_nitro_rep", val);
+                        tintDrawable("ic_nitro_rep", val);
                         break;
                 }
 
                 if (key.startsWith("color_")) {
                     activeTheme.put(key.substring(colorPrefixLength), val);
                 } else if (key.startsWith("drawablecolor_")) {
-                    boolean success = tintDrawable(ctx, key.substring(drawableColorPrefixLength), val);
+                    boolean success = tintDrawable(key.substring(drawableColorPrefixLength), val);
                     if (!success) Themer.logger.warn("Failed to tint drawable " + key.substring(drawableColorPrefixLength));
                 } else {
                     Themer.logger.warn("Unrecognised key " + key);
@@ -228,6 +228,11 @@ public class ThemeManager {
         return activeTheme.get(key);
     }
 
+    public static Integer getTint(int key) {
+        if (drawableTints == null) return null;
+        return drawableTints.get(key);
+    }
+
     public static Integer getColorWithAlpha(String alpha, int color) {
         return Color.parseColor("#" + alpha + Integer.toHexString(color).substring(2));
     }
@@ -237,15 +242,10 @@ public class ThemeManager {
             activeTheme.put(name, color);
     }
 
-    /**
-     * Todo: Find way to undo this once theme is unloaded
-     */
-    private static boolean tintDrawable(Context ctx, String name, int color) {
+    private static boolean tintDrawable(String name, int color) {
         int id = Utils.getResId(name, "drawable");
         if (id == 0) return false;
-        var drawable = AppCompatResources.getDrawable(ctx, id);
-        var found = drawable != null;
-        if (found) drawable.setTint(color);
-        return found;
+        drawableTints.put(id, color);
+        return true;
     }
 }

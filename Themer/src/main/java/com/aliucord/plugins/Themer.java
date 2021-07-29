@@ -122,9 +122,17 @@ public class Themer extends Plugin {
                 int ret = (int) callFrame.getResult();
                 var colorName = colorToName.get(ret);
                 if (colorName == null) return;
-                colorName = colorName.replace("brand_new", "brand"); // this trash
+                // colorName = colorName.replace("brand_new", "brand");
                 var customColor = ThemeManager.getColor(colorName);
-                if (customColor != null) callFrame.setResult(customColor);
+                if (customColor != null || (customColor = AttributeManager.getAttr((int) callFrame.args[1])) != null) callFrame.setResult(customColor);
+            }));
+
+            patcher.patch(Resources.class.getDeclaredMethod("getDrawableForDensity", int.class, int.class, Resources.Theme.class), new PinePatchFn(callFrame -> {
+                var drawable = (Drawable) callFrame.getResult();
+                if (drawable != null) {
+                    var color = ThemeManager.getTint((int) callFrame.args[0]);
+                    if (color != null) drawable.setTint(color);
+                }
             }));
 
             patcher.patch(Resources.Theme.class.getDeclaredMethod("resolveAttribute", int.class, TypedValue.class, boolean.class), new PinePatchFn(callFrame -> {
@@ -151,6 +159,8 @@ public class Themer extends Plugin {
         patcher.unpatchAll();
         colorToName.clear();
         ThemeManager.activeTheme = null;
+        ThemeManager.font = null;
+        ThemeManager.drawableTints = null;
         AttributeManager.activeTheme = null;
         Utils.appActivity.recreate();
     }

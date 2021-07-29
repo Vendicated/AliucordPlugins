@@ -75,6 +75,7 @@ public class AttributeManager {
         for (var attr : names)
             setAttr(attr, color);
     }
+
     public static void setAttr(String attr, int color) {
         int id = Utils.getResId(attr, "attr");
         if (id == 0)
