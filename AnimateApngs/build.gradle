@@ -1,0 +1,31 @@
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    compileSdkVersion sdkVer
+
+    defaultConfig {
+        minSdkVersion minSdkVer
+        targetSdkVersion sdkVer
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+}
+
+dependencies {
+    implementation "androidx.appcompat:appcompat:$appCompatVer"
+
+    implementation project(':Aliucord')
+    implementation 'androidx.cardview:cardview:1.0.0'
+}
