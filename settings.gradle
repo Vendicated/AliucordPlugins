@@ -1,3 +1,4 @@
+include ':AnimateApngs'
 include ':DedicatedPluginSettings'
 include ':Themer'
 include ':ViewProfileImages'
