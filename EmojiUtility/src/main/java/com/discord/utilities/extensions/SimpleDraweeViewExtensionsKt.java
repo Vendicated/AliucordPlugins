@@ -16,5 +16,17 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import kotlin.jvm.functions.Function1;
 
 public class SimpleDraweeViewExtensionsKt {
-    public static void setGuildIcon$default(SimpleDraweeView simpleDraweeView, boolean z2, Guild guild, float f, Integer num, Integer num2, Integer num3, Float f2, boolean z3, Function1 function1, int i, Object obj) { }
+    public static void setGuildIcon(
+            SimpleDraweeView simpleDraweeView,
+            boolean dontRoundAsCircle,
+            Guild guild,
+            float cornerRadius,
+            Integer size,
+            Integer color,
+            Integer num3,
+            Float borderWidth,
+            boolean animated,
+            Function1 function1
+    ) { }
+    //         MGImages.setRoundingParams(simpleDraweeView, f, !z2, num2, num3, f2);
 }

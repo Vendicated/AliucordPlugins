@@ -45,7 +45,9 @@ public class Commands {
             contentField.setAccessible(true);
         } catch (Throwable th) { throw new RuntimeException(th); }
     }
+
     public static void registerAll(CommandsAPI api) {
+        api.unregisterAll();
         registerDownload(api);
     }
 
@@ -73,7 +75,6 @@ public class Commands {
                 id,
                 clock
         );
-        Class<Message> c = Message.class;
         try {
             flagsField.set(msg, MessageFlags.EPHEMERAL);
             typeField.set(msg, MessageTypes.LOCAL);

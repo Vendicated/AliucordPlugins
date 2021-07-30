@@ -16,8 +16,7 @@ import androidx.annotation.NonNull;
 
 import com.aliucord.Logger;
 import com.aliucord.entities.Plugin;
-import com.aliucord.plugins.emojiutil.Commands;
-import com.aliucord.plugins.emojiutil.Patches;
+import com.aliucord.plugins.emojiutil.*;
 
 @SuppressWarnings("unused")
 public class EmojiUtility extends Plugin {
@@ -34,10 +33,13 @@ public class EmojiUtility extends Plugin {
         return manifest;
     }
 
+    public EmojiUtility() {
+        settingsTab = new SettingsTab(Settings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(settings, patcher, commands);
+    }
+
     @Override
     public void start(Context ctx) throws Throwable {
-        Patches.patchEmojiModal(ctx, patcher);
-        Patches.patchEmojiPicker(patcher);
+        Patches.init(ctx, settings, patcher);
         Commands.registerAll(commands);
     }
 

@@ -10,6 +10,7 @@
 
 package com.aliucord.plugins.emojiutil;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.os.Environment;
 import android.util.Pair;
@@ -17,10 +18,12 @@ import android.util.Pair;
 import com.aliucord.Http;
 import com.aliucord.Utils;
 import com.aliucord.plugins.EmojiUtility;
+import com.aliucord.views.Button;
 import com.aliucord.wrappers.GuildEmojiWrapper;
 import com.discord.api.emoji.GuildEmoji;
 import com.discord.models.guild.Guild;
 import com.discord.stores.StoreStream;
+import com.lytefast.flexinput.R$c;
 
 import java.io.*;
 import java.util.*;
@@ -41,12 +44,33 @@ public class EmojiDownloader {
         return new Pair<>(fileName, url);
     }
 
+    @SuppressLint("SetTextI18n")
+    public static void configureSaveButton(Context ctx, Button btn, String filename, long id, boolean animated) {
+        Runnable callSelf = () -> configureSaveButton(ctx, btn, filename, id, animated);
+        var file = new File(EmojiDownloader.getEmojiFolder(), filename);
+        var downloaded = file.exists();
+        if (downloaded) {
+            btn.setText("Remove saved Emoji");
+            btn.setBackgroundColor(ctx.getColor(R$c.uikit_btn_bg_color_selector_red));
+            btn.setOnClickListener(v -> {
+                if (file.delete())
+                    callSelf.run();
+                else
+                    Utils.showToast(v.getContext(), "Failed to delete emoji :(");
+            });
+        } else {
+            btn.setText("Save Emoji");
+            btn.setBackgroundColor(ctx.getColor(R$c.uikit_btn_bg_color_selector_brand));
+            btn.setOnClickListener(v -> downloadSingle(ctx, id, animated, callSelf));
+        }
+    }
+
     private static final String[] messages = { "Done!", "Already downloaded", "Something went wrong, sorry :(" };
 
     public static void downloadSingle(Context ctx, long id, boolean animated, Runnable cb) {
         Utils.threadPool.execute(() -> {
             int res = downloadSingle(id, animated);
-            Utils.showToast(ctx, messages[res]);
+            if (res != 0) Utils.showToast(ctx, messages[res]);
             cb.run();
         });
     }
@@ -68,8 +92,7 @@ public class EmojiDownloader {
         var values = StoreStream.getGuilds().getGuilds().values();
         var it = values.iterator();
         int size = values.size();
-        int i = 0;
-        for ( ; it.hasNext(); i++) {
+        for (int i = 0; it.hasNext(); i++) {
             var guild = it.next();
             onNext.invoke(guild.getName(), String.format("%s/%s", i + 1, size), guild.getEmojis().size(), result);
             var ret = downloadFromGuild(guild);

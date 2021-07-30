@@ -19,8 +19,10 @@ import android.widget.LinearLayout;
 
 import com.aliucord.Utils;
 import com.aliucord.api.PatcherAPI;
+import com.aliucord.api.SettingsAPI;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
+import com.aliucord.plugins.emojiutil.clonemodal.Modal;
 import com.aliucord.views.Button;
 import com.discord.app.AppBottomSheet;
 import com.discord.databinding.WidgetEmojiSheetBinding;
@@ -30,18 +32,46 @@ import com.discord.utilities.textprocessing.node.EmojiNode;
 import com.discord.widgets.chat.input.emoji.*;
 import com.discord.widgets.chat.list.actions.*;
 import com.discord.widgets.emoji.WidgetEmojiSheet;
-import com.lytefast.flexinput.R$c;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
+import kotlin.jvm.functions.Function1;
 import top.canyie.pine.Pine;
 import top.canyie.pine.callback.MethodHook;
 
 @SuppressWarnings({"UnusedReturnValue", "JavaReflectionMemberAccess"})
 public class Patches {
+    private static Runnable extraButtonsUnhook;
+    private static Runnable keepOpenUnhook;
+    private static Runnable hideUnusableUnhook;
+
+    public static void init(Context ctx, SettingsAPI settings, PatcherAPI patcher) throws Throwable {
+        if (settings.getBool("extraButtons", true)) {
+            if (extraButtonsUnhook == null) extraButtonsUnhook = emojiModalExtraButtons(ctx, patcher);
+        } else if (extraButtonsUnhook != null) {
+            extraButtonsUnhook.run();
+            extraButtonsUnhook = null;
+        }
+
+        if (settings.getBool("keepOpen", true)) {
+            if (keepOpenUnhook == null) keepOpenUnhook = keepEmojiPickerOpen(patcher);
+        } else if (keepOpenUnhook != null) {
+            keepOpenUnhook.run();
+            keepOpenUnhook = null;
+        }
+
+        if (settings.getBool("hideUnusable", true)) {
+            if (hideUnusableUnhook == null) hideUnusableUnhook = hideUnusableEmojis(patcher);
+        } else if (hideUnusableUnhook != null) {
+            hideUnusableUnhook.run();
+            hideUnusableUnhook = null;
+        }
+    }
+
     @SuppressLint("SetTextI18n")
-    public static void patchEmojiModal(Context ctx, PatcherAPI patcher) throws Throwable {
+    public static Runnable emojiModalExtraButtons(Context ctx, PatcherAPI patcher) throws Throwable {
         final int layoutId = View.generateViewId();
         var clipboard = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
 
@@ -50,7 +80,7 @@ public class Patches {
         var getBinding = WidgetEmojiSheet.class.getDeclaredMethod("getBinding");
         getBinding.setAccessible(true);
 
-        patcher.patch(WidgetEmojiSheet.class.getDeclaredMethod("configureButtons", boolean.class, boolean.class, Guild.class), new MethodHook() {
+        return patcher.patch(WidgetEmojiSheet.class.getDeclaredMethod("configureButtons", boolean.class, boolean.class, Guild.class), new MethodHook() {
             @Override
             public void afterCall(Pine.CallFrame callFrame) throws Throwable {
                 super.afterCall(callFrame);
@@ -91,20 +121,11 @@ public class Patches {
                 });
 
                 var saveButton = new Button(ctx);
-                Runnable initSaveButton = () -> {
-                    if (new File(EmojiDownloader.getEmojiFolder(), fileName).exists()) {
-                        saveButton.setText("Emoji saved");
-                        saveButton.setBackgroundColor(ctx.getColor(R$c.uikit_btn_bg_color_selector_red));
-                    } else {
-                        saveButton.setText("Save Emoji");
-                    }
-                };
-                initSaveButton.run();
-                saveButton.setOnClickListener(v -> EmojiDownloader.downloadSingle(ctx, id, animated, initSaveButton));
+                EmojiDownloader.configureSaveButton(ctx, saveButton, fileName, id, animated);
 
                 var cloneButton = new Button(ctx);
                 cloneButton.setText("Clone to other server");
-                cloneButton.setOnClickListener(v -> Utils.openPageWithProxy(ctx, new CloneModal(url, emoji.getName(), id, animated)));
+                cloneButton.setOnClickListener(v -> Utils.openPageWithProxy(ctx, new Modal(url, emoji.getName(), id, animated)));
 
                 var buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
                 buttonParams.setMargins(0, 0, 0, 0);
@@ -164,10 +185,10 @@ public class Patches {
         });
     }
 
-    public static void patchEmojiPicker(PatcherAPI patcher) throws Throwable {
+    public static Runnable keepEmojiPickerOpen(PatcherAPI patcher) throws Throwable {
         var isLongPress = new AtomicReference<>(false);
 
-        patcher.patch(MoreEmojisViewHolder.class.getDeclaredMethod("onConfigure", int.class, EmojiItem.class), new PinePatchFn(callFrame -> {
+        var unhook1 = patcher.patch(MoreEmojisViewHolder.class.getDeclaredMethod("onConfigure", int.class, EmojiItem.class), new PinePatchFn(callFrame -> {
             var _this = (MoreEmojisViewHolder) callFrame.thisObject;
             _this.itemView.setOnLongClickListener(v -> {
                 isLongPress.set(true);
@@ -184,7 +205,7 @@ public class Patches {
             });
         }));
 
-        patcher.patch(AppBottomSheet.class.getDeclaredMethod("dismiss"), new PinePrePatchFn(callFrame -> {
+        var unhook2 = patcher.patch(AppBottomSheet.class.getDeclaredMethod("dismiss"), new PinePrePatchFn(callFrame -> {
             if (isLongPress.get() && callFrame.thisObject instanceof WidgetChatListActions) callFrame.setResult(null);
         }));
 
@@ -192,12 +213,30 @@ public class Patches {
         final var onEmojiPickedField = clazz.getDeclaredField("emojiPickerListenerDelegate");
         onEmojiPickedField.setAccessible(true);
 
-        patcher.patch(clazz, "onEmojiPicked", new Class<?>[]{Emoji.class}, new PinePrePatchFn(callFrame -> {
+        var unhook3 = patcher.patch(clazz, "onEmojiPicked", new Class<?>[]{Emoji.class}, new PinePrePatchFn(callFrame -> {
             if (isLongPress.get()) try {
                 var listener = (EmojiPickerListener) onEmojiPickedField.get(callFrame.thisObject);
                 if (listener != null) listener.onEmojiPicked((Emoji) callFrame.args[0]);
                 callFrame.setResult(null);
             } catch (Throwable ignored) { }
         }));
+
+        return () -> { unhook1.run(); unhook2.run(); unhook3.run(); };
+    }
+
+    // Credit: https://github.com/Juby210/Aliucord-plugins/blob/d8f6da1ad387c0f94796b8efce6915163aeebb5b/HideDisabledEmojis/src/main/java/com/aliucord/plugins/HideDisabledEmojis.java
+    public static Runnable hideUnusableEmojis(PatcherAPI patcher) {
+        return patcher.patch(
+                "com.discord.widgets.chat.input.emoji.EmojiPickerViewModel$Companion", "buildEmojiListItems",
+                new Class<?>[]{ Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class },
+                new PinePrePatchFn(callFrame -> {
+                    var emojis = (Collection<? extends Emoji>) callFrame.args[0];
+                    if (!(emojis instanceof ArrayList)) {
+                        emojis = new ArrayList<>(emojis);
+                        callFrame.args[0] = emojis;
+                    }
+                    emojis.removeIf(e -> !e.isUsable());
+                })
+        );
     }
 }
