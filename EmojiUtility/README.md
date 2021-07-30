@@ -5,7 +5,7 @@ Adds lots of emoji utilities. All features are enabled by default but toggleable
 Emojis are saved to Download/Emojis/
 
 
-### Features
+## Features
 
 - New buttons in emoji widget (info sheet that opens if you click on one):
   - Copy emoji url
@@ -17,17 +17,17 @@ Emojis are saved to Download/Emojis/
 - Hide unusable emojis
 - Keep reaction modal open after reacting if reaction button was long pressed
 
-### Screenshots
+## Screenshots
 
-#### New Buttons in emoji widget
+### New Buttons in emoji widget
 
 ![Screenshot](https://cdn.discordapp.com/attachments/852332951542956052/870753374679740457/Screenshot_20210730-2138093.jpg)
 
-#### Clone Modal
+### Clone Modal
 
 ![Screenshot](https://cdn.discordapp.com/attachments/852332951542956052/870753374964944916/Screenshot_20210730-2138202.jpg)
 
-#### Commands
+### Commands
 
 ![Screenshot](https://cdn.discordapp.com/attachments/852332951542956052/870753911886188544/Screenshot_20210730-214505_Aliucord.png)
 

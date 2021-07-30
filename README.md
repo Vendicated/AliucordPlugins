@@ -1,6 +1,10 @@
 # Ven's Aliucord Plugins
 
-Click a Plugin's name to open a more detailed description & instructions if applicable
+Click a Plugin's name to open a more detailed explanation
+
+- ### [EmojiUtility](EmojiUtility/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/EmojiUtility.zip?raw=true)
+Adds lots of emoji utility, such as cloning and downloading
+
 - ### [MessageLinkEmbeds](MessageLinkEmbeds/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/MessageLinkEmbeds.zip?raw=true)
 Embeds message links
 
@@ -12,6 +16,9 @@ Allows you to open user or server avatars/banners by tapping them, similar to at
 
 - ### [TapTap](TapTap/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/TapTap.zip?raw=true)
 Double-tap someone elses message to quick reply, double tap your own to quick edit
+
+- ### [AnimateApngs](AnimateApngs/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/AnimateApngs.zip?raw=true)
+Properly animate apngs
 
 - ### [UrbanDictionary](UrbanDictionary/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/UrbanDictionary.zip?raw=true)
 Query the Urban Dictionary for definitions
