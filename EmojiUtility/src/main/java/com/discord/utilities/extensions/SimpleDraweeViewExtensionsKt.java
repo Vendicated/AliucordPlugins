@@ -15,7 +15,6 @@ import com.facebook.drawee.view.SimpleDraweeView;
 
 import kotlin.jvm.functions.Function1;
 
-@SuppressWarnings("unused")
 public class SimpleDraweeViewExtensionsKt {
     public static void setGuildIcon$default(SimpleDraweeView simpleDraweeView, boolean z2, Guild guild, float f, Integer num, Integer num2, Integer num3, Float f2, boolean z3, Function1 function1, int i, Object obj) { }
 }
