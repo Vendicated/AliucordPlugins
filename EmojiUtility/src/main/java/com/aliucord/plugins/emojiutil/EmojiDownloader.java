@@ -35,7 +35,9 @@ public class EmojiDownloader {
     private static final Pattern emotePattern = Pattern.compile("<?(a)?:?(\\w{2,32}):(\\d{17,19})>?");
 
     public static File getEmojiFolder() {
-        return new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Emojis");
+        var dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Emojis");
+        if (!dir.exists() && !dir.mkdirs()) throw new RuntimeException("Failed to create emoji folder " + dir.getAbsolutePath());
+        return dir;
     }
 
     public static Pair<String, String> getFilenameAndUrl(long id, boolean animated) {
