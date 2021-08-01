@@ -60,13 +60,34 @@ public class ThemeManager {
         for (String backgroundSecondaryName : BACKGROUND_SECONDARY_NAMES) put(backgroundSecondaryName, true);
     }};
 
+    public static String readFile(File file) throws IOException {
+        int size = Math.toIntExact(file.length());
+        var bytes = new byte[size];
+        try (var fis = new FileInputStream(file)) {
+            fis.read(bytes);
+        }
+        return new String(bytes);
+    }
+
     public static final class ThemeInfo {
         public final File file;
-        public final String name;
+        public String name;
+        public String author = "Anonymous";
+        public String version = "1.0.0";
+        public String license = null;
+        public String updaterUrl = null;
 
         public ThemeInfo(File file) {
             this.file = file;
             this.name = file.getName().replace(".json", "");
+            try {
+                var json = new JSONObject(new JSONTokener(readFile(file)));
+                if (json.has("name")) name = json.getString("name");
+                if (json.has("author")) author = json.getString("author");
+                if (json.has("version")) version = json.getString("version");
+                if (json.has("license")) license = json.getString("license");
+                if (json.has("updater")) updaterUrl = json.getString("updater");
+            } catch (Throwable ignored) {}
         }
 
         public void enable() {
@@ -91,7 +112,6 @@ public class ThemeManager {
         }
     }
 
-
     public static Typeface font;
     public static final List<ThemeInfo> themes = new ArrayList<>();
     public static SettingsAPI settings;
@@ -99,7 +119,7 @@ public class ThemeManager {
     public static Map<String, Integer> activeTheme;
     public static Map<Integer, Integer> drawableTints;
     public static BitmapDrawable customBackground;
-    public static int backgroundTransparency;
+    public static int backgroundTransparency = -1;
 
     public static void init(Context ctx, SettingsAPI sets, boolean shouldRerender) {
         settings = sets;
@@ -135,15 +155,6 @@ public class ThemeManager {
     private static final int drawableColorPrefixLength = "drawablecolor_".length();
 
     public static boolean loadFont(File file, boolean shouldRerender) {
-        int size = Math.toIntExact(file.length());
-        var bytes = new byte[size];
-        try (var fis = new FileInputStream(file)) {
-            fis.read(bytes);
-        } catch (IOException ex) {
-            Themer.logger.error("Failed to load font " + file, ex);
-            return false;
-        }
-
         font = Typeface.createFromFile(file);
         if (shouldRerender) Utils.appActivity.recreate();
         return true;
@@ -154,20 +165,26 @@ public class ThemeManager {
             try (var stream = new Http.Request(url).execute().stream()) {
                 var bitmap = BitmapFactory.decodeStream(stream);
                 customBackground = new BitmapDrawable(Utils.appActivity.getResources(), bitmap);
-            } catch (Throwable th) { Themer.logger.error("Failed to load background " + url, th); }
+                if (Themer.appContainer != null)
+                    Utils.mainThread.post(() -> {
+                        Themer.appContainer.setBackground(customBackground);
+                        Themer.appContainer = null;
+                    });
+            } catch (Throwable th) {
+                Themer.logger.error("Failed to load background " + url, th);
+                Themer.appContainer = null;
+            }
         });
     }
 
     public static boolean loadTheme(ThemeInfo theme, boolean shouldRerender) {
-        int size = Math.toIntExact(theme.file.length());
-        var bytes = new byte[size];
-        try (var fis = new FileInputStream(theme.file)) {
-            fis.read(bytes);
+        String content;
+        try {
+            content = readFile(theme.file);
         } catch (IOException ex) {
             Themer.logger.error("Failed to load theme " + theme, ex);
             return false;
         }
-        var content = new String(bytes);
 
         try {
             var json = new JSONObject(new JSONTokener(content));
@@ -181,26 +198,31 @@ public class ThemeManager {
 
             while (it.hasNext()) {
                 var key = it.next();
-                if (key.equals("name") || key.equals("author") || key.equalsIgnoreCase("copyright") || key.equalsIgnoreCase("license") || key.equalsIgnoreCase("licence")) continue;
 
-                if (key.equals("background_url")) {
-                    loadBackground(json.getString(key));
-                    continue;
+                switch (key) {
+                    case "name":
+                    case "author":
+                    case "version":
+                    case "license":
+                    case "updater":
+                        continue;
+                    case "background_url":
+                        loadBackground(json.getString(key));
+                        if (backgroundTransparency == -1) backgroundTransparency = Themer.DEFAULT_ALPHA;
+                        continue;
                 }
 
                 var val = json.getInt(key);
-
-                if (key.equals("background_transparency")) {
-                    if (val < 0 || val > 255) throw new IndexOutOfBoundsException("background_transparency must be 0-255, was " + val);
-                    backgroundTransparency = val;
-                    continue;
-                }
 
                 if (AttributeManager.mappings.containsKey(key)) {
                     AttributeManager.loadAttr(key, val);
                 }
 
                 switch (key) {
+                    case "background_transparency":
+                        if (val < 0 || val > 255) throw new IndexOutOfBoundsException("background_transparency must be 0-255, was " + val);
+                        backgroundTransparency = val;
+                        continue;
                     case "simple_accent_color":
                         themeAll(ACCENT_NAMES, val);
                         AttributeManager.loadAll(AttributeManager.SIMPLE_ACCENT_ATTRS, val);

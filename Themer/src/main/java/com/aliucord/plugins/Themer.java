@@ -10,25 +10,28 @@
 
 package com.aliucord.plugins;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.graphics.ColorUtils;
 
 import com.aliucord.*;
 import com.aliucord.entities.Plugin;
+import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
 import com.aliucord.plugins.themer.*;
+import com.discord.app.AppFragment;
 import com.discord.utilities.color.ColorCompat;
 import com.google.android.material.textfield.TextInputLayout;
 import com.lytefast.flexinput.R$c;
@@ -36,10 +39,11 @@ import com.lytefast.flexinput.R$c;
 import java.io.File;
 import java.util.HashMap;
 
+import rx.functions.Action1;
 import top.canyie.pine.Pine;
-import top.canyie.pine.callback.MethodHook;
 
 public class Themer extends Plugin {
+    public static final int DEFAULT_ALPHA = 150;
     public static final Logger logger = new Logger("Themer");
 
     public Themer() {
@@ -62,6 +66,13 @@ public class Themer extends Plugin {
 
     public final HashMap<Integer, String> colorToName = new HashMap<>();
 
+    public static View appContainer;
+
+    private Integer getReplacement(Object color) {
+        var name = colorToName.get((int) color);
+        return name == null ? null : ThemeManager.getColor(name);
+    }
+
     public void start(Context ctx) throws Throwable {
         var themeDir = new File(Constants.BASE_PATH, "themes");
         if (!themeDir.exists() && !themeDir.mkdir()) throw new RuntimeException("Failed to create theme folder.");
@@ -79,64 +90,75 @@ public class Themer extends Plugin {
 
         ThemeManager.init(ctx, settings, false);
 
-        patcher.patch("com.discord.widgets.tabs.WidgetTabsHost", "onViewBound", new Class<?>[] { View.class }, new PinePatchFn(callFrame -> {
-            if (ThemeManager.customBackground != null) ((View) callFrame.args[0]).setBackground(ThemeManager.customBackground);
-        }));
-
-        var viewHook = new MethodHook() {
-            @Override
-            public void afterCall(Pine.CallFrame callFrame) {
-                var view = (View) callFrame.thisObject;
-                var background = view.getBackground();
-
-                if (background instanceof ColorDrawable) {
-                    var colorDrawable = (ColorDrawable) background;
-                    int color = colorDrawable.getColor();
-                    var colorName = colorToName.get(color);
-                    if (colorName == null) return;
-
-                    var customColor = ThemeManager.getColor(colorName);
-                    if (customColor != null) colorDrawable.setColor(customColor);
-
-                    if (ThemeManager.customBackground != null && ThemeManager.BACKGROUNDS.containsKey(colorName)) {
-                        colorDrawable.setAlpha(ThemeManager.backgroundTransparency == -1 ? 150 : ThemeManager.backgroundTransparency);
+        final boolean enableTransparency = settings.getBool("enableTransparency", false);
+        if (enableTransparency) {
+            int containerId = Utils.getResId("widget_tabs_host_container", "id");
+            patcher.patch(AppFragment.class.getDeclaredMethod("onViewBound", View.class), new PinePatchFn(callFrame -> {
+                var clazz = callFrame.thisObject.getClass();
+                var className = clazz.getSimpleName();
+                var view = (View) callFrame.args[0];
+                if (className.equals("WidgetChatList")) {
+                    while (view.getId() != containerId) view = (View) view.getParent();
+                    if (ThemeManager.customBackground != null)
+                        view.setBackground(ThemeManager.customBackground);
+                    else
+                        appContainer = view;
+                } else if (className.toLowerCase().contains("settings") || SettingsPage.class.isAssignableFrom(clazz)) {
+                    Integer tint = ThemeManager.getColor("primary_dark_600");
+                    var bg = (Drawable) ThemeManager.customBackground;
+                    if (tint != null || (tint = view.getContext().getColor(R$c.primary_dark_600)) != 0) {
+                        bg = ThemeManager.customBackground.mutate();
+                        bg.setColorFilter(tint, PorterDuff.Mode.DARKEN);
                     }
+                    view.setBackground(bg);
                 }
+            }));
+        }
 
-                if (ThemeManager.font != null && view instanceof TextView) {
-                    ((TextView) view).setTypeface(ThemeManager.font);
-                }
-            }
-        };
-
-        MethodHook fontHook = new MethodHook() {
-            @Override public void beforeCall(Pine.CallFrame callFrame) {
-                if (ThemeManager.font != null) callFrame.setResult(ThemeManager.font);
-            }
-        };
+        var fontHook = new PinePrePatchFn(callFrame -> {
+            if (ThemeManager.font != null) callFrame.setResult(ThemeManager.font);
+        });
 
          // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
         patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class), fontHook);
         patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, ResourcesCompat.FontCallback.class, Handler.class), fontHook);
         patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, TypedValue.class, int.class, ResourcesCompat.FontCallback.class), fontHook);
 
-        patcher.patch(View.class.getDeclaredMethod("onFinishInflate"), viewHook);
-        patcher.patch(View.class.getDeclaredMethod("setBackground", Drawable.class), viewHook);
+        Action1<Pine.CallFrame> setColorHook = enableTransparency
+                ? callFrame -> {
+                    var name = colorToName.get((int) callFrame.args[0]);
+                    if (name != null) {
+                        var replacement = ThemeManager.getColor(name);
+                        if (replacement != null) callFrame.args[0] = replacement;
+                        if (ThemeManager.BACKGROUNDS.containsKey(name))
+                            callFrame.args[0] = ColorUtils.setAlphaComponent(
+                                    (int) callFrame.args[0],
+                                    ThemeManager.backgroundTransparency == -1
+                                            ? DEFAULT_ALPHA
+                                            : ThemeManager.backgroundTransparency
+                            );
+                    }
+                }
+                : callFrame -> {
+                    var replacement = getReplacement(callFrame.args[0]);
+                    if (replacement != null) callFrame.args[0] = replacement;
+                };
 
-        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), new PinePatchFn(callFrame -> {
-            int ret = (int) callFrame.getResult();
-            var colorName = colorToName.get(ret);
-            if (colorName == null) return;
-            // colorName = colorName.replace("brand_new", "brand");
-            var customColor = ThemeManager.getColor(colorName);
-            if (customColor != null || (customColor = AttributeManager.getAttr((int) callFrame.args[1])) != null) callFrame.setResult(customColor);
-        }));
+        patcher.patch(ColorDrawable.class.getDeclaredMethod("setColor", int.class), new PinePrePatchFn(setColorHook));
+
+        var replaceResult = new PinePatchFn(callFrame -> {
+            var replacement = getReplacement(callFrame.getResult());
+            if (replacement != null) callFrame.setResult(replacement);
+        });
+
+        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), replaceResult);
+        patcher.patch(ColorStateList.class.getDeclaredMethod("getColorForState", int[].class, int.class), replaceResult);
 
         patcher.patch(Resources.class.getDeclaredMethod("getDrawableForDensity", int.class, int.class, Resources.Theme.class), new PinePatchFn(callFrame -> {
-            var drawable = (Drawable) callFrame.getResult();
-            if (drawable != null) {
-                var color = ThemeManager.getTint((int) callFrame.args[0]);
-                if (color != null) drawable.setTint(color);
+            var color = ThemeManager.getTint((int) callFrame.args[0]);
+            if (color != null) {
+                var drawable = (Drawable) callFrame.getResult();
+                if (drawable != null) drawable.setTint(color);
             }
         }));
 
@@ -163,6 +185,7 @@ public class Themer extends Plugin {
         ThemeManager.activeTheme = null;
         ThemeManager.font = null;
         ThemeManager.drawableTints = null;
+        ThemeManager.customBackground = null;
         AttributeManager.activeTheme = null;
         Utils.appActivity.recreate();
     }
