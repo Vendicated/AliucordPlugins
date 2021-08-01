@@ -11,11 +11,10 @@
 package com.aliucord.plugins.themer;
 
 import android.content.Context;
-import android.graphics.Color;
-import android.graphics.Typeface;
+import android.graphics.*;
+import android.graphics.drawable.BitmapDrawable;
 
-import com.aliucord.Constants;
-import com.aliucord.Utils;
+import com.aliucord.*;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.plugins.Themer;
 
@@ -56,6 +55,11 @@ public class ThemeManager {
             "primary_dark_700"
     };
 
+    public static final Map<String, Boolean> BACKGROUNDS = new HashMap<>() {{
+        for (String backgroundName : BACKGROUND_NAMES) put(backgroundName, true);
+        for (String backgroundSecondaryName : BACKGROUND_SECONDARY_NAMES) put(backgroundSecondaryName, true);
+    }};
+
     public static final class ThemeInfo {
         public final File file;
         public final String name;
@@ -94,6 +98,8 @@ public class ThemeManager {
 
     public static Map<String, Integer> activeTheme;
     public static Map<Integer, Integer> drawableTints;
+    public static BitmapDrawable customBackground;
+    public static int backgroundTransparency;
 
     public static void init(Context ctx, SettingsAPI sets, boolean shouldRerender) {
         settings = sets;
@@ -143,6 +149,15 @@ public class ThemeManager {
         return true;
     }
 
+    public static void loadBackground(String url) {
+        Utils.threadPool.execute(() -> {
+            try (var stream = new Http.Request(url).execute().stream()) {
+                var bitmap = BitmapFactory.decodeStream(stream);
+                customBackground = new BitmapDrawable(Utils.appActivity.getResources(), bitmap);
+            } catch (Throwable th) { Themer.logger.error("Failed to load background " + url, th); }
+        });
+    }
+
     public static boolean loadTheme(ThemeInfo theme, boolean shouldRerender) {
         int size = Math.toIntExact(theme.file.length());
         var bytes = new byte[size];
@@ -160,13 +175,26 @@ public class ThemeManager {
 
             activeTheme = new HashMap<>();
             drawableTints = new HashMap<>();
+            customBackground = null;
+            backgroundTransparency = -1;
             AttributeManager.activeTheme = new HashMap<>();
 
             while (it.hasNext()) {
                 var key = it.next();
                 if (key.equals("name") || key.equals("author") || key.equalsIgnoreCase("copyright") || key.equalsIgnoreCase("license") || key.equalsIgnoreCase("licence")) continue;
 
+                if (key.equals("background_url")) {
+                    loadBackground(json.getString(key));
+                    continue;
+                }
+
                 var val = json.getInt(key);
+
+                if (key.equals("background_transparency")) {
+                    if (val < 0 || val > 255) throw new IndexOutOfBoundsException("background_transparency must be 0-255, was " + val);
+                    backgroundTransparency = val;
+                    continue;
+                }
 
                 if (AttributeManager.mappings.containsKey(key)) {
                     AttributeManager.loadAttr(key, val);
@@ -175,16 +203,16 @@ public class ThemeManager {
                 switch (key) {
                     case "simple_accent_color":
                         themeAll(ACCENT_NAMES, val);
-                        AttributeManager.loadAll(AttributeManager.simpleAccentAttrs, val);
+                        AttributeManager.loadAll(AttributeManager.SIMPLE_ACCENT_ATTRS, val);
                         tintDrawable("ic_nitro_rep", val);
                         continue;
                     case "simple_bg_color":
                         themeAll(BACKGROUND_NAMES, val);
-                        AttributeManager.loadAll(AttributeManager.simpleBackgroundAttrs, val);
+                        AttributeManager.loadAll(AttributeManager.SIMPLE_BACKGROUND_ATTRS, val);
                         continue;
                     case "simple_bg_secondary_color":
                         themeAll(BACKGROUND_SECONDARY_NAMES, val);
-                        AttributeManager.loadAll(AttributeManager.simpleBackgroundSecondaryAttrs, val);
+                        AttributeManager.loadAll(AttributeManager.SIMPLE_BACKGROUND_SECONDARY_ATTRS, val);
                         activeTheme.put("input_background_color", val);
                         activeTheme.put("statusbar_color", val);
                         tintDrawable("drawable_overlay_channels_active_dark", val);

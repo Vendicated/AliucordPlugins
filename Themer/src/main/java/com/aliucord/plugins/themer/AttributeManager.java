@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class AttributeManager {
-    public static final String[] simpleAccentAttrs = new String[] {
+    public static final String[] SIMPLE_ACCENT_ATTRS = new String[] {
             "color_brand",
             "colorControlBrandForeground",
             "colorControlActivated",
@@ -25,7 +25,7 @@ public class AttributeManager {
             "__alpha_10_theme_chat_mention_background",
             "theme_chat_mention_foreground"
     };
-    public static final String[] simpleBackgroundAttrs = new String[] {
+    public static final String[] SIMPLE_BACKGROUND_ATTRS = new String[] {
             "colorSurface",
             "colorBackgroundFloating",
             "colorTabsBackground",
@@ -34,7 +34,7 @@ public class AttributeManager {
             "primary_660",
             "primary_800"
     };
-    public static final String[] simpleBackgroundSecondaryAttrs = new String[] {
+    public static final String[] SIMPLE_BACKGROUND_SECONDARY_ATTRS = new String[] {
             "colorBackgroundTertiary",
             "colorBackgroundSecondary",
             "primary_700",

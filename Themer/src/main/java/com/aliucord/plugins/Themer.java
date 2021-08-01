@@ -10,6 +10,7 @@
 
 package com.aliucord.plugins;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.ColorDrawable;
@@ -61,98 +62,99 @@ public class Themer extends Plugin {
 
     public final HashMap<Integer, String> colorToName = new HashMap<>();
 
-    public void start(Context ctx) {
+    public void start(Context ctx) throws Throwable {
         var themeDir = new File(Constants.BASE_PATH, "themes");
         if (!themeDir.exists() && !themeDir.mkdir()) throw new RuntimeException("Failed to create theme folder.");
 
-        try {
-            var res = ctx.getResources();
-            var theme = ctx.getTheme();
+        var res = ctx.getResources();
+        var theme = ctx.getTheme();
 
-            for (var field : R$c.class.getDeclaredFields()) {
-                String colorName = field.getName();
-                int colorId = field.getInt(null);
-                int color = res.getColor(colorId, theme);
-                if (color == 0) continue;
-                colorToName.put(color, colorName);
-            }
-
-            ThemeManager.init(ctx, settings, false);
-
-            var viewHook = new MethodHook() {
-                private boolean busy = false;
-                @Override
-                public void afterCall(Pine.CallFrame callFrame) {
-                    if (busy) return;
-                    var view = (View) callFrame.thisObject;
-                    var background = view.getBackground();
-
-                    if (background instanceof ColorDrawable) {
-                        int color = ((ColorDrawable) background).getColor();
-                        var colorName = colorToName.get(color);
-                        if (colorName == null) return;
-                        var customColor = ThemeManager.getColor(colorName);
-                        if (customColor == null) return;
-                        busy = true; // prevent infinite loop
-                        ((View) callFrame.thisObject).setBackground(new ColorDrawable(customColor));
-                        busy = false;
-                    }
-
-                    if (ThemeManager.font != null && view instanceof TextView) {
-                        ((TextView) view).setTypeface(ThemeManager.font);
-                    }
-                }
-            };
-
-            MethodHook fontHook = new MethodHook() {
-                @Override public void beforeCall(Pine.CallFrame callFrame) {
-                    if (ThemeManager.font != null) callFrame.setResult(ThemeManager.font);
-                }
-            };
-
-             // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
-            patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class), fontHook);
-            patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, ResourcesCompat.FontCallback.class, Handler.class), fontHook);
-            patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, TypedValue.class, int.class, ResourcesCompat.FontCallback.class), fontHook);
-
-            patcher.patch(View.class.getDeclaredMethod("onFinishInflate"), viewHook);
-            patcher.patch(View.class.getDeclaredMethod("setBackground", Drawable.class), viewHook);
-
-            patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), new PinePatchFn(callFrame -> {
-                int ret = (int) callFrame.getResult();
-                var colorName = colorToName.get(ret);
-                if (colorName == null) return;
-                // colorName = colorName.replace("brand_new", "brand");
-                var customColor = ThemeManager.getColor(colorName);
-                if (customColor != null || (customColor = AttributeManager.getAttr((int) callFrame.args[1])) != null) callFrame.setResult(customColor);
-            }));
-
-            patcher.patch(Resources.class.getDeclaredMethod("getDrawableForDensity", int.class, int.class, Resources.Theme.class), new PinePatchFn(callFrame -> {
-                var drawable = (Drawable) callFrame.getResult();
-                if (drawable != null) {
-                    var color = ThemeManager.getTint((int) callFrame.args[0]);
-                    if (color != null) drawable.setTint(color);
-                }
-            }));
-
-            patcher.patch(Resources.Theme.class.getDeclaredMethod("resolveAttribute", int.class, TypedValue.class, boolean.class), new PinePatchFn(callFrame -> {
-                int attr = (int) callFrame.args[0];
-                var color = AttributeManager.getAttr(attr);
-                if (color != null) ((TypedValue) callFrame.args[1]).data = color;
-            }));
-
-            patcher.patch(ColorCompat.class.getDeclaredMethod("setStatusBarColor", Window.class, int.class, boolean.class), new PinePrePatchFn(callFrame -> {
-                var color = ThemeManager.getColor("statusbar_color");
-                if (color != null) callFrame.args[1] = color;
-            }));
-
-            patcher.patch(TextInputLayout.class.getDeclaredMethod("calculateBoxBackgroundColor"), new PinePrePatchFn(callFrame -> {
-                var color = ThemeManager.getColor("input_background_color");
-                if (color != null) callFrame.setResult(color);
-            }));
-        } catch (Throwable th) {
-            throw new RuntimeException(th);
+        for (var field : R$c.class.getDeclaredFields()) {
+            String colorName = field.getName();
+            int colorId = field.getInt(null);
+            int color = res.getColor(colorId, theme);
+            if (color == 0) continue;
+            colorToName.put(color, colorName);
         }
+
+        ThemeManager.init(ctx, settings, false);
+
+        patcher.patch("com.discord.widgets.tabs.WidgetTabsHost", "onViewBound", new Class<?>[] { View.class }, new PinePatchFn(callFrame -> {
+            if (ThemeManager.customBackground != null) ((View) callFrame.args[0]).setBackground(ThemeManager.customBackground);
+        }));
+
+        var viewHook = new MethodHook() {
+            @Override
+            public void afterCall(Pine.CallFrame callFrame) {
+                var view = (View) callFrame.thisObject;
+                var background = view.getBackground();
+
+                if (background instanceof ColorDrawable) {
+                    var colorDrawable = (ColorDrawable) background;
+                    int color = colorDrawable.getColor();
+                    var colorName = colorToName.get(color);
+                    if (colorName == null) return;
+
+                    var customColor = ThemeManager.getColor(colorName);
+                    if (customColor != null) colorDrawable.setColor(customColor);
+
+                    if (ThemeManager.customBackground != null && ThemeManager.BACKGROUNDS.containsKey(colorName)) {
+                        colorDrawable.setAlpha(ThemeManager.backgroundTransparency == -1 ? 150 : ThemeManager.backgroundTransparency);
+                    }
+                }
+
+                if (ThemeManager.font != null && view instanceof TextView) {
+                    ((TextView) view).setTypeface(ThemeManager.font);
+                }
+            }
+        };
+
+        MethodHook fontHook = new MethodHook() {
+            @Override public void beforeCall(Pine.CallFrame callFrame) {
+                if (ThemeManager.font != null) callFrame.setResult(ThemeManager.font);
+            }
+        };
+
+         // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
+        patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class), fontHook);
+        patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, ResourcesCompat.FontCallback.class, Handler.class), fontHook);
+        patcher.patch(ResourcesCompat.class.getDeclaredMethod("getFont", Context.class, int.class, TypedValue.class, int.class, ResourcesCompat.FontCallback.class), fontHook);
+
+        patcher.patch(View.class.getDeclaredMethod("onFinishInflate"), viewHook);
+        patcher.patch(View.class.getDeclaredMethod("setBackground", Drawable.class), viewHook);
+
+        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), new PinePatchFn(callFrame -> {
+            int ret = (int) callFrame.getResult();
+            var colorName = colorToName.get(ret);
+            if (colorName == null) return;
+            // colorName = colorName.replace("brand_new", "brand");
+            var customColor = ThemeManager.getColor(colorName);
+            if (customColor != null || (customColor = AttributeManager.getAttr((int) callFrame.args[1])) != null) callFrame.setResult(customColor);
+        }));
+
+        patcher.patch(Resources.class.getDeclaredMethod("getDrawableForDensity", int.class, int.class, Resources.Theme.class), new PinePatchFn(callFrame -> {
+            var drawable = (Drawable) callFrame.getResult();
+            if (drawable != null) {
+                var color = ThemeManager.getTint((int) callFrame.args[0]);
+                if (color != null) drawable.setTint(color);
+            }
+        }));
+
+        patcher.patch(Resources.Theme.class.getDeclaredMethod("resolveAttribute", int.class, TypedValue.class, boolean.class), new PinePatchFn(callFrame -> {
+            int attr = (int) callFrame.args[0];
+            var color = AttributeManager.getAttr(attr);
+            if (color != null) ((TypedValue) callFrame.args[1]).data = color;
+        }));
+
+        patcher.patch(ColorCompat.class.getDeclaredMethod("setStatusBarColor", Window.class, int.class, boolean.class), new PinePrePatchFn(callFrame -> {
+            var color = ThemeManager.getColor("statusbar_color");
+            if (color != null) callFrame.args[1] = color;
+        }));
+
+        patcher.patch(TextInputLayout.class.getDeclaredMethod("calculateBoxBackgroundColor"), new PinePrePatchFn(callFrame -> {
+            var color = ThemeManager.getColor("input_background_color");
+            if (color != null) callFrame.setResult(color);
+        }));
     }
 
     public void stop(Context context) {
