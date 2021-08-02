@@ -20,7 +20,8 @@
     "version": "1.0.6"
   },
   "ViewProfileImages": {
-    "version": "1.0.0"
+    "minimumDiscordVersion": 86205,
+    "version": "1.0.1"
   },
   "DedicatedPluginSettings": {
     "version": "1.0.2"
