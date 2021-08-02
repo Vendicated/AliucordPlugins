@@ -50,7 +50,7 @@ public class ViewProfileImages extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Allows opening avatars/icons and banners by clicking them in the user/server profile sheet";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -108,7 +108,7 @@ public class ViewProfileImages extends Plugin {
             var user = data.getUser();
 
             final var avatarHash = user.getAvatar();
-            final var bannerHash = data.getBannerHash();
+            final var bannerHash = data.getBanner();
             final var username = user.getUsername();
             final var discriminator = user.getDiscriminator();
             final var userId = user.getId();

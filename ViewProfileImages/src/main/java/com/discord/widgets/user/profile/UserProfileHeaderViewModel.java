@@ -16,7 +16,7 @@ public final class UserProfileHeaderViewModel {
     public static abstract class ViewState {
         public static final class Loaded extends ViewState {
             public final User getUser() { return getUser(); }
-            public final String getBannerHash() { return null; }
+            public final String getBanner() { return null; }
         }
     }
 }
