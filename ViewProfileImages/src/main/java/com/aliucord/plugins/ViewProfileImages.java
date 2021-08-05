@@ -119,6 +119,7 @@ public class ViewProfileImages extends Plugin {
             var binding = UserProfileHeaderView.access$getBinding$p((UserProfileHeaderView) callFrame.thisObject);
             var root = binding.getRoot();
             var data = (UserProfileHeaderViewModel.ViewState.Loaded) callFrame.args[0];
+            if (data.getEditable()) return;
             var user = data.getUser();
 
             final var bannerHash = data.getBanner();
