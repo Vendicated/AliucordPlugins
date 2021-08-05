@@ -24,6 +24,8 @@ import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
 import com.discord.api.message.attachment.MessageAttachment;
 import com.discord.databinding.WidgetGuildProfileSheetBinding;
+import com.discord.models.member.GuildMember;
+import com.discord.models.user.User;
 import com.discord.utilities.SnowflakeUtils;
 import com.discord.utilities.icon.IconUtils;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment;
@@ -50,16 +52,16 @@ public class ViewProfileImages extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Allows opening avatars/icons and banners by clicking them in the user/server profile sheet";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
     @SuppressWarnings("AccessStaticViaInstance")
-    private void openAttachment(Context ctx, String url, String hash, String name) {
+    private void openAttachment(Context ctx, String url, String name) {
         var attachment = new MessageAttachment();
         try {
-            fileNameField.set(attachment, String.format("%s.%s", name, hash.startsWith("a_") ? "gif" : "png"));
+            fileNameField.set(attachment, String.format("%s.%s", name, getExtFromUrl(url)));
             idField.set(attachment, SnowflakeUtils.fromTimestamp(System.currentTimeMillis()));
             urlField.set(attachment, url);
             proxyUrlField.set(attachment, url);
@@ -71,7 +73,18 @@ public class ViewProfileImages extends Plugin {
         WidgetChatListAdapterItemAttachment.Companion.access$navigateToAttachment(WidgetChatListAdapterItemAttachment.Companion, ctx, attachment);
     }
 
-    @SuppressWarnings({"AccessStaticViaInstance", "JavaReflectionMemberAccess"})
+    private static String getForGuildMemberOrUser(User user, GuildMember guildMember) {
+        return guildMember == null || !guildMember.hasAvatar() ?
+            IconUtils.getForUser(user, true, 2048) :
+            IconUtils.INSTANCE.getForGuildMember(guildMember, 2048, true);
+    }
+
+    private static String getExtFromUrl(String url) {
+        var sub = url.substring(url.lastIndexOf('.') + 1);
+        return sub.contains("?") ? sub.substring(0, sub.indexOf('?')) : sub;
+    }
+
+    @SuppressWarnings("JavaReflectionMemberAccess")
     @SuppressLint("SetTextI18n")
     @Override
     public void start(Context context) throws Throwable {
@@ -90,6 +103,7 @@ public class ViewProfileImages extends Plugin {
 
         final int avatarResId = Utils.getResId("avatar", "id");
         final int bannerResId = Utils.getResId("banner", "id");
+        final int secondaryNameResId = Utils.getResId("user_profile_header_secondary_name", "id");
         final int guildIconResId = Utils.getResId("guild_profile_sheet_icon", "id");
         final int guildBannerResId = Utils.getResId("guild_profile_sheet_banner", "id");
 
@@ -105,27 +119,30 @@ public class ViewProfileImages extends Plugin {
             var binding = UserProfileHeaderView.access$getBinding$p((UserProfileHeaderView) callFrame.thisObject);
             var root = binding.getRoot();
             var data = (UserProfileHeaderViewModel.ViewState.Loaded) callFrame.args[0];
+            if (data.getEditable()) return;
             var user = data.getUser();
 
-            final var avatarHash = user.getAvatar();
             final var bannerHash = data.getBanner();
             final var username = user.getUsername();
-            final var discriminator = user.getDiscriminator();
             final var userId = user.getId();
 
             var avatarView = root.findViewById(avatarResId);
-            if (avatarView != null && avatarHash != null) {
-                avatarView.setOnClickListener(e -> {
-                    var avi = IconUtils.INSTANCE.getForUser(userId, avatarHash, discriminator, true, 2048);
-                    openAttachment(e.getContext(), avi, avatarHash, username);
-                });
+            if (avatarView != null) {
+                avatarView.setOnClickListener(e -> openAttachment(e.getContext(), getForGuildMemberOrUser(user, data.getGuildMember()), username));
+            }
+
+            if (data.getShowSmallAvatar()) {
+                var secondaryNameView = root.findViewById(secondaryNameResId);
+                if (secondaryNameView != null) {
+                    secondaryNameView.setOnClickListener(e -> openAttachment(e.getContext(), IconUtils.getForUser(user, true, 2048), username));
+                }
             }
 
             var bannerView = root.findViewById(bannerResId);
             if (bannerView != null && bannerHash != null) {
                 bannerView.setOnClickListener(e -> {
                     var banner = IconUtils.INSTANCE.getForUserBanner(userId, bannerHash, 2048, true);
-                    openAttachment(e.getContext(), banner, bannerHash, username);
+                    openAttachment(e.getContext(), banner, username);
                 });
             }
         }));
@@ -146,7 +163,7 @@ public class ViewProfileImages extends Plugin {
                 if (iconView != null && iconHash != null) {
                     iconView.setOnClickListener(e -> {
                         var icon = IconUtils.getForGuild(guildId, iconHash, "", true, 2048);
-                        openAttachment(e.getContext(), icon, iconHash, guildName);
+                        openAttachment(e.getContext(), icon, guildName);
                     });
                 }
 
@@ -154,7 +171,7 @@ public class ViewProfileImages extends Plugin {
                 if (bannerView != null && bannerHash != null) {
                     bannerView.setOnClickListener(e -> {
                         var banner = IconUtils.INSTANCE.getBannerForGuild(guildId, bannerHash, 2048);
-                        openAttachment(e.getContext(), banner, bannerHash, guildName);
+                        openAttachment(e.getContext(), banner, guildName);
                     });
                 }
             } catch (Throwable ignored) {};
