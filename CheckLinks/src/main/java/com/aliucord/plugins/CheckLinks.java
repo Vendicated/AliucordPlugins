@@ -23,6 +23,7 @@ import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.PinePatchFn;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class CheckLinks extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Checks links via the VirusTotal api";
-        manifest.version = "1.0.0";
+        manifest.version = "1.0.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -97,7 +98,7 @@ public class CheckLinks extends Plugin {
         }));
     }
 
-    public static class UrlInfo {
+    public static class CachedUrlInfo {
         public List<Data> data;
         public static class Data {
             public Attributes attributes;
@@ -110,23 +111,56 @@ public class CheckLinks extends Plugin {
         }
     }
 
-    private Map<String, UrlInfo.Data.Attributes.Entry> checkLink(String url) throws IOException {
+    public static class NewUrlInfo {
+        public Data data;
+        public static class Data {
+            public Attributes attributes;
+            public static class Attributes {
+                public Map<String, CachedUrlInfo.Data.Attributes.Entry> results;
+            }
+        }
+    }
+
+    public static class UrlIdInfo {
+        public Data data;
+        public static class Data {
+            public String id;
+        }
+    }
+
+    private Http.Request makeReq(String url, String method, String contentType) throws IOException {
+        return new Http.Request(url, method)
+            .setHeader("Content-Type", contentType)
+            .setHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:83.0) Firefox")
+            .setHeader("X-Tool", "vt-ui-main")
+            // Can be anything for some reason
+            .setHeader("X-VT-Anti-Abuse-Header", "uwu")
+            // yes upper case i lol
+            .setHeader("Accept-Ianguage", "en-US,en;q=0.9,es;q=0.8");
+    }
+
+    private Map<String, CachedUrlInfo.Data.Attributes.Entry> checkLink(String url) throws IOException {
         var qb = new Http.QueryBuilder("https://www.virustotal.com/ui/search")
                 .append("limit", "20")
                 .append("relationships[comment]", "author,item")
                 .append("query", url);
 
-        var req = new Http.Request(qb.toString())
-                .setHeader("Content-Type", "application/json")
-                .setHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:83.0) Firefox")
-                .setHeader("X-Tool", "vt-ui-main")
-                // Can be anything for some reason
-                .setHeader("X-VT-Anti-Abuse-Header", "uwu")
-                // yes upper case i lol
-                .setHeader("Accept-Ianguage", "en-US,en;q=0.9,es;q=0.8");
+        CachedUrlInfo cached = makeReq(qb.toString(), "GET", "application/json").execute().json(CachedUrlInfo.class);
+        if (cached.data.size() > 0) return cached.data.get(0).attributes.last_analysis_results;
 
-        UrlInfo res = req.execute().json(UrlInfo.class);
-        return res.data.size() > 0 ? res.data.get(0).attributes.last_analysis_results : null;
+        // no cached data, make full request
+
+        var postData = "url=" + URLEncoder.encode(url, "UTF-8");
+        UrlIdInfo idInfo = makeReq("https://www.virustotal.com/ui/urls", "POST", "application/x-www-form-urlencoded")
+                .setHeader("Content-Length", Integer.toString(postData.length()))
+                .executeWithBody(postData)
+                .json(UrlIdInfo.class);
+
+        NewUrlInfo newUrlInfo = makeReq("https://www.virustotal.com/ui/analyses/" + idInfo.data.id, "GET", "application/json")
+                .execute()
+                .json(NewUrlInfo.class);
+
+        return newUrlInfo.data.attributes.results;
     }
 
     @Override
