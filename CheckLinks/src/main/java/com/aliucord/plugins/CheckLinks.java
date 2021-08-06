@@ -48,13 +48,13 @@ public class CheckLinks extends Plugin {
             var url = bundle.getString("WIDGET_SPOOPY_LINKS_DIALOG_URL");
             var binding = dialog.g();
             var text = (TextView) binding.getRoot().findViewById(dialogTextId);
-            text.setText(String.format("Checking url %s...", url));
+            text.setText(String.format("Checking URL %s...", url));
             Utils.threadPool.execute(() -> {
                 String content;
                 try {
                     var data = checkLink(url);
                     if (data == null) {
-                        content = "No info on url %s. Proceed at your own risk.";
+                        content = "No info on URL %s. Proceed at your own risk.";
                     } else {
                         var counts = new int[4];
                         for (var entry : data.values()) {
@@ -75,7 +75,7 @@ public class CheckLinks extends Plugin {
                             }
                         }
                         content = String.format(
-                                "Url %%s is %s\nClean: %s\nUnrated: %s\nMalicious: %s\nPhishing: %s",
+                                "URL %%s is %s\nClean: %s\nUnrated: %s\nMalicious: %s\nPhishing: %s",
                                 counts[1] > 2 || counts[2] > 2
                                         ? "likely malicious!"
                                         : (counts[1] > 0 || counts[2] > 0)
@@ -89,7 +89,7 @@ public class CheckLinks extends Plugin {
                     }
                 } catch (Throwable th) {
                     Log.e("[CheckLinks]", "Oops", th);
-                    content = "Failed to check url %s. Proceed at your own risk.";
+                    content = "Failed to check URL %s. Proceed at your own risk.";
                 }
                 var finalContent = String.format(content, url);
                 Utils.mainThread.post(() -> text.setText(finalContent));
