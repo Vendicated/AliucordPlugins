@@ -11,30 +11,81 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.method.LinkMovementMethod;
+import android.text.style.ClickableSpan;
 import android.util.Log;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.*;
 
 import androidx.annotation.NonNull;
 
 import com.aliucord.Http;
 import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
+import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
+import com.lytefast.flexinput.R$h;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CheckLinks extends Plugin {
+    public static class MoreInfoModal extends SettingsPage {
+        private final Map<String, CachedUrlInfo.Data.Attributes.Entry> data;
+        public MoreInfoModal(Map<String, CachedUrlInfo.Data.Attributes.Entry> data) {
+            this.data = data;
+        }
+
+        public void onViewBound(View _view) {
+            super.onViewBound(_view);
+
+            //noinspection ResultOfMethodCallIgnored
+            setActionBarTitle("URL info");
+
+            var ctx = requireContext();
+            var table = new TableLayout(ctx);
+            int p = Utils.getDefaultPadding();
+            int p2 = p / 2;
+
+            var entries = data
+                    .entrySet()
+                    .stream()
+                    .sorted(Comparator.comparing((Map.Entry<String, CachedUrlInfo.Data.Attributes.Entry> e) -> e.getValue().result).reversed())
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            for (var entry : entries) {
+                var row = new TableRow(ctx);
+                var header = new TextView(ctx, null, 0, R$h.UiKit_TextView);
+                header.setText(entry.getKey());
+                header.setPadding(p, p2, p, p2);
+
+                var body = new TextView(ctx, null, 0, R$h.UiKit_TextView);
+                body.setText(entry.getValue().result);
+                body.setPadding(p, p2, p, p2);
+
+                row.addView(header);
+                row.addView(body);
+
+                table.addView(row);
+            }
+
+            addView(table);
+        }
+    }
+
     @NonNull
     @Override
     public Manifest getManifest() {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Checks links via the VirusTotal api";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -52,8 +103,9 @@ public class CheckLinks extends Plugin {
             text.setText(String.format("Checking URL %s...", url));
             Utils.threadPool.execute(() -> {
                 String content;
+                Map<String, CheckLinks.CachedUrlInfo.Data.Attributes.Entry> data = null;
                 try {
-                    var data = checkLink(url);
+                    data = checkLink(url);
                     if (data == null) {
                         content = "No info on URL %s. Proceed at your own risk.";
                     } else {
@@ -75,25 +127,45 @@ public class CheckLinks extends Plugin {
                                     break;
                             }
                         }
-                        content = String.format(
-                                "URL %%s is %s\nClean: %s\nUnrated: %s\nMalicious: %s\nPhishing: %s",
-                                counts[1] > 2 || counts[2] > 2
-                                        ? "likely malicious!"
-                                        : (counts[1] > 0 || counts[2] > 0)
-                                            ? "possibly malicious."
-                                            : "clean or too new to be flagged.",
-                                counts[0],
-                                counts[3],
-                                counts[2],
-                                counts[1]
-                        );
+                        int malicious = counts[1] + counts[2];
+                        if (malicious > 2) content = String.format("URL %%s is likely malicious. %s engines flagged it.", malicious);
+                        else if (malicious > 0) content = String.format("URL %%s is possibly malicious. %s engines flagged it.", malicious);
+                        else content = "URL %s is either safe or too new to be flagged.";
                     }
                 } catch (Throwable th) {
                     Log.e("[CheckLinks]", "Oops", th);
                     content = "Failed to check URL %s. Proceed at your own risk.";
                 }
-                var finalContent = String.format(content, url);
-                Utils.mainThread.post(() -> text.setText(finalContent));
+
+                content = String.format(content, url);
+                if (data != null) content += "\n\nMore Info";
+                SpannableString spannableContent = new SpannableString(content);
+
+                int urlIdx = content.indexOf(url);
+                spannableContent.setSpan(new ClickableSpan() {
+                    @Override
+                    public void onClick(@NonNull View view) {
+                        var intent = new Intent(Intent.ACTION_VIEW);
+                        intent.setData(Uri.parse(url));
+                        dialog.startActivity(intent);
+                    }
+                }, urlIdx, urlIdx + url.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+                if (data != null) {
+                    var finalData = data;
+                    spannableContent.setSpan(new ClickableSpan() {
+                        @Override
+                        public void onClick(@NonNull View view) {
+                            var page = new MoreInfoModal(finalData);
+                            Utils.openPageWithProxy(view.getContext(), page);
+                        }
+                    }, content.length() - 9, content.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+
+                Utils.mainThread.post(() -> {
+                    text.setMovementMethod(LinkMovementMethod.getInstance());
+                    text.setText(spannableContent);
+                });
             });
         }));
     }
