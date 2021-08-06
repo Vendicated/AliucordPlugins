@@ -20,6 +20,9 @@ Double-tap someone elses message to quick reply, double tap your own to quick ed
 - ### [AnimateApngs](AnimateApngs/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/AnimateApngs.zip?raw=true)
 Properly animate apngs
 
+- ### [CheckLinks](CheckLinks/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/CheckLinks.zip?raw=true)
+Simple plugin that checks links using the VirusTotal api and shows the result in the "Are you sure you want to open this link" modal
+
 - ### [UrbanDictionary](UrbanDictionary/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/UrbanDictionary.zip?raw=true)
 Query the Urban Dictionary for definitions
 
