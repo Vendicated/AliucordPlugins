@@ -13,7 +13,7 @@ mv "$name/src/main/java/com/aliucord/plugins/Template.java" "$name/src/main/java
 # Change class name
 sed -i "s/Template/$name/" "$name/src/main/java/com/aliucord/plugins/$name.java"
 # Add to settings.gradle
-echo "include ':$name'" | cat - settings.gradle > settings.gradle.new && mv settings.gradle.new settings.gradle
+echo "include(\":$name\"" | cat - settings.gradle > settings.gradle.new && mv settings.gradle.new settings.gradle
 # Add to updater.json
 jq --argjson "$name" '{"version": "1.0.0"}' ". + { $name: \$$name }" < updater.json \
   > updater.json.new && \
