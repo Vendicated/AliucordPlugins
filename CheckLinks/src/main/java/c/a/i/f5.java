@@ -8,14 +8,14 @@
  * http://www.apache.org/licenses/LICENSE-2.0
 */
 
-package c.a.j;
+package c.a.i;
 
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.viewbinding.ViewBinding;
 
-public class g5 implements ViewBinding {
+public class f5 implements ViewBinding {
     @NonNull
     public View getRoot() { return getRoot(); }
 }

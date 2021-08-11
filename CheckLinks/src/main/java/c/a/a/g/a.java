@@ -12,10 +12,10 @@ package c.a.a.g;
 
 import com.discord.app.AppDialog;
 
-import c.a.j.g5;
+import c.a.i.f5;
 
 /* compiled from: WidgetMaskedLinksDialog.kt */
 public class a extends AppDialog {
     // getBinding
-    public final g5 g() { return g(); }
+    public final f5 g() { return g(); }
 }
