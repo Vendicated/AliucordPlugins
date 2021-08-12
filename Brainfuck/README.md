@@ -12,7 +12,7 @@ Brainfuck is an extremely minimal esoteric programming language with only 8 inst
 
 [More info (Wikipedia)](https://en.wikipedia.org/wiki/Brainfuck)
 
-This plugin includes a brainfuck interpreter and a command to convert plain text to brainfuck, because who doesn't want to send
+This plugin includes both a command to interpret brainfuck (`/brainfuck`) and a command to convert plain text to brainfuck (`/tobrainfuck`), because who doesn't want to send
 ```bf
 >+++++++++[<+++++++++>-]<++++++.>+++++[<+++++>-]<-.++++++++.>+++++++++[<--------->-]<++++++.>+++[<--->-]
 <---.>++++++[<++++++>-]<+++++.>++++++[<------>-]<-----.>+++++++++[<+++++++++>-]<++.++.---.>++++[<---->-]
