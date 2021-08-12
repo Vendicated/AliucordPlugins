@@ -34,5 +34,8 @@
   "CheckLinks": {
     "version": "1.0.3",
     "minimumDiscordVersion": 88202
+  },
+  "Brainfuck": {
+    "version": "1.0.0"
   }
 }

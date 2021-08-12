@@ -80,6 +80,7 @@ public class Brainfuck extends Plugin {
     }
 
     private CommandsAPI.CommandResult sendResult(Context context, CommandContext ctx, String content, String fileContent, String fileName) {
+        if (fileContent.isEmpty()) return new CommandsAPI.CommandResult("No output! Nothing here but us chicken...", null, false);
         boolean send = ctx.getBoolOrDefault("send", false);
         if (!send) return new CommandsAPI.CommandResult(content, null, false);
         int maxLen = ctx.getMe().getPremiumTier() == PremiumTier.TIER_2 ? 4000 : 2000;

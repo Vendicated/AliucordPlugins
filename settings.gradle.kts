@@ -1,3 +1,4 @@
+include(":Brainfuck")
 include(":CheckLinks")
 include(":AnimateApngs")
 include(":DedicatedPluginSettings")
