@@ -37,5 +37,8 @@
   },
   "Brainfuck": {
     "version": "1.0.0"
+  },
+  "Themer": {
+    "version": "1.0.0"
   }
 }
