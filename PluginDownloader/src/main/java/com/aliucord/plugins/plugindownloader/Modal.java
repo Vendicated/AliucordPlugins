@@ -22,13 +22,10 @@ import com.aliucord.views.DangerButton;
 import com.google.gson.reflect.TypeToken;
 import com.lytefast.flexinput.R$h;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Map;
+import java.util.*;
 
 public final class Modal extends SettingsPage {
     private static final Type resType = TypeToken.getParameterized(Map.class, String.class, Plugin.Info.class).getType();
@@ -36,7 +33,7 @@ public final class Modal extends SettingsPage {
     private final String author;
     private final String repo;
     private Map<String, Plugin.Info> plugins;
-    private IOException ex;
+    private Throwable ex;
 
     public Modal(String author, String repo) {
         super();
@@ -67,7 +64,7 @@ public final class Modal extends SettingsPage {
             Utils.threadPool.execute(() -> {
                 try {
                     plugins = Http.simpleJsonGet(String.format("https://raw.githubusercontent.com/%s/%s/builds/updater.json", author, repo), resType);
-                } catch (IOException e) {
+                } catch (Throwable e) {
                     ex = e;
                 }
                 Utils.mainThread.post(() -> onViewBound(view));
