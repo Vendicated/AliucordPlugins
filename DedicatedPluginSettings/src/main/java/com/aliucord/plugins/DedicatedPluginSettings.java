@@ -50,12 +50,14 @@ public class DedicatedPluginSettings extends Plugin {
             put("Themer", R$d.ic_theme_24dp);
             put("Hastebin", R$d.ic_link_white_24dp);
             put("ImageUploader", R$d.ic_uploads_image_dark);
+            put("EmojiUtility", R$d.ic_emoji_24dp);
 
             // Juby
             put("UserDetails", R$d.ic_my_account_24dp);
             put("PronounDB", R$d.ic_accessibility_24dp);
             put("CustomTimestamps", R$d.ic_clock_black_24dp);
             put("CustomNicknameFormat", R$d.ic_account_circle_white_24dp);
+            put("RemoveZoomLimit", R$d.ic_search_white_24dp);
 
             // Moth
             put("RotatedChat", R$c.ucrop_rotate); // This is from https://github.com/Yalantis/uCrop lmao
@@ -74,7 +76,7 @@ public class DedicatedPluginSettings extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds a dedicated plugin settings category to the settings page";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }

@@ -21,5 +21,7 @@ public class R$d {
     public static int ic_clock_black_24dp;
     public static int ic_account_circle_white_24dp;
     public static int design_ic_visibility_off;
-    public static int ic_call_toolbar_icon_minimize;
+    public static int ic_search_white_24dp;
+    public static int ic_emoji_24dp;
+    public static int ic_play_arrow_24dp;
 }
