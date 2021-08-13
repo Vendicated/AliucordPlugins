@@ -15,7 +15,7 @@ set -e
   ./buildtool -p "$1"
 
   cd ../buildsPlugins
-  [ "$(adb devices | wc -l)" = "2" ] && adb connect 192.168.178.21:5555
+  [ "$(adb devices | wc -l)" = "2" ] && adb connect 192.168.178.53:5555
 
   echo "Pushing plugin zip to device..."
   if [ "$1" = "*" ]; then
