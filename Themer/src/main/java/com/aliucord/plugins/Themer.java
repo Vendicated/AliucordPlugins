@@ -18,10 +18,11 @@ import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.util.TypedValue;
-import android.view.View;
-import android.view.Window;
+import android.view.*;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.core.graphics.ColorUtils;
 
@@ -31,13 +32,16 @@ import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
 import com.aliucord.plugins.themer.*;
+import com.aliucord.wrappers.messages.AttachmentWrapper;
 import com.discord.app.AppFragment;
 import com.discord.utilities.color.ColorCompat;
+import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.google.android.material.textfield.TextInputLayout;
-import com.lytefast.flexinput.R$c;
+import com.lytefast.flexinput.*;
 
-import java.io.File;
+import java.io.*;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import rx.functions.Action1;
 import top.canyie.pine.Pine;
@@ -116,7 +120,9 @@ public class Themer extends Plugin {
         }
 
         var fontHook = new PinePrePatchFn(callFrame -> {
-            if (ThemeManager.font != null) callFrame.setResult(ThemeManager.font);
+            int id = (int) callFrame.args[1];
+            if (ThemeManager.fonts.containsKey(id)) callFrame.setResult(ThemeManager.fonts.get(id));
+            else if (ThemeManager.fonts.containsKey(-1)) callFrame.setResult(ThemeManager.fonts.get(-1));
         });
 
          // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
@@ -177,13 +183,75 @@ public class Themer extends Plugin {
             var color = ThemeManager.getColor("input_background_color");
             if (color != null) callFrame.setResult(color);
         }));
+
+
+        var id = View.generateViewId();
+        var badUrlMatcher = Pattern.compile("http[^\\s]+\\.json");
+
+        patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new PinePatchFn(callFrame -> {
+            var layout = (ViewGroup) ((ViewGroup) ((WidgetChatListActions) callFrame.thisObject).requireView()).getChildAt(0);
+            if (layout == null || layout.findViewById(id) != null) return;
+            var context = layout.getContext();
+            var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
+            final long THEMES_CHANNEL_ID = 824357609778708580L;
+
+            if (msg.getChannelId() == THEMES_CHANNEL_ID) {
+                String url = null;
+                String name = null;
+                var attachments = msg.getAttachments();
+                for (var attachment : attachments) {
+                    var _url = AttachmentWrapper.getUrl(attachment);
+                    if (_url.endsWith(".json")) {
+                        url = _url;
+                        name = AttachmentWrapper.getFilename(attachment);
+                        break;
+                    }
+                }
+                if (url == null && msg.getContent() != null) {
+                    var urlMatcher = badUrlMatcher.matcher(msg.getContent());
+                    if (urlMatcher.find()) {
+                        url = urlMatcher.group();
+                        name = url.substring(url.lastIndexOf('/') + 1);
+                    }
+                }
+
+                if (url != null) {
+                    var view = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    view.setId(id);
+                    view.setText("Install " + name);
+                    var icon = ContextCompat.getDrawable(context, R$d.ic_theme_24dp);
+                    if (icon != null) {
+                        icon.setTint(ColorCompat.getThemedColor(context, R$b.colorInteractiveNormal));
+                        view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
+                    }
+                    String finalUrl = url;
+                    String finalName = name;
+                    view.setOnClickListener(e -> {
+                        Utils.threadPool.execute(() -> {
+                            try (var req = new Http.Request(finalUrl)) {
+                                var resp = req.execute();
+                                try (var fos = new FileOutputStream(Constants.BASE_PATH + "/themes/" + finalName)) {
+                                    resp.pipe(fos);
+                                    ThemeManager.themes.clear();
+                                    ThemeManager.loadThemes(context, false, false);
+                                    Utils.showToast(context, "Successfully installed theme " + finalName);
+                                }
+                            } catch (IOException ex) {
+                                logger.error(context, "Failed to install theme " + finalName, ex);
+                            }
+                        });
+                    });
+                    layout.addView(view, 1);
+                }
+            }
+        }));
     }
 
     public void stop(Context context) {
         patcher.unpatchAll();
         colorToName.clear();
         ThemeManager.activeTheme = null;
-        ThemeManager.font = null;
+        ThemeManager.fonts = null;
         ThemeManager.drawableTints = null;
         ThemeManager.customBackground = null;
         AttributeManager.activeTheme = null;

@@ -112,7 +112,7 @@ public class ThemeManager {
         }
     }
 
-    public static Typeface font;
+    public static Map<Integer, Typeface> fonts;
     public static final List<ThemeInfo> themes = new ArrayList<>();
     public static SettingsAPI settings;
 
@@ -123,15 +123,6 @@ public class ThemeManager {
 
     public static void init(Context ctx, SettingsAPI sets, boolean shouldRerender) {
         settings = sets;
-        var fontPath = sets.getString("font", null);
-        if (fontPath != null) {
-            var file = new File(fontPath);
-            if (file.exists()) loadFont(file, shouldRerender);
-            else {
-                Themer.logger.warn("No such font: " + fontPath);
-                sets.setString("font", null);
-            }
-        }
         loadThemes(ctx, true, shouldRerender);
     }
 
@@ -154,10 +145,25 @@ public class ThemeManager {
     private static final int colorPrefixLength = "color_".length();
     private static final int drawableColorPrefixLength = "drawablecolor_".length();
 
-    public static boolean loadFont(File file, boolean shouldRerender) {
-        font = Typeface.createFromFile(file);
+    public static boolean loadFont(int id, File file, boolean shouldRerender) {
+        var font = Typeface.createFromFile(file);
+        fonts.put(id, font);
         if (shouldRerender) Utils.appActivity.recreate();
         return true;
+    }
+
+    public static boolean loadFont(int id, String url, boolean shouldRerender) {
+        try (var req = new Http.Request(url)) {
+            var res = req.execute();
+            var file = new File(Utils.appActivity.getCacheDir(), "font-" + id + ".ttf");
+            try (var fos = new FileOutputStream(file)) {
+                res.pipe(fos);
+                return loadFont(id, file, shouldRerender);
+            }
+        } catch (IOException ex) {
+            Themer.logger.error("Failed to load font " + url, ex);
+            return false;
+        }
     }
 
     public static void loadBackground(String url) {
@@ -190,6 +196,7 @@ public class ThemeManager {
             var json = new JSONObject(new JSONTokener(content));
             var it = json.keys();
 
+            fonts = new HashMap<>();
             activeTheme = new HashMap<>();
             drawableTints = new HashMap<>();
             customBackground = null;
@@ -210,6 +217,20 @@ public class ThemeManager {
                         loadBackground(json.getString(key));
                         if (backgroundTransparency == -1) backgroundTransparency = Themer.DEFAULT_ALPHA;
                         continue;
+                }
+
+                if (key.startsWith("font")) {
+                    if (key.equals("font")) loadFont(-1, json.getString(key), shouldRerender);
+                    else if (key.charAt(5) == '-'){
+                        var fontName = key.substring(5);
+                        try {
+                            var font = Constants.Fonts.class.getField(fontName);
+                            loadFont((int) Objects.requireNonNull(font.get(null)), json.getString(key), shouldRerender);
+                        } catch (ReflectiveOperationException ex) {
+                            Themer.logger.error("No such font: " + fontName, ex);
+                        }
+                    }
+                    continue;
                 }
 
                 var val = json.getInt(key);
@@ -270,6 +291,22 @@ public class ThemeManager {
         }
 
         if (shouldRerender) Utils.appActivity.recreate();
+
+        if (theme.updaterUrl != null) Utils.threadPool.execute(() -> {
+            try (var req = new Http.Request(theme.updaterUrl, "HEAD")) {
+                req.execute();
+                int size = Integer.parseInt(req.conn.getHeaderField("Content-Length"));
+                if (size != theme.file.length()) {
+                    try (var req2 = new Http.Request(theme.updaterUrl); var fos = new FileOutputStream(theme.file)) {
+                        req2.execute().pipe(fos);
+                        Utils.showToast(Utils.appActivity, "Updated theme " + theme.name + ". Please restart to reload it");
+                    }
+                }
+            } catch (Throwable ex) {
+                Themer.logger.error("Failed to update theme " + theme.name, ex);
+            }
+        });
+
         return true;
     }
 

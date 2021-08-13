@@ -100,7 +100,7 @@ public class ThemerSettings extends SettingsPage {
                                     ThemeManager.loadThemes(ctx, false, false);
                                 } else {
                                     ThemeManager.settings.setString("font", file.getAbsolutePath());
-                                    ThemeManager.loadFont(file, true);
+                                    ThemeManager.loadFont(-1, file, true);
                                 }
                                 reRender();
                             } catch (Throwable th) {
@@ -154,7 +154,6 @@ public class ThemerSettings extends SettingsPage {
             reRender();
         });
 
-        addView(fontBtn);
         addView(importBtn);
         addView(refreshBtn);
         addView(new Divider(ctx));
