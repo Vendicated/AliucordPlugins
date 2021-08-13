@@ -17,10 +17,12 @@ import android.graphics.drawable.BitmapDrawable;
 import com.aliucord.*;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.plugins.Themer;
+import com.aliucord.updater.Updater;
 
 import org.json.*;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class ThemeManager {
@@ -134,7 +136,6 @@ public class ThemeManager {
             var theme = new ThemeInfo(file);
             if (shouldLoad && theme.isEnabled()) {
                 boolean success = loadTheme(theme, shouldRerender);
-                Utils.showToast(ctx, (success ? "Successfully loaded theme " : "Failed to load theme ") + theme.name);
                 if (!success) continue;
             }
             themes.add(theme);
@@ -152,18 +153,19 @@ public class ThemeManager {
         return true;
     }
 
-    public static boolean loadFont(int id, String url, boolean shouldRerender) {
-        try (var req = new Http.Request(url)) {
-            var res = req.execute();
-            var file = new File(Utils.appActivity.getCacheDir(), "font-" + id + ".ttf");
-            try (var fos = new FileOutputStream(file)) {
-                res.pipe(fos);
-                return loadFont(id, file, shouldRerender);
+    public static void loadFont(int id, String url, boolean shouldRerender) {
+        Utils.threadPool.execute(() -> {
+            try (var req = new Http.Request(url)) {
+                var res = req.execute();
+                var file = new File(Utils.appActivity.getCacheDir(), "font-" + id + ".ttf");
+                try (var fos = new FileOutputStream(file)) {
+                    res.pipe(fos);
+                    loadFont(id, file, shouldRerender);
+                }
+            } catch (IOException ex) {
+                Themer.logger.error("Failed to load font " + url, ex);
             }
-        } catch (IOException ex) {
-            Themer.logger.error("Failed to load font " + url, ex);
-            return false;
-        }
+        });
     }
 
     public static void loadBackground(String url) {
@@ -221,7 +223,7 @@ public class ThemeManager {
 
                 if (key.startsWith("font")) {
                     if (key.equals("font")) loadFont(-1, json.getString(key), shouldRerender);
-                    else if (key.charAt(5) == '-'){
+                    else if (key.charAt(5) == '_'){
                         var fontName = key.substring(5);
                         try {
                             var font = Constants.Fonts.class.getField(fontName);
@@ -292,14 +294,13 @@ public class ThemeManager {
 
         if (shouldRerender) Utils.appActivity.recreate();
 
-        if (theme.updaterUrl != null) Utils.threadPool.execute(() -> {
-            try (var req = new Http.Request(theme.updaterUrl, "HEAD")) {
-                req.execute();
-                int size = Integer.parseInt(req.conn.getHeaderField("Content-Length"));
-                if (size != theme.file.length()) {
-                    try (var req2 = new Http.Request(theme.updaterUrl); var fos = new FileOutputStream(theme.file)) {
-                        req2.execute().pipe(fos);
-                        Utils.showToast(Utils.appActivity, "Updated theme " + theme.name + ". Please restart to reload it");
+        if (theme.updaterUrl != null && theme.version != null) Utils.threadPool.execute(() -> {
+            try (var req = new Http.Request(theme.updaterUrl)) {
+                var res = req.execute().text();
+                var json = new JSONObject(res);
+                if (json.has("version") && Updater.isOutdated("Theme " + theme.name, theme.version, json.getString("version"))) {
+                    try (var fos = new FileOutputStream(theme.file)) {
+                        fos.write(res.getBytes(StandardCharsets.UTF_8));
                     }
                 }
             } catch (Throwable ex) {
