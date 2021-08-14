@@ -160,7 +160,7 @@ public class ThemeManager {
                 var file = new File(Utils.appActivity.getCacheDir(), "font-" + id + ".ttf");
                 try (var fos = new FileOutputStream(file)) {
                     res.pipe(fos);
-                    loadFont(id, file, shouldRerender);
+                    Utils.mainThread.post(() -> loadFont(id, file, shouldRerender));
                 }
             } catch (IOException ex) {
                 Themer.logger.error("Failed to load font " + url, ex);
@@ -223,7 +223,7 @@ public class ThemeManager {
 
                 if (key.startsWith("font")) {
                     if (key.equals("font")) loadFont(-1, json.getString(key), shouldRerender);
-                    else if (key.charAt(5) == '_'){
+                    else if (key.charAt(4) == '_'){
                         var fontName = key.substring(5);
                         try {
                             var font = Constants.Fonts.class.getField(fontName);

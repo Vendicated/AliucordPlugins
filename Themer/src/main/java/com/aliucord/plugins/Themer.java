@@ -11,8 +11,7 @@
 package com.aliucord.plugins;
 
 import android.content.Context;
-import android.content.res.ColorStateList;
-import android.content.res.Resources;
+import android.content.res.*;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -81,6 +80,8 @@ public class Themer extends Plugin {
         var themeDir = new File(Constants.BASE_PATH, "themes");
         if (!themeDir.exists() && !themeDir.mkdir()) throw new RuntimeException("Failed to create theme folder.");
 
+        ThemeManager.init(ctx, settings, false);
+
         var res = ctx.getResources();
         var theme = ctx.getTheme();
 
@@ -91,8 +92,6 @@ public class Themer extends Plugin {
             if (color == 0) continue;
             colorToName.put(color, colorName);
         }
-
-        ThemeManager.init(ctx, settings, false);
 
         final boolean enableTransparency = settings.getBool("enableTransparency", false);
         if (enableTransparency) {
