@@ -59,7 +59,7 @@ public class ViewProfileImages extends Plugin {
 
     @SuppressWarnings("AccessStaticViaInstance")
     private void openAttachment(Context ctx, String url, String name) {
-        var attachment = new MessageAttachment();
+        var attachment = Utils.allocateInstance(MessageAttachment.class);
         try {
             fileNameField.set(attachment, String.format("%s.%s", name, getExtFromUrl(url)));
             idField.set(attachment, SnowflakeUtils.fromTimestamp(System.currentTimeMillis()));
