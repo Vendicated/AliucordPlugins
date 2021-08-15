@@ -62,7 +62,7 @@ public class Themer extends Plugin {
                 new Manifest.Author("AAGaming", 373833473091436546L),
         };
         manifest.description = "Adds support for custom themes & fonts";
-        manifest.version = "1.0.1";
+        manifest.version = "1.0.2";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
