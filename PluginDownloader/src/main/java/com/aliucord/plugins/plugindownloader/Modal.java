@@ -20,7 +20,7 @@ import com.aliucord.fragments.SettingsPage;
 import com.aliucord.views.Button;
 import com.aliucord.views.DangerButton;
 import com.google.gson.reflect.TypeToken;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -53,7 +53,7 @@ public final class Modal extends SettingsPage {
         var ctx = requireContext();
 
         if (ex != null) {
-            var exView = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_SubText);
+            var exView = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_SubText);
             var sw = new StringWriter();
             var pw = new PrintWriter(sw);
             ex.printStackTrace(pw);

@@ -23,7 +23,7 @@ import com.aliucord.wrappers.GuildEmojiWrapper;
 import com.discord.api.emoji.GuildEmoji;
 import com.discord.models.guild.Guild;
 import com.discord.stores.StoreStream;
-import com.lytefast.flexinput.R$c;
+import com.lytefast.flexinput.R;
 
 import java.io.*;
 import java.util.*;
@@ -53,7 +53,7 @@ public class EmojiDownloader {
         var downloaded = file.exists();
         if (downloaded) {
             btn.setText("Remove saved Emoji");
-            btn.setBackgroundColor(ctx.getColor(R$c.uikit_btn_bg_color_selector_red));
+            btn.setBackgroundColor(ctx.getColor(R.c.uikit_btn_bg_color_selector_red));
             btn.setOnClickListener(v -> {
                 if (file.delete())
                     callSelf.run();
@@ -62,7 +62,7 @@ public class EmojiDownloader {
             });
         } else {
             btn.setText("Save Emoji");
-            btn.setBackgroundColor(ctx.getColor(R$c.uikit_btn_bg_color_selector_brand));
+            btn.setBackgroundColor(ctx.getColor(R.c.uikit_btn_bg_color_selector_brand));
             btn.setOnClickListener(v -> downloadSingle(ctx, id, animated, callSelf));
         }
     }

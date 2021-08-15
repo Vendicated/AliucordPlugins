@@ -31,7 +31,7 @@ import com.aliucord.views.Button;
 import com.aliucord.views.Divider;
 import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -158,14 +158,14 @@ public class ThemerSettings extends SettingsPage {
         addView(refreshBtn);
         addView(new Divider(ctx));
 
-        var header = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Header);
+        var header = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header);
         header.setText("Active Theme");
         header.setTypeface(ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold));
 
         addView(header);
 
         if (ThemeManager.themes.size() == 0) {
-            var text = new TextView(ctx, null, 0, R$h.UiKit_TextView);
+            var text = new TextView(ctx, null, 0, R.h.UiKit_TextView);
             text.setText("Hmm... No themes found.");
             addView(text);
         } else {

@@ -36,7 +36,7 @@ import com.discord.app.AppFragment;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.google.android.material.textfield.TextInputLayout;
-import com.lytefast.flexinput.*;
+import com.lytefast.flexinput.R;
 
 import java.io.*;
 import java.util.HashMap;
@@ -85,7 +85,7 @@ public class Themer extends Plugin {
         var res = ctx.getResources();
         var theme = ctx.getTheme();
 
-        for (var field : R$c.class.getDeclaredFields()) {
+        for (var field : R.c.class.getDeclaredFields()) {
             String colorName = field.getName();
             int colorId = field.getInt(null);
             int color = res.getColor(colorId, theme);
@@ -109,7 +109,7 @@ public class Themer extends Plugin {
                 } else if (className.toLowerCase().contains("settings") || SettingsPage.class.isAssignableFrom(clazz)) {
                     Integer tint = ThemeManager.getColor("primary_dark_600");
                     var bg = (Drawable) ThemeManager.customBackground;
-                    if (tint != null || (tint = view.getContext().getColor(R$c.primary_dark_600)) != 0) {
+                    if (tint != null || (tint = view.getContext().getColor(R.c.primary_dark_600)) != 0) {
                         bg = ThemeManager.customBackground.mutate();
                         bg.setColorFilter(tint, PorterDuff.Mode.DARKEN);
                     }
@@ -215,12 +215,12 @@ public class Themer extends Plugin {
                 }
 
                 if (url != null) {
-                    var view = new TextView(context, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    var view = new TextView(context, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Install " + name);
-                    var icon = ContextCompat.getDrawable(context, R$d.ic_theme_24dp);
+                    var icon = ContextCompat.getDrawable(context, R.d.ic_theme_24dp);
                     if (icon != null) {
-                        icon.setTint(ColorCompat.getThemedColor(context, R$b.colorInteractiveNormal));
+                        icon.setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal));
                         view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     }
                     String finalUrl = url;

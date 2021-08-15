@@ -81,7 +81,7 @@ public class Modal extends SettingsPage {
 
     private boolean isCandidate(Guild guild) {
         var perms = guildPerms.get(guild.getId());
-        if (!PermissionUtils.can(Permission.MANAGE_EMOJIS, perms)) return false;
+        if (!PermissionUtils.can(Permission.MANAGE_EMOJIS_AND_STICKERS, perms)) return false;
         int usedSlots = 0;
         for (var emoji : guild.getEmojis()) {
             if (GuildEmojiWrapper.getId(emoji) == id) return false;

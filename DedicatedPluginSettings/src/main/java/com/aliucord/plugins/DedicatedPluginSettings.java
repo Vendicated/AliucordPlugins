@@ -34,36 +34,35 @@ import com.discord.app.AppBottomSheet;
 import com.discord.databinding.WidgetSettingsBinding;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.settings.WidgetSettings;
-import com.lytefast.flexinput.*;
-import com.yalantis.ucrop.R$c;
+import com.lytefast.flexinput.R;
 
 import java.util.*;
 
 @SuppressWarnings("unused")
 public class DedicatedPluginSettings extends Plugin {
     private static final Map<String, Integer> drawableIds = new HashMap<>() {{
-        put("fallback", R$d.ic_slash_command_24dp);
+        put("fallback", R.d.ic_slash_command_24dp);
 
         try {
             // Ven
-            put("TapTap", R$d.ic_raised_hand_action_24dp);
-            put("Themer", R$d.ic_theme_24dp);
-            put("Hastebin", R$d.ic_link_white_24dp);
-            put("ImageUploader", R$d.ic_uploads_image_dark);
-            put("EmojiUtility", R$d.ic_emoji_24dp);
+            put("TapTap", R.d.ic_raised_hand_action_24dp);
+            put("Themer", R.d.ic_theme_24dp);
+            put("Hastebin", R.d.ic_link_white_24dp);
+            put("ImageUploader", R.d.ic_uploads_image_dark);
+            put("EmojiUtility", R.d.ic_emoji_24dp);
 
             // Juby
-            put("UserDetails", R$d.ic_my_account_24dp);
-            put("PronounDB", R$d.ic_accessibility_24dp);
-            put("CustomTimestamps", R$d.ic_clock_black_24dp);
-            put("CustomNicknameFormat", R$d.ic_account_circle_white_24dp);
-            put("RemoveZoomLimit", R$d.ic_search_white_24dp);
+            put("UserDetails", R.d.ic_my_account_24dp);
+            put("PronounDB", R.d.ic_accessibility_24dp);
+            put("CustomTimestamps", R.d.ic_clock_black_24dp);
+            put("CustomNicknameFormat", R.d.ic_account_circle_white_24dp);
+            put("RemoveZoomLimit", R.d.ic_search_white_24dp);
 
             // Moth
-            put("RotatedChat", R$c.ucrop_rotate); // This is from https://github.com/Yalantis/uCrop lmao
+            put("RotatedChat", com.yalantis.ucrop.R.c.ucrop_rotate); // This is from https://github.com/Yalantis/uCrop lmao
 
             // Xinto
-            put("HideBloat", R$d.design_ic_visibility_off);
+            put("HideBloat", R.d.design_ic_visibility_off);
         } catch (Throwable th) { logger.error("Failed to retrieve some drawables", th); }
     }};
 
@@ -122,7 +121,7 @@ public class DedicatedPluginSettings extends Plugin {
 
             var existingHeader = layout.findViewById(id);
             if (existingHeader == null) {
-                var header = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Header);
+                var header = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header);
                 header.setId(id);
                 header.setText("Plugin Settings");
                 header.setTypeface(ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold));
@@ -138,7 +137,7 @@ public class DedicatedPluginSettings extends Plugin {
             for (var p : PluginManager.plugins.values()) if (p.settingsTab != null && PluginManager.isPluginEnabled(p.name)) {
                 int hashcode = p.name.hashCode();
                 if (layout.findViewById(hashcode) == null) {
-                    var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(hashcode);
                     view.setText(p.name);
                     view.setTypeface(font);
@@ -153,7 +152,7 @@ public class DedicatedPluginSettings extends Plugin {
                         if (icon == null) icon = Objects.requireNonNull(drawables.get("fallback"), "Fallback icon was somehow null");
                     }
                     icon = icon.mutate();
-                    icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
+                    icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
                     view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
 
                     view.setOnClickListener(e -> handleEntryClicked(e.getContext(), p, widgetSettings.getParentFragmentManager()));

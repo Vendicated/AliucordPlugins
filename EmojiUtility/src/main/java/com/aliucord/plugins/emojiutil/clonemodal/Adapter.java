@@ -21,7 +21,7 @@ import com.aliucord.Utils;
 import com.discord.models.guild.Guild;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.extensions.SimpleDraweeViewExtensionsKt;
-import com.lytefast.flexinput.R$b;
+import com.lytefast.flexinput.R;
 
 import java.util.List;
 
@@ -52,7 +52,7 @@ public class Adapter extends RecyclerView.Adapter<ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         var guild = guilds.get(position);
 
-        var color = Integer.valueOf(ColorCompat.getThemedColor(holder.itemView.getContext(), R$b.colorBackgroundPrimary));
+        var color = Integer.valueOf(ColorCompat.getThemedColor(holder.itemView.getContext(), R.b.colorBackgroundPrimary));
         if (guild.getIcon() != null) {
             SimpleDraweeViewExtensionsKt.setGuildIcon(holder.icon, false, guild, 0, null, color, null, null, true, null);
             holder.iconText.setVisibility(View.GONE);

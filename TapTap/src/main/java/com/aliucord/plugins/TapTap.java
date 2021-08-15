@@ -33,7 +33,7 @@ import com.discord.utilities.color.ColorCompat;
 import com.discord.views.CheckedSetting;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.google.android.material.card.MaterialCardView;
-import com.lytefast.flexinput.R$b;
+import com.lytefast.flexinput.R;
 
 import top.canyie.pine.Pine;
 import top.canyie.pine.callback.MethodReplacement;
@@ -81,7 +81,7 @@ public class TapTap extends Plugin {
 
             var card = new MaterialCardView(ctx);
             card.setRadius(Utils.getDefaultCardRadius());
-            card.setCardBackgroundColor(ColorCompat.getThemedColor(ctx, R$b.colorBackgroundSecondary));
+            card.setCardBackgroundColor(ColorCompat.getThemedColor(ctx, R.b.colorBackgroundSecondary));
             var params = new MaterialCardView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             params.setMargins(0, Utils.getDefaultPadding(), 0, 0);
             card.setLayoutParams(params);

@@ -28,7 +28,7 @@ import com.aliucord.Utils;
 import com.aliucord.entities.Plugin;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -61,11 +61,11 @@ public class CheckLinks extends Plugin {
 
             for (var entry : entries) {
                 var row = new TableRow(ctx);
-                var header = new TextView(ctx, null, 0, R$h.UiKit_TextView);
+                var header = new TextView(ctx, null, 0, R.h.UiKit_TextView);
                 header.setText(entry.getKey());
                 header.setPadding(p, p2, p, p2);
 
-                var body = new TextView(ctx, null, 0, R$h.UiKit_TextView);
+                var body = new TextView(ctx, null, 0, R.h.UiKit_TextView);
                 body.setText(entry.getValue().result);
                 body.setPadding(p, p2, p, p2);
 

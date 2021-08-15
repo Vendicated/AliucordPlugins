@@ -29,8 +29,8 @@ import com.aliucord.plugins.plugindownloader.Modal;
 import com.aliucord.plugins.plugindownloader.PDUtil;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
-import com.lytefast.flexinput.R$b;
-import com.lytefast.flexinput.R$h;
+import com.lytefast.flexinput.R;
+import com.lytefast.flexinput.R;
 
 import java.util.regex.Pattern;
 
@@ -85,11 +85,11 @@ public class PluginDownloader extends Plugin {
                     String author = matcher.group(1);
                     String repo = matcher.group(2);
                     String name = matcher.group(4);
-                    var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Download " + name);
                     if (icon != null) {
-                        icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
+                        icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
                         view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     }
                     view.setOnClickListener(e -> PDUtil.downloadPlugin(e.getContext(), author, repo, name, _this::dismiss));
@@ -102,11 +102,11 @@ public class PluginDownloader extends Plugin {
                     String repo = repoMatcher.group(2);
 
                     var modal = new Modal(author, repo);
-                    var view = new TextView(ctx, null, 0, R$h.UiKit_Settings_Item_Icon);
+                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Open Plugin Downloader");
                     if (icon != null) {
-                        icon.setTint(ColorCompat.getThemedColor(ctx, R$b.colorInteractiveNormal));
+                        icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
                         view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     }
                     view.setOnClickListener(e -> {
