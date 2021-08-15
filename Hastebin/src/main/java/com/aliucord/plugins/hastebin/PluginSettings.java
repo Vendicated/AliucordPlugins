@@ -38,7 +38,6 @@ public final class PluginSettings extends SettingsPage {
     public void onViewBound(View view) {
         super.onViewBound(view);
 
-        //noinspection ResultOfMethodCallIgnored
         setActionBarTitle("Hastebin");
 
         var ctx = requireContext();

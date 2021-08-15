@@ -43,7 +43,6 @@ public final class Modal extends SettingsPage {
 
     @Override
     @SuppressLint("SetTextI18n")
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void onViewBound(View view) {
         super.onViewBound(view);
 
@@ -57,7 +56,7 @@ public final class Modal extends SettingsPage {
             var sw = new StringWriter();
             var pw = new PrintWriter(sw);
             ex.printStackTrace(pw);
-            exView.setText("An error occurred:\n\n" + sw.toString());
+            exView.setText("An error occurred:\n\n" + sw);
             exView.setTextIsSelectable(true);
             addView(exView);
         } else if (plugins == null) {
@@ -73,7 +72,7 @@ public final class Modal extends SettingsPage {
             var list = new ArrayList<Plugin.CardInfo>();
             for (var plugin : plugins.entrySet()) {
                 String name = plugin.getKey();
-                if (name.equals("default")) continue;;
+                if (name.equals("default")) continue;
                 boolean exists = PDUtil.isPluginInstalled(name);
                 String title = String.format("%s %s v%s", exists ? "Uninstall" : "Install", name, plugin.getValue().version);
                 list.add(new Plugin.CardInfo(name, title, exists));
@@ -81,7 +80,7 @@ public final class Modal extends SettingsPage {
             list.sort(Comparator.comparing(a -> a.title));
             for (var plugin: list) {
                 var button = plugin.exists ? new DangerButton(ctx) : new Button(ctx);
-                button.setText(plugin.title);;
+                button.setText(plugin.title);
                 if (!plugin.exists)
                     button.setOnClickListener(e -> PDUtil.downloadPlugin(ctx, author, repo, plugin.name, this::reRender));
                 else

@@ -84,7 +84,6 @@ public class ViewProfileImages extends Plugin {
         return sub.contains("?") ? sub.substring(0, sub.indexOf('?')) : sub;
     }
 
-    @SuppressWarnings("JavaReflectionMemberAccess")
     @SuppressLint("SetTextI18n")
     @Override
     public void start(Context context) throws Throwable {
@@ -174,7 +173,7 @@ public class ViewProfileImages extends Plugin {
                         openAttachment(e.getContext(), banner, guildName);
                     });
                 }
-            } catch (Throwable ignored) {};
+            } catch (Throwable ignored) {}
         }));
     }
 

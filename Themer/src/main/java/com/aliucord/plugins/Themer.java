@@ -10,6 +10,7 @@
 
 package com.aliucord.plugins;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.*;
 import android.graphics.PorterDuff;
@@ -76,6 +77,7 @@ public class Themer extends Plugin {
         return name == null ? null : ThemeManager.getColor(name);
     }
 
+    @SuppressLint("SetTextI18n")
     public void start(Context ctx) throws Throwable {
         var themeDir = new File(Constants.BASE_PATH, "themes");
         if (!themeDir.exists() && !themeDir.mkdir()) throw new RuntimeException("Failed to create theme folder.");
@@ -225,21 +227,19 @@ public class Themer extends Plugin {
                     }
                     String finalUrl = url;
                     String finalName = name;
-                    view.setOnClickListener(e -> {
-                        Utils.threadPool.execute(() -> {
-                            try (var req = new Http.Request(finalUrl)) {
-                                var resp = req.execute();
-                                try (var fos = new FileOutputStream(Constants.BASE_PATH + "/themes/" + finalName)) {
-                                    resp.pipe(fos);
-                                    ThemeManager.themes.clear();
-                                    ThemeManager.loadThemes(context, false, false);
-                                    Utils.showToast(context, "Successfully installed theme " + finalName);
-                                }
-                            } catch (IOException ex) {
-                                logger.error(context, "Failed to install theme " + finalName, ex);
+                    view.setOnClickListener(e -> Utils.threadPool.execute(() -> {
+                        try (var req = new Http.Request(finalUrl)) {
+                            var resp = req.execute();
+                            try (var fos = new FileOutputStream(Constants.BASE_PATH + "/themes/" + finalName)) {
+                                resp.pipe(fos);
+                                ThemeManager.themes.clear();
+                                ThemeManager.loadThemes(context, false, false);
+                                Utils.showToast(context, "Successfully installed theme " + finalName);
                             }
-                        });
-                    });
+                        } catch (IOException ex) {
+                            logger.error(context, "Failed to install theme " + finalName, ex);
+                        }
+                    }));
                     layout.addView(view, 1);
                 }
             }

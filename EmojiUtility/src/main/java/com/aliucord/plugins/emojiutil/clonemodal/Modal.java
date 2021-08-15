@@ -60,7 +60,6 @@ public class Modal extends SettingsPage {
     }
 
     @Override
-    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void onViewBound(View view) {
         super.onViewBound(view);
 

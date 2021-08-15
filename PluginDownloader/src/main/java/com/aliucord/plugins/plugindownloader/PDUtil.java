@@ -48,7 +48,7 @@ public final class PDUtil {
                 if (file.exists())
                     //noinspection ResultOfMethodCallIgnored
                     file.delete();
-            };
+            }
         });
     }
 

@@ -50,7 +50,6 @@ public class TapTap extends Plugin {
         }
 
         @SuppressLint("SetTextI18n")
-        @SuppressWarnings("ResultOfMethodCallIgnored")
         @Override
         public void onViewBound(View view) {
             super.onViewBound(view);

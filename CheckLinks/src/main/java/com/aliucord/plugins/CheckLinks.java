@@ -45,7 +45,6 @@ public class CheckLinks extends Plugin {
         public void onViewBound(View _view) {
             super.onViewBound(_view);
 
-            //noinspection ResultOfMethodCallIgnored
             setActionBarTitle("URL info");
 
             var ctx = requireContext();

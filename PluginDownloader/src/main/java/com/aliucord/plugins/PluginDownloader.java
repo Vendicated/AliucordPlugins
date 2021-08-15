@@ -30,10 +30,8 @@ import com.aliucord.plugins.plugindownloader.PDUtil;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R;
-import com.lytefast.flexinput.R;
 
 import java.util.regex.Pattern;
-
 
 @SuppressWarnings("unused")
 @SuppressLint("SetTextI18n")

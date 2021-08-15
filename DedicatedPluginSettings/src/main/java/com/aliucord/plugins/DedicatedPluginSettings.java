@@ -115,7 +115,7 @@ public class DedicatedPluginSettings extends Plugin {
             var ctx = widgetSettings.requireContext();
             var layout = (LinearLayoutCompat) ((NestedScrollView) ((CoordinatorLayout) binding.getRoot()).getChildAt(1)).getChildAt(0);
 
-            int baseIndex = layout.indexOfChild(layout.findViewById(Utils.getResId("developer_options_divider", "id")));;
+            int baseIndex = layout.indexOfChild(layout.findViewById(Utils.getResId("developer_options_divider", "id")));
 
             if (PluginManager.plugins.size() == 0) return;
 

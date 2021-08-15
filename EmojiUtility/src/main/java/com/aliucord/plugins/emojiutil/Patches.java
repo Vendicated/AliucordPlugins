@@ -41,7 +41,7 @@ import kotlin.jvm.functions.Function1;
 import top.canyie.pine.Pine;
 import top.canyie.pine.callback.MethodHook;
 
-@SuppressWarnings({"UnusedReturnValue", "JavaReflectionMemberAccess"})
+@SuppressWarnings({"UnusedReturnValue"})
 public class Patches {
     private static Runnable extraButtonsUnhook;
     private static Runnable keepOpenUnhook;
@@ -100,7 +100,6 @@ public class Patches {
                 var binding = (WidgetEmojiSheetBinding) getBinding.invoke(_this);
                 if (binding == null) return;
                 var root = (ViewGroup) binding.getRoot();
-                if (root == null) return;
                 var rootLayout = (LinearLayout) root.getChildAt(0);
 
                 if (rootLayout.findViewById(layoutId) != null) return;

@@ -27,8 +27,7 @@ import com.discord.utilities.time.ClockFactory;
 import com.discord.utilities.user.UserUtils;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Commands {
@@ -140,7 +139,7 @@ public class Commands {
                 if (msg.getContent() == null) return replyError("That message has no content");
                 ret = EmojiDownloader.downloadFromString(msg.getContent());
             } else if (ctx.containsArg("provided")) {
-                ret = EmojiDownloader.downloadFromString((String) ctx.getSubCommandArgs("provided").get("emojis"));
+                ret = EmojiDownloader.downloadFromString((String) Objects.requireNonNull(ctx.getSubCommandArgs("provided")).get("emojis"));
             } else {
                 return new CommandsAPI.CommandResult("Please choose a subcommand!", null, false);
             }
