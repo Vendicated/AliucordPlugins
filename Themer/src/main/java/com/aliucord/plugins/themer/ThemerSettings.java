@@ -15,20 +15,21 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Environment;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.aliucord.*;
 import com.aliucord.fragments.InputDialog;
 import com.aliucord.fragments.SettingsPage;
 import com.aliucord.plugins.Themer;
-import com.aliucord.views.Button;
-import com.aliucord.views.Divider;
+import com.aliucord.views.*;
 import com.discord.views.CheckedSetting;
 import com.discord.views.RadioManager;
 import com.lytefast.flexinput.R;
@@ -38,6 +39,7 @@ import org.json.JSONTokener;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import kotlin.jvm.functions.Function1;
 
@@ -137,6 +139,28 @@ public class ThemerSettings extends SettingsPage {
         );
 
         setActionBarTitle("Themer");
+
+        var exportBtn = new ToolbarButton(ctx);
+        exportBtn.setOnClickListener(v -> {
+            var f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "nameToColor.json");
+            try (var fos = new FileOutputStream(f)) {
+                var json = new JSONObject();
+                var res = v.getResources();
+                var theme = v.getContext().getTheme();
+                for (var field : R.c.class.getDeclaredFields()) {
+                    String colorName = field.getName();
+                    int colorId = field.getInt(null);
+                    int color = res.getColor(colorId, theme);
+                    if (color == 0) continue;
+                    json.put(colorName, color);
+                }
+                fos.write(json.toString(2).getBytes(StandardCharsets.UTF_8));
+                Utils.showToast(v.getContext(), "Successfully created nameToColor.json");
+            } catch (Throwable ignored) { }
+        });
+        exportBtn.setImageDrawable(ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp));
+        exportBtn.getDrawable().mutate().setAlpha(0);
+        addHeaderButton(exportBtn);
 
         var fontBtn = new Button(ctx);
         fontBtn.setText("Choose font");

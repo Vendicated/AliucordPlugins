@@ -279,7 +279,7 @@ public class ThemeManager {
                 }
 
                 if (key.startsWith("color_")) {
-                    activeTheme.put(key.substring(colorPrefixLength), val);
+                    put(key.substring(colorPrefixLength), val);
                 } else if (key.startsWith("drawablecolor_")) {
                     boolean success = tintDrawable(key.substring(drawableColorPrefixLength), val);
                     if (!success) Themer.logger.warn("Failed to tint drawable " + key.substring(drawableColorPrefixLength));
@@ -311,6 +311,14 @@ public class ThemeManager {
         return true;
     }
 
+    private static void put(String key, int value) {
+        try {
+            var color = Utils.appActivity.getColor(Utils.getResId(key, "color"));
+            Themer.colorReplacements.put(color, value);
+        } catch (Throwable ignored) {}
+        activeTheme.put(key, value);
+    }
+
     public static Integer getColor(String key) {
         if (activeTheme == null) return null;
         return activeTheme.get(key);
@@ -327,7 +335,7 @@ public class ThemeManager {
 
     private static void themeAll(String[] colors, int color) {
         for (var name : colors)
-            activeTheme.put(name, color);
+            put(name, color);
     }
 
     private static boolean tintDrawable(String name, int color) {

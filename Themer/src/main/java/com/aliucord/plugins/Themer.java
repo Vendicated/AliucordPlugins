@@ -12,7 +12,8 @@ package com.aliucord.plugins;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.res.*;
+import android.content.res.ColorStateList;
+import android.content.res.Resources;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
@@ -63,18 +64,22 @@ public class Themer extends Plugin {
                 new Manifest.Author("AAGaming", 373833473091436546L),
         };
         manifest.description = "Adds support for custom themes & fonts";
-        manifest.version = "1.0.2";
+        manifest.version = "1.0.3";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
-    public final HashMap<Integer, String> colorToName = new HashMap<>();
+    public static final HashMap<Integer, Integer> colorReplacements = new HashMap<>();
+    public static final HashMap<Integer, Integer> idToColor = new HashMap<>();
+    public static final HashMap<Integer, String> colorToName = new HashMap<>();
 
     public static View appContainer;
 
     private Integer getReplacement(Object color) {
         var name = colorToName.get((int) color);
-        return name == null ? null : ThemeManager.getColor(name);
+        Integer out;
+        if (name != null && (out = ThemeManager.getColor(name)) != null) return out;
+        return colorReplacements.get(color);
     }
 
     @SuppressLint("SetTextI18n")
@@ -154,11 +159,20 @@ public class Themer extends Plugin {
         patcher.patch(ColorDrawable.class.getDeclaredMethod("setColor", int.class), new PinePrePatchFn(setColorHook));
 
         var replaceResult = new PinePatchFn(callFrame -> {
-            var replacement = getReplacement(callFrame.getResult());
+            var replacement = colorReplacements.get(callFrame.getResult());
             if (replacement != null) callFrame.setResult(replacement);
         });
 
-        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), replaceResult);
+        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), new PinePrePatchFn(callFrame -> {
+            int id = (int) callFrame.args[1];
+            if (idToColor.containsKey(id)) callFrame.setResult(idToColor.get(id));
+        }));
+
+        patcher.patch(Context.class.getDeclaredMethod("getColor", int.class), new PinePrePatchFn(callFrame -> {
+            int id = (int) callFrame.args[0];
+            if (idToColor.containsKey(id)) callFrame.setResult(idToColor.get(id));
+        }));
+
         patcher.patch(ColorStateList.class.getDeclaredMethod("getColorForState", int[].class, int.class), replaceResult);
 
         patcher.patch(Resources.class.getDeclaredMethod("getDrawableForDensity", int.class, int.class, Resources.Theme.class), new PinePatchFn(callFrame -> {
