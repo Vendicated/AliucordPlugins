@@ -312,11 +312,17 @@ public class ThemeManager {
     }
 
     private static void put(String key, int value) {
-        try {
-            var color = Utils.appActivity.getColor(Utils.getResId(key, "color"));
-            Themer.colorReplacements.put(color, value);
-        } catch (Throwable ignored) {}
-        activeTheme.put(key, value);
+        int id = Utils.getResId(key, "color");
+        if (id != 0) {
+            Themer.idToColor.put(id, value);
+            activeTheme.put(key, value);
+            try {
+                int color = Utils.appActivity.getColor(id);
+                Themer.colorReplacements.put(color, value);
+            } catch (Throwable ignored) {}
+        } else {
+            Themer.logger.warn("Unrecognised colour " + key);
+        }
     }
 
     public static Integer getColor(String key) {

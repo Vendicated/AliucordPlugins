@@ -33,6 +33,7 @@ import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
 import com.aliucord.plugins.themer.*;
+import com.aliucord.utils.ReflectUtils;
 import com.aliucord.wrappers.messages.AttachmentWrapper;
 import com.discord.app.AppFragment;
 import com.discord.utilities.color.ColorCompat;
@@ -41,11 +42,14 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.lytefast.flexinput.R;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
+import kotlin.jvm.functions.Function1;
 import rx.functions.Action1;
 import top.canyie.pine.Pine;
+import top.canyie.pine.callback.MethodHook;
 
 public class Themer extends Plugin {
     public static final int DEFAULT_ALPHA = 150;
@@ -125,6 +129,7 @@ public class Themer extends Plugin {
             }));
         }
 
+        // Font patch
         var fontHook = new PinePrePatchFn(callFrame -> {
             int id = (int) callFrame.args[1];
             if (ThemeManager.fonts.containsKey(id)) callFrame.setResult(ThemeManager.fonts.get(id));
@@ -158,23 +163,31 @@ public class Themer extends Plugin {
 
         patcher.patch(ColorDrawable.class.getDeclaredMethod("setColor", int.class), new PinePrePatchFn(setColorHook));
 
-        var replaceResult = new PinePatchFn(callFrame -> {
-            var replacement = colorReplacements.get(callFrame.getResult());
-            if (replacement != null) callFrame.setResult(replacement);
+
+
+        // Replace getColor calls, idk if this actually does anything
+        Function1<Integer, MethodHook> patchGetColor = idx -> new PinePrePatchFn(callFrame -> {
+            int id = (int) callFrame.args[idx];
+            if (idToColor.containsKey(id)) callFrame.setResult(idToColor.get(id));
         });
+        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), patchGetColor.invoke(1));
+        patcher.patch(Resources.class.getDeclaredMethod("getColor", int.class, Resources.Theme.class), patchGetColor.invoke(0));
 
-        patcher.patch(ColorCompat.class.getDeclaredMethod("getThemedColor", Context.class, int.class), new PinePrePatchFn(callFrame -> {
-            int id = (int) callFrame.args[1];
-            if (idToColor.containsKey(id)) callFrame.setResult(idToColor.get(id));
+
+        // Figure out better way to do this
+        // This is stupid, because it matches the wrong name because we dont work with ids here but rather the colour value so its
+        // impossible to consistently resolve the correct name
+        patcher.patch(ColorStateList.class.getDeclaredMethod("getColorForState", int[].class, int.class), new PinePatchFn(callFrame -> {
+            var state = (ColorStateList) callFrame.thisObject;
+            try {
+                var themeAttrs = (Object[]) ReflectUtils.getField(state, "mStateSpecs");
+                logger.error(Arrays.deepToString(themeAttrs), null);
+            } catch (Throwable ignored) {}
+            var replacement = getReplacement(callFrame.getResult());
+            if (replacement != null) callFrame.setResult(replacement);
         }));
 
-        patcher.patch(Context.class.getDeclaredMethod("getColor", int.class), new PinePrePatchFn(callFrame -> {
-            int id = (int) callFrame.args[0];
-            if (idToColor.containsKey(id)) callFrame.setResult(idToColor.get(id));
-        }));
-
-        patcher.patch(ColorStateList.class.getDeclaredMethod("getColorForState", int[].class, int.class), replaceResult);
-
+        // Tint drawables
         patcher.patch(Resources.class.getDeclaredMethod("getDrawableForDensity", int.class, int.class, Resources.Theme.class), new PinePatchFn(callFrame -> {
             var color = ThemeManager.getTint((int) callFrame.args[0]);
             if (color != null) {
@@ -183,26 +196,29 @@ public class Themer extends Plugin {
             }
         }));
 
+        // Replace Attributes
         patcher.patch(Resources.Theme.class.getDeclaredMethod("resolveAttribute", int.class, TypedValue.class, boolean.class), new PinePatchFn(callFrame -> {
             int attr = (int) callFrame.args[0];
             var color = AttributeManager.getAttr(attr);
             if (color != null) ((TypedValue) callFrame.args[1]).data = color;
         }));
 
+        // Change Status Bar Colour
         patcher.patch(ColorCompat.class.getDeclaredMethod("setStatusBarColor", Window.class, int.class, boolean.class), new PinePrePatchFn(callFrame -> {
             var color = ThemeManager.getColor("statusbar_color");
             if (color != null) callFrame.args[1] = color;
         }));
 
+        // Change Text Input Background
         patcher.patch(TextInputLayout.class.getDeclaredMethod("calculateBoxBackgroundColor"), new PinePrePatchFn(callFrame -> {
             var color = ThemeManager.getColor("input_background_color");
             if (color != null) callFrame.setResult(color);
         }));
 
 
+        // Patch Message Actions in #themes channel to show download button
         var id = View.generateViewId();
         var badUrlMatcher = Pattern.compile("http[^\\s]+\\.json");
-
         patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new PinePatchFn(callFrame -> {
             var layout = (ViewGroup) ((ViewGroup) ((WidgetChatListActions) callFrame.thisObject).requireView()).getChildAt(0);
             if (layout == null || layout.findViewById(id) != null) return;
