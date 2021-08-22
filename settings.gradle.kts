@@ -10,7 +10,5 @@ include(":EmojiUtility")
 include(":PluginDownloader")
 include(":Hastebin")
 include(":UrbanDictionary")
-rootProject.name = "AliucordPlugins"
 
-include(":Aliucord")
-project(":Aliucord").projectDir = File("../repo/Aliucord")
+rootProject.name = "AliucordPlugins"
