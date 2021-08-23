@@ -37,8 +37,8 @@ import java.util.regex.Pattern;
 @SuppressLint("SetTextI18n")
 public class PluginDownloader extends Plugin {
     private final int id = View.generateViewId();
-    private final Pattern repoPattern = Pattern.compile("https?://github.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)");
-    private final Pattern zipPattern = Pattern.compile("https?://github.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)/(raw|blob)/\\w+/(\\w+).zip");
+    private final Pattern repoPattern = Pattern.compile("https?://github\\.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)");
+    private final Pattern zipPattern = Pattern.compile("https?://(?:github|raw\\.githubusercontent)\\.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)/(?:raw|blob)?/?\\w+/(\\w+).zip");
 
     public PluginDownloader() {
         super();
@@ -51,7 +51,7 @@ public class PluginDownloader extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.1.3";
+        manifest.version = "1.2.0";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -82,7 +82,7 @@ public class PluginDownloader extends Plugin {
                 while (matcher.find()) {
                     String author = matcher.group(1);
                     String repo = matcher.group(2);
-                    String name = matcher.group(4);
+                    String name = matcher.group(3);
                     var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Download " + name);
