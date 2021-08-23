@@ -12,13 +12,12 @@ package com.aliucord.plugins;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.res.ResourcesCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.widget.NestedScrollView;
 
 import com.aliucord.Constants;
@@ -40,32 +39,19 @@ public class PluginDownloader extends Plugin {
     private final Pattern repoPattern = Pattern.compile("https?://github\\.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)");
     private final Pattern zipPattern = Pattern.compile("https?://(?:github|raw\\.githubusercontent)\\.com/([A-Za-z0-9\\-_.]+)/([A-Za-z0-9\\-_.]+)/(?:raw|blob)?/?\\w+/(\\w+).zip");
 
-    public PluginDownloader() {
-        super();
-        needsResources = true;
-    }
-
     @NonNull
     @Override
     public Manifest getManifest() {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Adds message context menu items to quick download plugins";
-        manifest.version = "1.2.0";
+        manifest.version = "1.2.1";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
 
     @Override
     public void start(Context context) {
-        Drawable icon = ResourcesCompat.getDrawable(
-                resources,
-                resources.getIdentifier(
-                        "ic_download",
-                        "drawable",
-                        "com.aliucord.plugins"),
-                null);
-
         patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new PinePatchFn(callFrame -> {
             var _this = (WidgetChatListActions) callFrame.thisObject;
             var rootView = (NestedScrollView) _this.requireView();
@@ -86,7 +72,9 @@ public class PluginDownloader extends Plugin {
                     var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Download " + name);
+                    var icon = ContextCompat.getDrawable(ctx, R.d.ic_file_download_white_24dp);
                     if (icon != null) {
+                        icon = icon.mutate();
                         icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
                         view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     }
@@ -103,7 +91,9 @@ public class PluginDownloader extends Plugin {
                     var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Open Plugin Downloader");
+                    var icon = ContextCompat.getDrawable(ctx, R.d.ic_file_download_white_24dp);
                     if (icon != null) {
+                        icon = icon.mutate();
                         icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
                         view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                     }
