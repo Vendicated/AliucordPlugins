@@ -61,7 +61,7 @@ public class MessageLinkEmbeds extends Plugin {
         var manifest = new Manifest();
         manifest.authors = new Manifest.Author[] { new Manifest.Author("Vendicated", 343383572805058560L) };
         manifest.description = "Embeds message links";
-        manifest.version = "1.1.4";
+        manifest.version = "1.1.5";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -129,7 +129,7 @@ public class MessageLinkEmbeds extends Plugin {
                 .setDescription(msg.getContent())
                 .setTimestamp(new UtcDateTime(SnowflakeUtils.toTimestamp(messageId)));
 
-        var mEmbeds = MessageEmbedWrapper.wrapList(msg.getEmbeds());
+        var mEmbeds = CollectionUtils.map(msg.getEmbeds(), MessageEmbedWrapper::new);
         boolean setColor = false;
         if (mEmbeds.size() != 0) {
             var color = CollectionUtils.find(mEmbeds, e -> e.getColor() != null);
