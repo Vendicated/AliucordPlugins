@@ -155,7 +155,7 @@ public class ThemerSettings extends SettingsPage {
                     json.put(colorName, color);
                 }
                 fos.write(json.toString(2).getBytes(StandardCharsets.UTF_8));
-                Utils.showToast(v.getContext(), "Successfully created nameToColor.json");
+                Utils.showToast(v.getContext(), "hehehehe");
             } catch (Throwable ignored) { }
         });
         exportBtn.setImageDrawable(ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp));
@@ -193,7 +193,7 @@ public class ThemerSettings extends SettingsPage {
             text.setText("Hmm... No themes found.");
             addView(text);
         } else {
-            var transparencySwitch = Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Transparency", "Enables transparency for themes with custom background. Requires restart");
+            var transparencySwitch = Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Transparency (EXPERIMENTAL)", "Enables transparency for themes with custom background. Requires restart. MAY CAUSE LAG");
             transparencySwitch.setChecked(ThemeManager.settings.getBool("enableTransparency", false));
             transparencySwitch.setOnCheckedListener(c -> ThemeManager.settings.setBool("enableTransparency", c));
             addView(transparencySwitch);

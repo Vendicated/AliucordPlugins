@@ -316,10 +316,10 @@ public class ThemeManager {
         if (id != 0) {
             Themer.idToColor.put(id, value);
             activeTheme.put(key, value);
-            try {
+            /*try {
                 int color = Utils.appActivity.getColor(id);
                 Themer.colorReplacements.put(color, value);
-            } catch (Throwable ignored) {}
+            } catch (Throwable ignored) {}*/
         } else {
             Themer.logger.warn("Unrecognised colour " + key);
         }

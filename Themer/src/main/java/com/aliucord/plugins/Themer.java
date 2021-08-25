@@ -33,7 +33,6 @@ import com.aliucord.fragments.SettingsPage;
 import com.aliucord.patcher.PinePatchFn;
 import com.aliucord.patcher.PinePrePatchFn;
 import com.aliucord.plugins.themer.*;
-import com.aliucord.utils.ReflectUtils;
 import com.aliucord.wrappers.messages.AttachmentWrapper;
 import com.discord.app.AppFragment;
 import com.discord.utilities.color.ColorCompat;
@@ -42,7 +41,6 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.lytefast.flexinput.R;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
@@ -68,7 +66,7 @@ public class Themer extends Plugin {
                 new Manifest.Author("AAGaming", 373833473091436546L),
         };
         manifest.description = "Adds support for custom themes & fonts";
-        manifest.version = "1.0.3";
+        manifest.version = "1.0.4";
         manifest.updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json";
         return manifest;
     }
@@ -178,11 +176,6 @@ public class Themer extends Plugin {
         // This is stupid, because it matches the wrong name because we dont work with ids here but rather the colour value so its
         // impossible to consistently resolve the correct name
         patcher.patch(ColorStateList.class.getDeclaredMethod("getColorForState", int[].class, int.class), new PinePatchFn(callFrame -> {
-            var state = (ColorStateList) callFrame.thisObject;
-            try {
-                var themeAttrs = (Object[]) ReflectUtils.getField(state, "mStateSpecs");
-                logger.error(Arrays.deepToString(themeAttrs), null);
-            } catch (Throwable ignored) {}
             var replacement = getReplacement(callFrame.getResult());
             if (replacement != null) callFrame.setResult(replacement);
         }));

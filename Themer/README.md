@@ -2,6 +2,9 @@
 
 Custom Themes!
 
+Note: This plugin is quite heavy. If your Aliucord becomes slow, it may be why. If you are rooted, consider using
+the [Xposed Discord Themer](https://github.com/Aliucord/DiscordThemer) instead.
+
 ### Features
 - Custom colours
 - Custom icon (drawable) colours
