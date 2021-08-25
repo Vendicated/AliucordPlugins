@@ -41,8 +41,8 @@ class CheckLinks : Plugin() {
             val ctx = view.context
             val p = DimenUtils.getDefaultPadding()
             val p2 = p / 2
-            TableLayout(ctx).apply {
-                for ((key, value) in data.toList().sortedBy { (_, value) -> value.result }) {
+            TableLayout(ctx).let { table ->
+                for ((key, value) in data.toList().sortedBy { (_, value) -> value.result }.reversed()) {
                     TableRow(ctx).let { row ->
                         TextView(ctx, null, 0, R.h.UiKit_TextView).apply {
                             text = key
@@ -54,10 +54,10 @@ class CheckLinks : Plugin() {
                             setPadding(p, p2, p, p2)
                             row.addView(this)
                         }
-                        this.addView(row)
+                        table.addView(row)
                     }
                 }
-                addView(this)
+                addView(table)
             }
         }
     }
@@ -108,8 +108,8 @@ class CheckLinks : Plugin() {
                         }
                         val malicious = counts[1] + counts[2]
                         when {
-                            malicious > 2 -> String.format("URL %%s is likely malicious. %s engines flagged it.", malicious)
-                            malicious > 0 -> String.format("URL %%s is possibly malicious. %s engines flagged it.", malicious)
+                            malicious > 2 -> String.format("URL %%s is likely malicious. %s engines flagged it as malicious.", malicious)
+                            malicious > 0 -> String.format("URL %%s is possibly malicious. %s engines flagged it as malicious.", malicious)
                             else -> "URL %s is either safe or too new to be flagged."
                         }
                     } ?: "No info on URL %s. Proceed at your own risk."
