@@ -32,13 +32,15 @@
     "version": "1.0.1"
   },
   "CheckLinks": {
-    "version": "1.0.3",
-    "minimumDiscordVersion": 88202
+    "version": "1.0.4"
   },
   "Brainfuck": {
     "version": "1.0.0"
   },
   "Themer": {
     "version": "1.0.3"
+  },
+  "Softblock": {
+    "version": "1.0.0"
   }
 }
