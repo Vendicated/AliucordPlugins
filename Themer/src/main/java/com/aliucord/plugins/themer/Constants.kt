@@ -30,8 +30,11 @@ val ACCENT_NAMES = arrayOf(
     "brand_new_530",
     "brand_new_560", // reactions
     "brand_new_600",
-    "primary_dark_400", // timestamps & user status in member list
-    "uikit_btn_bg_color_selector_brand", // buttons
+    // =========== Buttons ============
+    "uikit_btn_bg_color_selector_brand",
+    "uikit_btn_bg_color_selector_secondary_dark",
+    "uikit_btn_compound_color_selector_dark",
+    "uikit_btn_compound_color_selector_light",
 )
 
 val BACKGROUND_NAMES = arrayOf(
@@ -53,7 +56,6 @@ val BACKGROUND_SECONDARY_NAMES = arrayOf(
     "input_background_color",
     "statusbar_color",
     "active_channel_color",
-    "uikit_btn_color_selector_background_accent_dark"
 )
 
 

@@ -2,13 +2,18 @@ package com.aliucord.plugins.themer
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.text.SpannableString
+import android.text.SpannableStringBuilder
+import android.text.method.LinkMovementMethod
+import android.text.style.ClickableSpan
 import android.view.View
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
-import com.aliucord.Constants
-import com.aliucord.Utils
+import com.aliucord.*
 import com.aliucord.fragments.SettingsPage
 import com.aliucord.plugins.Themer
+import com.aliucord.utils.ChangelogUtils
+import com.aliucord.utils.DimenUtils
 import com.aliucord.views.Button
 import com.aliucord.views.Divider
 import com.discord.views.CheckedSetting
@@ -26,6 +31,25 @@ class ThemerSettings : SettingsPage() {
         val ctx = view.context
 
         setActionBarTitle("Themer")
+
+        TextView(ctx, null, 0, R.h.UiKit_TextView).run {
+            val content = "Read the changelog!"
+            SpannableStringBuilder(content).let {
+                it.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) {
+                        val manifest = PluginManager.plugins["Themer"]!!.manifest
+                        ChangelogUtils.show(context, manifest.version, manifest.changelogMedia, manifest.changelog)
+                    }
+                }, content.indexOf("changelog"), content.length, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
+                text = it
+            }
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            DimenUtils.getDefaultPadding().let {
+                setPadding(it, it, it, it)
+            }
+            movementMethod = LinkMovementMethod.getInstance()
+            linearLayout.addView(this)
+        }
 
         Button(ctx).apply {
             text = "Load missing themes"

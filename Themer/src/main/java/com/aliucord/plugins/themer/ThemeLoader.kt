@@ -76,6 +76,30 @@ object ThemeLoader {
 
             theme.update()
 
+            if (json.has("simple_accent_color")) {
+                val v = json.getInt("simple_accent_color")
+                ResourceManager.putColors(ACCENT_NAMES, v)
+                ResourceManager.putAttrs(SIMPLE_ACCENT_ATTRS, v)
+                ResourceManager.putDrawableTint("ic_nitro_rep", v)
+                ResourceManager.putDrawableTint("drawable_voice_indicator_speaking", v)
+            }
+
+            if (json.has("simple_bg_color")) {
+                val v = json.getInt("simple_bg_color")
+                ResourceManager.putColors(BACKGROUND_NAMES, v)
+                ResourceManager.putAttrs(SIMPLE_BACKGROUND_ATTRS, v)
+            }
+
+            if (json.has("simple_bg_secondary_color")) {
+                val v = json.getInt("simple_bg_secondary_color")
+                ResourceManager.putColors(BACKGROUND_SECONDARY_NAMES, v)
+                ResourceManager.putAttrs(SIMPLE_BACKGROUND_SECONDARY_ATTRS, v)
+                ResourceManager.putDrawableTint("drawable_overlay_channels_selected_dark", v)
+                ResourceManager.putDrawableTint("drawable_overlay_channels_selected_light", v)
+                ResourceManager.putDrawableTint("drawable_overlay_channels_active_dark", v)
+                ResourceManager.putDrawableTint("drawable_overlay_channels_active_light", v)
+            }
+
             for (key in json.keys()) {
                 val v: Int by lazy {
                     json.getInt(key)
@@ -84,7 +108,7 @@ object ThemeLoader {
                 if (ATTR_MAPPINGS.containsKey(key)) ResourceManager.putAttr(key, v)
 
                 when (key) {
-                    "name", "author", "version", "license", "updater" -> continue
+                    "name", "author", "version", "license", "updater", "simple_accent_color", "simple_bg_color", "simple_bg_secondary_color" -> continue
                     "background_url" -> {
                         loadBackground(json.getString(key))
                         continue
@@ -98,26 +122,6 @@ object ThemeLoader {
                         ResourceManager.bgOpacity = v
                         continue
                     }
-                    "simple_accent_color" -> {
-                        ResourceManager.putColors(ACCENT_NAMES, v)
-                        ResourceManager.putAttrs(SIMPLE_ACCENT_ATTRS, v)
-                        ResourceManager.putDrawableTint("ic_nitro_rep", v)
-                        ResourceManager.putDrawableTint("ic_channel_text", v)
-                        ResourceManager.putDrawableTint("drawable_voice_indicator_speaking", v)
-                        continue
-                    }
-                    "simple_bg_color" -> {
-                        ResourceManager.putColors(BACKGROUND_NAMES, v)
-                        ResourceManager.putAttrs(SIMPLE_BACKGROUND_ATTRS, v)
-                        continue
-                    }
-                    "simple_bg_secondary_color" -> {
-                        ResourceManager.putColors(BACKGROUND_SECONDARY_NAMES, v)
-                        ResourceManager.putAttrs(SIMPLE_BACKGROUND_SECONDARY_ATTRS, v)
-                        ResourceManager.putDrawableTint("drawable_overlay_channels_selected_dark", v)
-                        ResourceManager.putDrawableTint("drawable_overlay_channels_selected_light", v)
-                        continue
-                    }
                     "mention_highlight" -> {
                         ResourceManager.putColor(
                             "status_yellow_500",
@@ -126,8 +130,8 @@ object ThemeLoader {
                         continue
                     }
                     "active_channel_color" -> {
-                        ResourceManager.putDrawableTint("drawable_overlay_channels_selected_dark", v)
-                        ResourceManager.putDrawableTint("drawable_overlay_channels_selected_light", v)
+                        ResourceManager.putDrawableTint("drawable_overlay_channels_active_dark", v)
+                        ResourceManager.putDrawableTint("drawable_overlay_channels_active_light", v)
                         ResourceManager.putColor(key, v)
                         continue
                     }

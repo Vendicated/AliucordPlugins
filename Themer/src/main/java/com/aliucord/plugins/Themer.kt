@@ -30,9 +30,19 @@ class Themer : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Author("Vendicated", 343383572805058560L))
         description = "Apply custom themes to your Discord"
-        version = "2.0.0"
+        version = "2.1.0"
         updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json"
         changelog = """
+            # Future RoadMap:
+            * Theme editor & creator
+            * Allow loading multiple themes at once
+            * Implement full transparency
+            
+            # 2.1.0
+            * Fix simple_accent_color
+            * Revert simple_accent_color theming chat input, timestamps etc
+            * simple colours now have less priority, meaning individual colours will always override them
+            
             # 2.0.0
             * Rewrite from scratch
             * Theme more things
