@@ -23,7 +23,7 @@ without it to create themes for the themer plugin
 ### Theme spec (SUBJECT TO CHANGE)
 - flat json file with key value pairs
 - All keys are optional
-- keys: 
+- keys:
   - name: The name of the theme
   - author: The name of the theme author
   - version: The version of the theme (Format: 1.0.0) used for updating

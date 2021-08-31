@@ -1,6 +1,6 @@
 {
   "default": {
-    "minimumDiscordVersion": 86205,
+    "minimumDiscordVersion": 89108,
     "version": "1.0.0",
     "build": "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/%s.zip"
   },
@@ -38,6 +38,6 @@
     "version": "1.0.0"
   },
   "Themer": {
-    "version": "1.0.4"
+    "version": "2.0.0"
   }
 }
