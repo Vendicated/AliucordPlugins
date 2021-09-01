@@ -14,13 +14,17 @@ enum class TransparencyMode(val value: Int) {
     }
 }
 
+const val SIMPLE_ACCENT_COLOR = "simple_accent_color"
+const val SIMPLE_BG_COLOR = "simple_bg_color"
+const val SIMPLE_BG_SECONDARY_COLOR = "simple_bg_secondary_color"
+
 const val DEFAULT_BACKGROUND_OPACITY = 150
 val themeDir = File(Constants.BASE_PATH, "themes")
 
 // Credit for these colours to both https://github.com/Aliucord/DiscordThemer
 // and https://github.com/GangsterFox/AliuFox-themes/blob/main/ThemerDocu.md
 
-val ACCENT_NAMES = arrayOf(
+val SIMPLE_ACCENT_NAMES = arrayOf(
     "link",
     "link_light",
     "brand_new",
@@ -37,7 +41,7 @@ val ACCENT_NAMES = arrayOf(
     "uikit_btn_compound_color_selector_light",
 )
 
-val BACKGROUND_NAMES = arrayOf(
+val SIMPLE_BG_NAMES = arrayOf(
     "dark_grey_2",
     "primary_600",
     "primary_660",
@@ -47,7 +51,7 @@ val BACKGROUND_NAMES = arrayOf(
     "primary_dark_800"
 )
 
-val BACKGROUND_SECONDARY_NAMES = arrayOf(
+val SIMPLE_BG_SECONDARY_NAMES = arrayOf(
     "primary_500",
     "primary_630",
     "primary_700",
@@ -68,7 +72,7 @@ val SIMPLE_ACCENT_ATTRS = arrayOf(
     "theme_chat_mention_foreground"
 )
 
-val SIMPLE_BACKGROUND_ATTRS = arrayOf(
+val SIMPLE_BG_ATTRS = arrayOf(
     "colorSurface",
     "colorBackgroundFloating",
     "colorTabsBackground",
@@ -78,7 +82,7 @@ val SIMPLE_BACKGROUND_ATTRS = arrayOf(
     "primary_800"
 )
 
-val SIMPLE_BACKGROUND_SECONDARY_ATTRS = arrayOf(
+val SIMPLE_BG_SECONDARY_ATTRS = arrayOf(
     "colorBackgroundTertiary",
     "colorBackgroundSecondary",
     "primary_700",

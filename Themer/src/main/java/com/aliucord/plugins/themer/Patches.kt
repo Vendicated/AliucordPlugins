@@ -4,7 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
-import android.graphics.PorterDuff
+import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.Handler
@@ -70,7 +70,7 @@ private fun PatcherAPI.setBackgrounds() {
             ResourceManager.customBg?.let { bg ->
                 var tint = ResourceManager.getColorForName("primary_dark_600")
                 if (tint != null || view.context.getColor(R.c.primary_dark_600).also { tint = it } != 0) {
-                    bg.setColorFilter(tint!!, PorterDuff.Mode.DARKEN)
+                    bg.colorFilter = PorterDuffColorFilter(tint!!, PorterDuff.Mode.DARKEN)
                 }
                 view.background = bg
             }

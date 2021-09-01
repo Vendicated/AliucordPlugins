@@ -68,7 +68,7 @@ object ThemeLoader {
         themes.sortBy { it.name }
     }
 
-    fun loadTheme(theme: Theme): Boolean {
+    private fun loadTheme(theme: Theme): Boolean {
         ResourceManager.bgOpacity = DEFAULT_BACKGROUND_OPACITY
 
         try {
@@ -76,24 +76,24 @@ object ThemeLoader {
 
             theme.update()
 
-            if (json.has("simple_accent_color")) {
-                val v = json.getInt("simple_accent_color")
-                ResourceManager.putColors(ACCENT_NAMES, v)
+            if (json.has(SIMPLE_ACCENT_COLOR)) {
+                val v = json.getInt(SIMPLE_ACCENT_COLOR)
+                ResourceManager.putColors(SIMPLE_ACCENT_NAMES, v)
                 ResourceManager.putAttrs(SIMPLE_ACCENT_ATTRS, v)
                 ResourceManager.putDrawableTint("ic_nitro_rep", v)
                 ResourceManager.putDrawableTint("drawable_voice_indicator_speaking", v)
             }
 
-            if (json.has("simple_bg_color")) {
-                val v = json.getInt("simple_bg_color")
-                ResourceManager.putColors(BACKGROUND_NAMES, v)
-                ResourceManager.putAttrs(SIMPLE_BACKGROUND_ATTRS, v)
+            if (json.has(SIMPLE_BG_COLOR)) {
+                val v = json.getInt(SIMPLE_BG_COLOR)
+                ResourceManager.putColors(SIMPLE_BG_NAMES, v)
+                ResourceManager.putAttrs(SIMPLE_BG_ATTRS, v)
             }
 
-            if (json.has("simple_bg_secondary_color")) {
-                val v = json.getInt("simple_bg_secondary_color")
-                ResourceManager.putColors(BACKGROUND_SECONDARY_NAMES, v)
-                ResourceManager.putAttrs(SIMPLE_BACKGROUND_SECONDARY_ATTRS, v)
+            if (json.has(SIMPLE_BG_SECONDARY_COLOR)) {
+                val v = json.getInt(SIMPLE_BG_SECONDARY_COLOR)
+                ResourceManager.putColors(SIMPLE_BG_SECONDARY_NAMES, v)
+                ResourceManager.putAttrs(SIMPLE_BG_SECONDARY_ATTRS, v)
                 ResourceManager.putDrawableTint("drawable_overlay_channels_selected_dark", v)
                 ResourceManager.putDrawableTint("drawable_overlay_channels_selected_light", v)
                 ResourceManager.putDrawableTint("drawable_overlay_channels_active_dark", v)
@@ -108,7 +108,8 @@ object ThemeLoader {
                 if (ATTR_MAPPINGS.containsKey(key)) ResourceManager.putAttr(key, v)
 
                 when (key) {
-                    "name", "author", "version", "license", "updater", "simple_accent_color", "simple_bg_color", "simple_bg_secondary_color" -> continue
+                    "name", "author", "version", "license", "updater" -> continue
+                    SIMPLE_ACCENT_COLOR, SIMPLE_BG_COLOR, SIMPLE_BG_SECONDARY_COLOR -> continue
                     "background_url" -> {
                         loadBackground(json.getString(key))
                         continue

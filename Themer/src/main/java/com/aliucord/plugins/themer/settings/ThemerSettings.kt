@@ -1,17 +1,25 @@
-package com.aliucord.plugins.themer
+package com.aliucord.plugins.themer.settings
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ShapeDrawable
+import android.graphics.drawable.shapes.RectShape
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.view.View
+import android.view.View.TEXT_ALIGNMENT_CENTER
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.*
 import com.aliucord.*
+import com.aliucord.fragments.InputDialog
 import com.aliucord.fragments.SettingsPage
 import com.aliucord.plugins.Themer
+import com.aliucord.plugins.themer.*
 import com.aliucord.utils.ChangelogUtils
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.Button
@@ -43,7 +51,7 @@ class ThemerSettings : SettingsPage() {
                 }, content.indexOf("changelog"), content.length, SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE)
                 text = it
             }
-            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            textAlignment = TEXT_ALIGNMENT_CENTER
             DimenUtils.getDefaultPadding().let {
                 setPadding(it, it, it, it)
             }
@@ -81,7 +89,7 @@ class ThemerSettings : SettingsPage() {
                 radio.e {
                     manager.a(radio)
                     Themer.mSettings.transparencyMode = TransparencyMode.from(i)
-                    promptRestart(view)
+                    promptRestart(view, this)
                 }
                 addView(radio)
             }
@@ -89,74 +97,72 @@ class ThemerSettings : SettingsPage() {
 
         addView(Divider(ctx))
 
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header).apply {
-            text = "Active Theme"
+        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header).run {
+            text = "Themes"
             typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold)
-
             linearLayout.addView(this)
         }
 
-        if (ThemeLoader.themes.isEmpty()) {
-            TextView(ctx, null, 0, R.h.UiKit_TextView).apply {
-                text = "Hmm... No themes found."
+        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).run {
+            text = "Enable multiple themes at your own risk! The result may destroy your eyes."
+            linearLayout.addView(this)
+        }
 
-                linearLayout.addView(this)
+        val recycler = RecyclerView(ctx).apply {
+            adapter = ThemeAdapter(this@ThemerSettings, ThemeLoader.themes)
+            layoutManager = LinearLayoutManager(ctx)
+
+            val decoration = DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
+            ShapeDrawable(RectShape()).run {
+                setTint(Color.TRANSPARENT)
+                intrinsicHeight = DimenUtils.getDefaultPadding()
+                decoration.setDrawable(this)
             }
-        } else {
-            val items = ThemeLoader.themes.map {
-                Utils.createCheckedSetting(
-                    ctx,
-                    CheckedSetting.ViewType.RADIO,
-                    "${it.name} v${it.version}",
-                    it.author
-                )
+            addItemDecoration(decoration)
+        }
+
+        Button(ctx).run {
+            text = "New Theme"
+            DimenUtils.getDefaultPadding().let {
+                setPadding(it, it, it, it)
             }
-            val noTheme = Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "None", null)
-            (items as MutableList).add(0, noTheme)
+            setOnClickListener {
+                val dialog = InputDialog()
+                    .setTitle("New Theme")
+                    .setDescription("Please choose a name for your theme")
+                    .setPlaceholderText("Name")
 
-            val manager = RadioManager(items)
-            manager.a(noTheme)
-            noTheme.e {
-                ResourceManager.clean()
-                val idx = manager.b()
-                if (idx != 0) {
-                    ThemeLoader.themes[idx - 1].disable()
-                    manager.a(noTheme)
-                    Utils.appActivity.recreate()
-                    promptRestart(view)
-                }
-            }
-
-            addView(noTheme)
-
-            for (i in 1 until items.size) {
-                val theme = ThemeLoader.themes[i - 1]
-                val item = items[i]
-                item.e {
-                    if (manager.b() != i) {
-                        if (theme.load()) {
-                            theme.enable()
-                            manager.a(item)
-                            promptRestart(view)
-                        } else {
-                            Utils.showToast(ctx, "Something went wrong while loading that theme :(")
+                dialog.setOnOkListener {
+                    val name = dialog.input
+                    if (name.isEmpty()) {
+                        Utils.showToast(ctx, "Cancelled.")
+                    } else {
+                        Theme.create(name).let {
+                            ThemeLoader.themes.add(0, it)
+                            recycler.adapter!!.notifyItemInserted(0)
                         }
                     }
+                    dialog.dismiss()
                 }
-                addView(item)
-                if (theme.isEnabled) manager.a(item)
+
+                dialog.show(parentFragmentManager, "New Theme")
             }
+            linearLayout.addView(this)
         }
+
+        addView(recycler)
     }
 
-    private fun promptRestart(v: View) {
-        Snackbar.make(v, "Changes detected. Restart?", LENGTH_INDEFINITE)
-            .setAction("Restart") {
-                val ctx = it.context
-                ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)?.run {
-                    startActivity(Intent.makeRestartActivityTask(component))
-                    exitProcess(0)
-                }
-            }.show()
+    companion object {
+        fun promptRestart(v: View, fragment: Fragment, msg: String = "Changes detected. Restart?") {
+            Snackbar.make(v, msg, LENGTH_INDEFINITE)
+                .setAction("Restart") {
+                    val ctx = it.context
+                    ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)?.run {
+                        fragment.startActivity(Intent.makeRestartActivityTask(component))
+                        exitProcess(0)
+                    }
+                }.show()
+        }
     }
 }

@@ -19,6 +19,7 @@ import com.aliucord.api.SettingsAPI
 import com.aliucord.entities.Plugin
 import com.aliucord.entities.Plugin.Manifest.Author
 import com.aliucord.plugins.themer.*
+import com.aliucord.plugins.themer.settings.ThemerSettings
 
 val logger = Logger("Themer")
 
@@ -30,13 +31,15 @@ class Themer : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Author("Vendicated", 343383572805058560L))
         description = "Apply custom themes to your Discord"
-        version = "2.1.0"
+        version = "2.2.0"
         updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json"
         changelog = """
-            # Future RoadMap:
-            * Theme editor & creator
-            * Allow loading multiple themes at once
+            # Future Roadmap
             * Implement full transparency
+            
+            # 2.2.0
+            * Add Theme editor / creator
+            * Allow loading multiple themes at once
             
             # 2.1.0
             * Fix simple_accent_color

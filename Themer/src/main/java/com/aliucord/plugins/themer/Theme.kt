@@ -5,11 +5,13 @@ import com.aliucord.Utils
 import com.aliucord.plugins.Themer
 import com.aliucord.plugins.logger
 import com.aliucord.updater.Updater
+import com.discord.stores.StoreStream
+import com.discord.utilities.user.UserUtils
 import org.json.JSONObject
 import java.io.File
 
 class Theme(
-    private val file: File
+    val file: File
 ) {
     var name: String
     var author: String = "Anonymous"
@@ -36,17 +38,6 @@ class Theme(
         get() = Themer.mSettings.getBool(prefsKey, false)
         set(v) = Themer.mSettings.setBool(prefsKey, v)
 
-    fun enable() {
-        ThemeLoader.themes.forEach { it.disable() }
-        isEnabled = true
-    }
-
-    fun load() = ThemeLoader.loadTheme(this)
-
-    fun disable() {
-        isEnabled = false
-    }
-
     fun update() =
         updaterUrl?.let {
             Utils.threadPool.execute {
@@ -63,5 +54,19 @@ class Theme(
                 }
             }
         }
+
+    companion object {
+        fun create(name: String): Theme {
+            val file = File(themeDir, "$name.json")
+            val json = JSONObject()
+                .put("name", name)
+                .put("version", "1.0.0")
+                .put("author", StoreStream.getUsers().me.run {
+                    "$username#${UserUtils.INSTANCE.padDiscriminator(discriminator)}"
+                })
+            file.writeText(json.toString(4))
+            return Theme(file)
+        }
+    }
 }
 
