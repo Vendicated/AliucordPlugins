@@ -62,7 +62,7 @@ class Theme(
                 .put("name", name)
                 .put("version", "1.0.0")
                 .put("author", StoreStream.getUsers().me.run {
-                    "$username#${UserUtils.INSTANCE.padDiscriminator(discriminator)}"
+                    "$username${UserUtils.INSTANCE.padDiscriminator(discriminator)}"
                 })
             file.writeText(json.toString(4))
             return Theme(file)

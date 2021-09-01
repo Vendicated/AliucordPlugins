@@ -37,21 +37,22 @@ private val specialKeys = arrayOf(
     "font"
 )
 
-var pattern = null as Pattern?
+val pattern: Pattern by lazy {
+    Pattern.compile("^(\\d{1,2}\\.){2,}\\d{1,2}$")
+}
+
 private fun versionValidator(s: String) =
-    (pattern?: Pattern.compile("^(\\d{1,2}\\.){2,}\\d{1,2}$").also {
-        pattern = it
-    }).matcher(s).matches()
+    s.isEmpty() || pattern.matcher(s).matches()
 
 private fun transparencyValidator(s: String) =
-    try {
-        s.toInt() in 1..256
+    s.isEmpty() || try {
+        s.toInt() in 0..256
     } catch (e: NumberFormatException) {
         false
     }
 
 private fun urlValidator(s: String) =
-    Patterns.WEB_URL.matcher(s).matches()
+    s.isEmpty() || Patterns.WEB_URL.matcher(s).matches()
 
 private val validators = mapOf<String, (s: String) -> Boolean>(
     "version" to ::versionValidator,
@@ -174,8 +175,8 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
             setOnClickListener {
                 JSONObject().let { out ->
                     specialKeys.forEach {
-                        if (json.has(it))
-                            out.put(it, json.getString(it))
+                        val s = json.optString(it)
+                        if (s.isNotEmpty()) out.put(it, s)
                     }
                     items.forEach {
                         out.put(it.name, it.color)

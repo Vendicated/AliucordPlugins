@@ -31,11 +31,15 @@ class Themer : Plugin() {
     override fun getManifest() = Manifest().apply {
         authors = arrayOf(Author("Vendicated", 343383572805058560L))
         description = "Apply custom themes to your Discord"
-        version = "2.2.0"
+        version = "2.2.1"
         updateUrl = "https://raw.githubusercontent.com/Vendicated/AliucordPlugins/builds/updater.json"
         changelog = """
             # Future Roadmap
             * Implement full transparency
+            
+            # 2.2.1
+            * ThemeEditor: Make field validators allow making fields empty (field will be removed from theme)
+            * New Theme: Fix double ##
             
             # 2.2.0
             * Add Theme editor / creator
@@ -67,6 +71,7 @@ class Themer : Plugin() {
         ResourceManager.clean()
         ThemeLoader.themes.clear()
         Utils.appActivity.recreate()
+        appContainer = null
     }
 
     companion object {
