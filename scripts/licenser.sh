@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 shopt -s globstar
 
-for file in $(git diff --staged --diff-filter=ACMR --name-only | grep -E ".java$")
+for file in $(git diff --staged --diff-filter=ACMR --name-only | grep -E ".(java|kt)$")
 do
   if [ -f "$file" ] && ! grep -q Copyright "$file"
   then

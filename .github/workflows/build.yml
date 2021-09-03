@@ -32,12 +32,14 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
-          ./gradlew make
+          ./gradlew make generateUpdaterJson
           cp **/build/*.zip $GITHUB_WORKSPACE/builds
+          cp build/updater.json $GITHUB_WORKSPACE/builds
 
       - name: Push builds
         run: |
           cd $GITHUB_WORKSPACE/builds
+          rm -f Themer.zip # REMOVE_ME - temporary hack blame 6pak
           cp ../src/updater.json .
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
