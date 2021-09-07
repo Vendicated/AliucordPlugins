@@ -78,7 +78,9 @@ private fun PatcherAPI.setBackgrounds() {
                 view.background = ResourceManager.customBg
             else
                 Themer.appContainer = view
-        } else if ((transparencyMode == TransparencyMode.CHAT_SETTINGS || transparencyMode == TransparencyMode.FULL) && (className.lowercase().contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))) {
+        } else if ((transparencyMode == TransparencyMode.CHAT_SETTINGS || transparencyMode == TransparencyMode.FULL) && (className.lowercase()
+                .contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
+        ) {
             ResourceManager.customBg?.let { bg ->
                 var tint = ResourceManager.getColorForName("primary_dark_600")
                 if (tint != null || view.context.getColor(R.c.primary_dark_600).also { tint = it } != 0) {
@@ -100,7 +102,13 @@ private fun PatcherAPI.patchGetFont() {
 
     // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
     val m1 = ResourcesCompat::class.java.getDeclaredMethod("getFont", Context::class.java, Int::class.javaPrimitiveType)
-    val m2 = ResourcesCompat::class.java.getDeclaredMethod("getFont", Context::class.java, Int::class.javaPrimitiveType, ResourcesCompat.FontCallback::class.java, Handler::class.java)
+    val m2 = ResourcesCompat::class.java.getDeclaredMethod(
+        "getFont",
+        Context::class.java,
+        Int::class.javaPrimitiveType,
+        ResourcesCompat.FontCallback::class.java,
+        Handler::class.java
+    )
     val m3 = ResourcesCompat::class.java.getDeclaredMethod(
         "getFont",
         Context::class.java,
@@ -129,42 +137,58 @@ private fun PatcherAPI.patchGetColor() {
 }
 
 private fun PatcherAPI.patchSetColor(enableTransparency: Boolean) {
-    patch(ColorDrawable::class.java.getDeclaredMethod("setColor", Int::class.javaPrimitiveType), PinePrePatchFn(if (enableTransparency) Action1 { callFrame: CallFrame ->
-        ResourceManager.getNameByColor(callFrame.args[0] as Int)?.let { name ->
-            ResourceManager.getColorForName(name)?.let { color ->
-                callFrame.args[0] = color
-                // TODO: Set alpha if background colour
+    patch(
+        ColorDrawable::class.java.getDeclaredMethod("setColor", Int::class.javaPrimitiveType),
+        PinePrePatchFn(if (enableTransparency) Action1 { callFrame: CallFrame ->
+            ResourceManager.getNameByColor(callFrame.args[0] as Int)?.let { name ->
+                ResourceManager.getColorForName(name)?.let { color ->
+                    callFrame.args[0] = color
+                    // TODO: Set alpha if background colour
+                }
             }
-        }
-    } else Action1 { callFrame: CallFrame ->
-        ResourceManager.getColorReplacement(callFrame.args[0] as Int)?.let {
-            callFrame.args[0] = it
-        }
-    }))
+        } else Action1 { callFrame: CallFrame ->
+            ResourceManager.getColorReplacement(callFrame.args[0] as Int)?.let {
+                callFrame.args[0] = it
+            }
+        })
+    )
 }
 
 private fun PatcherAPI.patchColorStateLists() {
     // Figure out better way to do this
     // This is stupid, because it matches the wrong name because we dont work with ids here but rather the colour value so its
     // impossible to consistently resolve the correct name
-    patch(ColorStateList::class.java.getDeclaredMethod("getColorForState", IntArray::class.java, Int::class.javaPrimitiveType), PinePatchFn { callFrame: CallFrame ->
-        ResourceManager.getColorReplacement(callFrame.result as Int)?.let {
-            callFrame.result = it
-        }
-    })
+    patch(
+        ColorStateList::class.java.getDeclaredMethod("getColorForState", IntArray::class.java, Int::class.javaPrimitiveType),
+        PinePatchFn { callFrame: CallFrame ->
+            ResourceManager.getColorReplacement(callFrame.result as Int)?.let {
+                callFrame.result = it
+            }
+        })
 }
 
 private fun PatcherAPI.tintDrawables() {
-    patch(Resources::class.java.getDeclaredMethod("getDrawableForDensity", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Resources.Theme::class.java), PinePatchFn { callFrame: CallFrame ->
+    patch(
+        Resources::class.java.getDeclaredMethod(
+            "getDrawableForDensity",
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType,
+            Resources.Theme::class.java
+        ), PinePatchFn { callFrame: CallFrame ->
             ResourceManager.getDrawableTintForId(callFrame.args[0] as Int)?.let {
                 (callFrame.result as Drawable?)?.setTint(it)
             }
-    })
+        })
 }
 
 private fun PatcherAPI.themeAttributes() {
     patch(
-        Resources.Theme::class.java.getDeclaredMethod("resolveAttribute", Int::class.javaPrimitiveType, TypedValue::class.java, Boolean::class.javaPrimitiveType), PinePatchFn { callFrame: CallFrame ->
+        Resources.Theme::class.java.getDeclaredMethod(
+            "resolveAttribute",
+            Int::class.javaPrimitiveType,
+            TypedValue::class.java,
+            Boolean::class.javaPrimitiveType
+        ), PinePatchFn { callFrame: CallFrame ->
             ResourceManager.getAttrForId(callFrame.args[0] as Int)?.let {
                 (callFrame.args[1] as TypedValue).data = it
             }
@@ -172,11 +196,17 @@ private fun PatcherAPI.themeAttributes() {
 }
 
 private fun PatcherAPI.themeStatusBar() {
-    patch(ColorCompat::class.java.getDeclaredMethod("setStatusBarColor", Window::class.java, Int::class.javaPrimitiveType, Boolean::class.javaPrimitiveType), PinePrePatchFn { callFrame ->
-        ResourceManager.getColorForName("statusbar")?.let {
-            callFrame.args[1] = it
-        }
-    })
+    patch(
+        ColorCompat::class.java.getDeclaredMethod(
+            "setStatusBarColor",
+            Window::class.java,
+            Int::class.javaPrimitiveType,
+            Boolean::class.javaPrimitiveType
+        ), PinePrePatchFn { callFrame ->
+            ResourceManager.getColorForName("statusbar")?.let {
+                callFrame.args[1] = it
+            }
+        })
 }
 
 private fun PatcherAPI.themeTextInput() {
@@ -194,56 +224,60 @@ private fun PatcherAPI.addDownloadButton() {
     val viewId = View.generateViewId()
     val badUrlMatcher = Pattern.compile("http[^\\s]+\\.json")
 
-    patch(WidgetChatListActions::class.java, "configureUI", arrayOf<Class<*>>(WidgetChatListActions.Model::class.java), PinePatchFn { callFrame: CallFrame ->
-        val layout = ((callFrame.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
-        if (layout == null || layout.findViewById<View?>(viewId) != null) return@PinePatchFn
-        val ctx = layout.context
-        val msg = (callFrame.args[0] as WidgetChatListActions.Model).message
-        if (msg.channelId == THEMES_CHANNEL_ID) {
-            var url: String? = null
-            var name: String? = null
-            msg.attachments.forEach {
-                if (it.url.endsWith(".json")) {
-                    url = it.url
-                    name = it.filename
-                }
-            }
-            if (url == null && msg.content != null) {
-                badUrlMatcher.matcher(msg.content).run {
-                    if (find()) {
-                        url = group()
-                        name = url!!.substringAfterLast('/')
+    patch(
+        WidgetChatListActions::class.java,
+        "configureUI",
+        arrayOf<Class<*>>(WidgetChatListActions.Model::class.java),
+        PinePatchFn { callFrame: CallFrame ->
+            val layout = ((callFrame.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
+            if (layout == null || layout.findViewById<View?>(viewId) != null) return@PinePatchFn
+            val ctx = layout.context
+            val msg = (callFrame.args[0] as WidgetChatListActions.Model).message
+            if (msg.channelId == THEMES_CHANNEL_ID) {
+                var url: String? = null
+                var name: String? = null
+                msg.attachments.forEach {
+                    if (it.url.endsWith(".json")) {
+                        url = it.url
+                        name = it.filename
                     }
                 }
-            }
-
-            url?.let {
-                TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).run {
-                    id = viewId
-                    text = "Install $name"
-                    ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.let {
-                        it.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
-                        setCompoundDrawablesRelativeWithIntrinsicBounds(it, null, null, null)
-                    }
-
-                    setOnClickListener {
-                        Utils.threadPool.execute {
-                            try {
-                                Http.Request(url).execute().run {
-                                    saveToFile(File(THEME_DIR, name!!))
-                                    ThemeLoader.loadThemes(false)
-                                    Utils.showToast(ctx, "Successfully installed theme $name")
-                                }
-                            } catch (ex: Throwable) {
-                                logger.error(ctx, "Failed to install theme $name", ex)
-                            }
+                if (url == null && msg.content != null) {
+                    badUrlMatcher.matcher(msg.content).run {
+                        if (find()) {
+                            url = group()
+                            name = url!!.substringAfterLast('/')
                         }
                     }
-                    layout.addView(this, 1)
+                }
+
+                url?.let {
+                    TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).run {
+                        id = viewId
+                        text = "Install $name"
+                        ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.let {
+                            it.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
+                            setCompoundDrawablesRelativeWithIntrinsicBounds(it, null, null, null)
+                        }
+
+                        setOnClickListener {
+                            Utils.threadPool.execute {
+                                try {
+                                    Http.Request(url).execute().run {
+                                        saveToFile(File(THEME_DIR, name!!))
+                                        ThemeLoader.loadThemes(false)
+                                        Utils.showToast(ctx, "Successfully installed theme $name")
+                                    }
+                                } catch (ex: Throwable) {
+                                    logger.error(ctx, "Failed to install theme $name", ex)
+                                }
+                            }
+                        }
+                        layout.addView(this, 1)
+                    }
                 }
             }
-        }
-    })
+        })
 }
 
 private fun PatcherAPI.patchColorPicker() {
@@ -273,5 +307,6 @@ private fun PatcherAPI.patchColorPicker() {
                     }
                 }
             })
-    } catch (th: Throwable) {}
+    } catch (th: Throwable) {
+    }
 }

@@ -33,6 +33,7 @@ object ResourceManager {
     fun getColorReplacement(color: Int) = getNameByColor(color)?.let {
         getColorForName(it)
     }
+
     fun getNameByColor(color: Int) = colorToName[color]
     fun getColorForName(name: String) = colorsByName[name]
     fun getColorForId(id: Int) = colorsById[id]
@@ -88,7 +89,7 @@ object ResourceManager {
 
     internal fun putAttr(name: String?, color: Int) =
         ATTR_MAPPINGS[name]?.forEach {
-                setAttr(it, color)
+            setAttr(it, color)
         }
 
     internal fun putAttrs(attrs: Array<String>, color: Int) {

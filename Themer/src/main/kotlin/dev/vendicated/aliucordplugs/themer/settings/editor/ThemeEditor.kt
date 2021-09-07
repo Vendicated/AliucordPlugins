@@ -30,6 +30,7 @@ import org.json.JSONObject
 
 class ThemeEditor(private val theme: Theme) : SettingsPage() {
     private val json: JSONObject
+
     init {
         theme.convertIfLegacy()
         json = theme.json().apply {

@@ -1,7 +1,8 @@
 version = "3.0.0"
 description = "Apply custom themes to your Discord"
 
-aliucord.changelog.set("""
+aliucord.changelog.set(
+    """
     
     # Future Roadmap
     * Implement full transparency
@@ -30,4 +31,5 @@ aliucord.changelog.set("""
     * Remove "import theme" button. Please use the download feature (long press message in #themes) or move themes manually to Aliucord/themes
     * Add restart prompt when changing settings
     
-""".trimIndent())
+""".trimIndent()
+)

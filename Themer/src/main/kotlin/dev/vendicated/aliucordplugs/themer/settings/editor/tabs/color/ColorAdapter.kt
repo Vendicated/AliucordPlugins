@@ -91,7 +91,7 @@ class ColorAdapter(
 
         override fun publishResults(constraint: CharSequence?, results: FilterResults) {
             val data = results.values as ArrayList<*>
-            DiffUtil.calculateDiff(object: DiffUtil.Callback() {
+            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                 override fun getOldListSize() = filteredItems.size
 
                 override fun getNewListSize() = results.count

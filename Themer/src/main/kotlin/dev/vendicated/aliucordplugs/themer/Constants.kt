@@ -20,7 +20,7 @@ enum class TransparencyMode(val value: Int) {
     FULL(3);
 
     companion object {
-        fun from(i: Int) = values().first { it.value == i}
+        fun from(i: Int) = values().first { it.value == i }
     }
 }
 

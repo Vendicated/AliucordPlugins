@@ -15,8 +15,8 @@ import dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color.ColorTuple
 import org.json.JSONObject
 
 var SettingsAPI.transparencyMode
-        get() = TransparencyMode.from(getInt("transparencyMode", TransparencyMode.NONE.value))
-        set(v) = setInt("transparencyMode", v.value)
+    get() = TransparencyMode.from(getInt("transparencyMode", TransparencyMode.NONE.value))
+    set(v) = setInt("transparencyMode", v.value)
 
 fun JSONObject.toColorArray() = ArrayList<ColorTuple>().apply {
     keys().forEach {

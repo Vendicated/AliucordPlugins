@@ -23,7 +23,7 @@ fun convertLegacyTheme(theme: Theme, json: JSONObject) {
     val drawableTints = JSONObject()
 
     for (key in json.keys().asSequence().sorted()) {
-        when(key) {
+        when (key) {
             "author", "version", "name", "license", "updater" -> manifest.puts(json, key)
 
             "background_url" -> background.puts(json, key, "url")

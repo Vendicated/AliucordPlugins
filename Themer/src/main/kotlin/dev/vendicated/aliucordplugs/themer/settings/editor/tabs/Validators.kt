@@ -22,12 +22,13 @@ private fun urlValidator(s: String) =
 
 
 object Validators {
-    fun manifest(key: String, s: String) = when(key) {
+    fun manifest(key: String, s: String) = when (key) {
         "version" -> versionPattern.matcher(s).matches()
         "updater" -> urlValidator(s)
         else -> true
     }
-    fun background(key: String, s: String) = when(key) {
+
+    fun background(key: String, s: String) = when (key) {
         "url" -> urlValidator(s)
         "alpha" -> tryOrFalse { s.toInt() in 0..256 }
         else -> throw NotImplementedError(key)

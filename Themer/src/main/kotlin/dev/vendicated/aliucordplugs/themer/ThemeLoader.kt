@@ -77,7 +77,6 @@ object ThemeLoader {
     }
 
 
-
     private fun loadTheme(theme: Theme): Boolean {
         ResourceManager.bgOpacity = DEFAULT_BACKGROUND_OPACITY
 
@@ -89,7 +88,7 @@ object ThemeLoader {
 
             json.optJSONObject("background")?.run {
                 keys().forEach {
-                    when(it) {
+                    when (it) {
                         "url" -> loadBackground(getString(it))
                         "alpha" -> {
                             val v = getInt(it)
