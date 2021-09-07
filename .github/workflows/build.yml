@@ -33,7 +33,6 @@ jobs:
           cd $GITHUB_WORKSPACE/src
           chmod +x gradlew
           ./gradlew make generateUpdaterJson
-          rm -rf Themer/build # REMOVE_ME - temporary hack blame 6pak
           cp **/build/*.zip $GITHUB_WORKSPACE/builds
           cp build/updater.json $GITHUB_WORKSPACE/builds
 

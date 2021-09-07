@@ -25,10 +25,29 @@ enum class TransparencyMode(val value: Int) {
 }
 
 const val DEFAULT_BACKGROUND_OPACITY = 150
-val themeDir = File(Constants.BASE_PATH, "themes")
+val THEME_DIR = File(Constants.BASE_PATH, "themes")
 
 // Credit for these colours to both https://github.com/Aliucord/DiscordThemer
 // and https://github.com/GangsterFox/AliuFox-themes/blob/main/ThemerDocu.md
+
+val THEME_KEYS = arrayOf(
+    "manifest",
+    "background",
+    "fonts",
+    "simple_colors",
+    "colors",
+    "drawable_tints"
+)
+
+val SIMPLE_KEYS = arrayOf(
+    "accent",
+    "background",
+    "background_secondary",
+    "mention_highlight",
+    "active_channel",
+    "statusbar",
+    "input_background"
+)
 
 val SIMPLE_ACCENT_NAMES = arrayOf(
     "link",

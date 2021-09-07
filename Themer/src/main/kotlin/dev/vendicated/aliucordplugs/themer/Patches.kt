@@ -34,6 +34,7 @@ import com.discord.app.AppFragment
 import com.discord.utilities.color.ColorCompat
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
 import com.google.android.material.textfield.TextInputLayout
+import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.lytefast.flexinput.R
 import rx.functions.Action1
 import top.canyie.pine.Pine.CallFrame
@@ -56,6 +57,9 @@ fun addPatches(patcher: PatcherAPI) {
         themeStatusBar()
         themeTextInput()
         addDownloadButton()
+
+        // Set text colour of transparency options in colour picker
+        patchColorPicker()
     }
 }
 
@@ -226,7 +230,7 @@ private fun PatcherAPI.addDownloadButton() {
                         Utils.threadPool.execute {
                             try {
                                 Http.Request(url).execute().run {
-                                    saveToFile(File(themeDir, name!!))
+                                    saveToFile(File(THEME_DIR, name!!))
                                     ThemeLoader.loadThemes(false)
                                     Utils.showToast(ctx, "Successfully installed theme $name")
                                 }
@@ -240,4 +244,34 @@ private fun PatcherAPI.addDownloadButton() {
             }
         }
     })
+}
+
+private fun PatcherAPI.patchColorPicker() {
+    /*
+     * Discord does not use transparency so it does not get themed
+     * This method is createPresetsView: https://github.com/discord/ColorPicker/blob/master/library/src/main/java/com/jaredrummler/android/colorpicker/ColorPickerDialog.java#L553
+     * Wrapped into try catch so the plugin still works even if this method ever changes
+     */
+    try {
+        patch(ColorPickerDialog::class.java.getDeclaredMethod("j"),
+            PinePatchFn { cf ->
+                val bundle = (cf.thisObject as ColorPickerDialog).arguments ?: return@PinePatchFn
+
+                val view = cf.result as View
+                val color = bundle.getInt("customButtonTextColor")
+                val font = ResourcesCompat.getFont(view.context, bundle.getInt("buttonFont"))
+
+                arrayOf(
+                    com.jaredrummler.android.colorpicker.R.c.transparency_text,
+                    com.jaredrummler.android.colorpicker.R.c.transparency_title
+                ).forEach {
+                    view.findViewById<TextView>(it)?.run {
+                        setTextColor(color)
+                        font?.let {
+                            typeface = font
+                        }
+                    }
+                }
+            })
+    } catch (th: Throwable) {}
 }

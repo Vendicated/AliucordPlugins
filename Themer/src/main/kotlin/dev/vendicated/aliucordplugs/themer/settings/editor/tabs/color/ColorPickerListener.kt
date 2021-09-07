@@ -8,20 +8,21 @@
  * http://www.apache.org/licenses/LICENSE-2.0
 */
 
-package dev.vendicated.aliucordplugs.themer.settings.editor
+package dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color
 
 class ColorPickerListener(
     private val adapter: ColorAdapter,
     private val position: Int
 ) : c.k.a.a.f {
-    private fun setColor(color: Int) {
-        adapter.items[position].color = color
+    override fun onColorReset(color: Int) {}
+
+    override fun onColorSelected(_id: Int, color: Int) {
+        adapter.items[position].let {
+            it.color = color
+            adapter.json.put(it.name, color)
+        }
         adapter.notifyItemChanged(position)
     }
-
-    override fun onColorReset(color: Int) = setColor(color)
-
-    override fun onColorSelected(_id: Int, color: Int) = setColor(color)
 
     override fun onDialogDismissed(_id: Int) {}
 }

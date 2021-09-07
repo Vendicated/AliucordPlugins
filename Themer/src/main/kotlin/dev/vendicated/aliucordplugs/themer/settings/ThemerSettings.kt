@@ -28,7 +28,6 @@ import androidx.recyclerview.widget.*
 import com.aliucord.*
 import com.aliucord.fragments.InputDialog
 import com.aliucord.fragments.SettingsPage
-import dev.vendicated.aliucordplugs.themer.*
 import com.aliucord.utils.ChangelogUtils
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.Button
@@ -38,6 +37,7 @@ import com.discord.views.RadioManager
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.snackbar.Snackbar.LENGTH_INDEFINITE
 import com.lytefast.flexinput.R
+import dev.vendicated.aliucordplugs.themer.*
 import kotlin.system.exitProcess
 
 class ThemerSettings : SettingsPage() {

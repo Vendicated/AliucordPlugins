@@ -1,10 +1,14 @@
-version = "2.2.1"
+version = "3.0.0"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set("""
     
     # Future Roadmap
     * Implement full transparency
+    
+    # 3.0.0
+    * Revamp theme format (see README for details)
+    * Revamp Editor: Organise values into categories, improve colour picker, add variable name auto complete
     
     # 2.2.1
     * ThemeEditor: Make field validators allow making fields empty (field will be removed from theme)

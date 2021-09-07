@@ -8,6 +8,6 @@
  * http://www.apache.org/licenses/LICENSE-2.0
 */
 
-package dev.vendicated.aliucordplugs.themer.settings.editor
+package dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color
 
 data class ColorTuple(var name: String, var color: Int)

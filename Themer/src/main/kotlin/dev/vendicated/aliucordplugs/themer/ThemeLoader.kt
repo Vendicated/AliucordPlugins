@@ -57,9 +57,9 @@ object ThemeLoader {
     fun loadThemes(shouldLoad: Boolean) {
         themes.clear()
 
-        if (!themeDir.exists() && !themeDir.mkdirs()) throw RuntimeException("Failed to create Theme directory ${themeDir.absolutePath}")
+        if (!THEME_DIR.exists() && !THEME_DIR.mkdirs()) throw RuntimeException("Failed to create Theme directory ${THEME_DIR.absolutePath}")
 
-        themeDir.listFiles()!!.forEach {
+        THEME_DIR.listFiles()!!.forEach {
             if (it.name.endsWith(".json")) {
                 try {
                     val theme = Theme(it)
@@ -76,26 +76,16 @@ object ThemeLoader {
         themes.sortBy { it.name }
     }
 
-    private val newKeys =
-        arrayOf(
-            "manifest",
-            "background",
-            "fonts",
-            "simple_colors",
-            "colors",
-            "drawable_tints"
-        )
+
 
     private fun loadTheme(theme: Theme): Boolean {
         ResourceManager.bgOpacity = DEFAULT_BACKGROUND_OPACITY
 
         try {
-            var json = theme.json()
-            if (newKeys.none { json.has(it) }) {
-                convertLegacyTheme(theme, json)
-                json = theme.json()
-            } else
+            if (!theme.convertIfLegacy())
                 theme.update()
+
+            val json = theme.json()
 
             json.optJSONObject("background")?.run {
                 keys().forEach {

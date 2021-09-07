@@ -48,6 +48,14 @@ class Theme(
         get() = Themer.mSettings.getBool(prefsKey, false)
         set(v) = Themer.mSettings.setBool(prefsKey, v)
 
+    fun convertIfLegacy(): Boolean {
+        val json = json()
+
+        val isLegacy = THEME_KEYS.none { json.has(it) }
+        if (isLegacy) convertLegacyTheme(this@Theme, json)
+        return isLegacy
+    }
+
     fun update() =
         updaterUrl?.let {
             Utils.threadPool.execute {
@@ -66,17 +74,17 @@ class Theme(
         }
 
     companion object {
-        fun create(name: String): Theme {
-            val file = File(themeDir, "$name.json")
-            val json = JSONObject()
-                .put("name", name)
-                .put("version", "1.0.0")
-                .put("author", StoreStream.getUsers().me.run {
-                    "$username${UserUtils.INSTANCE.padDiscriminator(discriminator)}"
-                })
-            file.writeText(json.toString(4))
-            return Theme(file)
-        }
+    fun create(name: String): Theme {
+        val file = File(THEME_DIR, "$name.json")
+        val json = JSONObject()
+            .put("name", name)
+            .put("version", "1.0.0")
+            .put("author", StoreStream.getUsers().me.run {
+                "$username${UserUtils.INSTANCE.padDiscriminator(discriminator)}"
+            })
+        file.writeText(json.toString(4))
+        return Theme(file)
     }
+}
 }
 
