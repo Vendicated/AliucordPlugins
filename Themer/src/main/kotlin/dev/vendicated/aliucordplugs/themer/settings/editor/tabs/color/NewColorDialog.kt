@@ -18,6 +18,8 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.*
 import androidx.recyclerview.widget.*
 import com.aliucord.utils.DimenUtils
@@ -132,6 +134,7 @@ private class AutoCompleteViewHolder(
     itemView: TextView
 ) : RecyclerView.ViewHolder(itemView) {
     init {
+        itemView.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
         itemView.setOnClickListener {
             adapter.onClick(adapterPosition)
         }

@@ -47,7 +47,6 @@ object ThemeLoader {
             if (!ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(url).find())
                 throw IllegalArgumentException("URL $url is not allowed. Please use one of >> ${ALLOWED_RESOURCE_DOMAINS.joinToString()} <<")
 
-            Utils.log("Fetching $url")
             try {
                 Utils.threadPool.submit {
                     Http.Request(url).use {
@@ -81,11 +80,13 @@ object ThemeLoader {
 
     // https://stackoverflow.com/a/23119957/11590009
     private fun blurBitmap(bm: Bitmap, blurRadius: Double) {
+        if (blurRadius !in 0.0..25.0)
+            throw IllegalArgumentException("Blur Radius must be 0-25, was $blurRadius")
         val rs = RenderScript.create(Utils.appContext)
         val input = Allocation.createFromBitmap(rs, bm)
         val output = Allocation.createTyped(rs, input.type)
 
-        with (ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))) {
+        with(ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))) {
             setRadius(blurRadius.toFloat())
             setInput(input)
             forEach(output)
@@ -144,7 +145,7 @@ object ThemeLoader {
                 if (has("url")) {
                     val alpha = optInt("overlay_alpha", DEFAULT_OVERLAY_ALPHA)
                     if (alpha !in 0..0xFF)
-                        throw IndexOutOfBoundsException("overlay_alpha must be 0-255, was $alpha")
+                        throw IllegalArgumentException("overlay_alpha must be 0-255, was $alpha")
                     loadBackground(theme, getString("url"), alpha, optDouble("blur_radius"))
                 }
             }

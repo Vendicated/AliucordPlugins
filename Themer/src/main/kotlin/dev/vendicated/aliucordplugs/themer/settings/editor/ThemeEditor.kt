@@ -61,7 +61,10 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
                 .show(parentFragmentManager, "Edit background")
         })
 
-        // TODO: Fonts
+        addView(buildEntry(ctx, "Fonts", R.d.ic_edit_24dp) {
+            FontTab(json.getJSONObject("fonts"))
+                .show(parentFragmentManager, "Edit fonts")
+        })
 
         addView(buildColorEntry(ctx, "Simple Colors", R.d.ic_accessibility_24dp, lazy {
             SIMPLE_KEYS.toList()

@@ -46,7 +46,11 @@ class ColorAdapter(
 
     fun addItem(item: ColorTuple) {
         items.add(0, item)
-        filter.filter(currentFilter)
+        val shouldShow = currentFilter?.let { item.name.contains(it, true) } ?: true
+        if (shouldShow) {
+            filteredItems.add(0, item)
+            notifyItemInserted(0)
+        }
     }
 
     fun onEntryClicked(position: Int, ctx: Context) =

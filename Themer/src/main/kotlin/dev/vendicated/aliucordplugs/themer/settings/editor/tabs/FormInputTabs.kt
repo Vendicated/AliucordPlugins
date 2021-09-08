@@ -15,11 +15,16 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.LinearLayout
+import com.aliucord.Constants
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.TextInput
+import dev.vendicated.aliucordplugs.themer.ALLOWED_RESOURCE_DOMAINS_PATTERN
 import org.json.JSONObject
+import java.io.File
+import java.lang.reflect.Modifier
+import java.util.regex.Pattern
 
-open class TextInputTab(
+open class FormInputTab(
     header: String,
     private val keys: Array<String>,
     private val validator: (key: String, s: String) -> Boolean,
@@ -60,7 +65,7 @@ open class TextInputTab(
     }
 }
 
-class ManifestTab(data: JSONObject) : TextInputTab(
+class ManifestTab(data: JSONObject) : FormInputTab(
     "Manifest", arrayOf(
         "name",
         "author",
@@ -70,7 +75,63 @@ class ManifestTab(data: JSONObject) : TextInputTab(
     ), Validators::manifest, data
 )
 
-class BackgroundTab(data: JSONObject) : TextInputTab(
+class BackgroundTab(data: JSONObject) : FormInputTab(
     "Background", arrayOf("url", "overlay_alpha", "blur_radius"),
     Validators::background, data
+)
+
+class FontTab(data: JSONObject) : FormInputTab(
+    "Fonts",
+    run {
+        try {
+            val fonts = Constants.Fonts::class.java.declaredFields
+            val names = Array(fonts.size) { "" }
+            names[0] = "*"
+            fonts.forEachIndexed { i, f ->
+                if (Modifier.isPublic(f.modifiers)) {
+                    names[i] = f.name
+                }
+            }
+            names
+        } catch (th: Throwable) {
+            emptyArray()
+        }
+    }, Validators::fonts, data
+)
+
+object Validators {
+    private fun tryOrFalse(fn: () -> Boolean) = try {
+        fn.invoke()
+    } catch (e: Throwable) {
+        false
+    }
+
+    private val versionPattern: Pattern by lazy {
+        Pattern.compile("^(\\d{1,2}\\.){2,}\\d{1,2}$")
+    }
+
+    private fun urlValidator(s: String) =
+        s.isEmpty() ||
+                ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(s).matches() ||
+                (s.startsWith("file://") && File(s.removePrefix("file://")).exists())
+
+    fun manifest(key: String, s: String) = when (key) {
+        "version" -> versionPattern.matcher(s).matches()
+        "updater" -> urlValidator(s)
+        else -> true
+    }
+
+    fun background(key: String, s: String) = when (key) {
+        "url" -> urlValidator(s)
+        "overlay_alpha" -> tryOrFalse { s.toInt() in 0..0xFF }
+        "blur_radius" -> tryOrFalse { s.toDouble() in 0.0..25.0 }
+        else -> throw NotImplementedError(key)
+    }
+
+    fun fonts(_key: String, s: String) = urlValidator(s)
+}
+
+val converters = mapOf<String, (s: String) -> Any>(
+    "overlay_alpha" to { it.toInt() },
+    "blur_radius" to { it.toDouble() }
 )
