@@ -18,7 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.*
 import com.aliucord.Utils
 import com.aliucord.fragments.SettingsPage
-import com.aliucord.utils.DimenUtils
+import com.aliucord.utils.MDUtils
 import com.aliucord.views.*
 import com.discord.utilities.color.ColorCompat
 import com.lytefast.flexinput.R
@@ -49,7 +49,11 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
 
         val ctx = view.context
 
-        val p = DimenUtils.getDefaultPadding()
+        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).run {
+            text =
+                MDUtils.render("**Allowed hosts for images/fonts:**\n${ALLOWED_RESOURCE_DOMAINS.joinToString()}")
+            addView(this)
+        }
 
         addView(buildEntry(ctx, "Manifest", R.d.ic_audit_logs_24dp) {
             ManifestTab(json.getJSONObject("manifest"))

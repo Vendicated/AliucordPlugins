@@ -112,7 +112,7 @@ object Validators {
 
     private fun urlValidator(s: String) =
         s.isEmpty() ||
-                ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(s).matches() ||
+                ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(s).find() ||
                 (s.startsWith("file://") && File(s.removePrefix("file://")).exists())
 
     fun manifest(key: String, s: String) = when (key) {
