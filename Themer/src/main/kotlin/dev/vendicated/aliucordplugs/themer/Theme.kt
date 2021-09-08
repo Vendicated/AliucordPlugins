@@ -73,6 +73,10 @@ class Theme(
             }
         }
 
+    fun error(msg: String, throwable: Throwable? = null) {
+        logger.error("[${name.uppercase()}] $msg", throwable)
+    }
+
     companion object {
         fun create(name: String): Theme {
             val file = File(THEME_DIR, "$name.json")

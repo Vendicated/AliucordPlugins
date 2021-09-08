@@ -10,9 +10,7 @@
 
 package dev.vendicated.aliucordplugs.themer
 
-import android.annotation.SuppressLint
 import android.content.Context
-import android.view.View
 import com.aliucord.Logger
 import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
@@ -40,13 +38,9 @@ class Themer : Plugin() {
         ResourceManager.clean()
         ThemeLoader.themes.clear()
         Utils.appActivity.recreate()
-        appContainer = null
     }
 
     companion object {
-        @SuppressLint("StaticFieldLeak") // Necessary to set the background, manually freed
-        var appContainer: View? = null
-
         lateinit var mSettings: SettingsAPI
     }
 }

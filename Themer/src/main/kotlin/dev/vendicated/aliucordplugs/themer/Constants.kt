@@ -12,6 +12,7 @@ package dev.vendicated.aliucordplugs.themer
 
 import com.aliucord.Constants
 import java.io.File
+import java.util.regex.Pattern
 
 enum class TransparencyMode(val value: Int) {
     NONE(0),
@@ -24,11 +25,27 @@ enum class TransparencyMode(val value: Int) {
     }
 }
 
-const val DEFAULT_BACKGROUND_OPACITY = 150
+const val DEFAULT_OVERLAY_ALPHA = 150
 val THEME_DIR = File(Constants.BASE_PATH, "themes")
 
 // Credit for these colours to both https://github.com/Aliucord/DiscordThemer
 // and https://github.com/GangsterFox/AliuFox-themes/blob/main/ThemerDocu.md
+
+val ALLOWED_RESOURCE_DOMAINS = arrayOf(
+    "github.com",
+    "raw.githubusercontent.com",
+    "cdn.discordapp.com",
+    "media.discordapp.net",
+    "i.imgur.com"
+)
+
+val ALLOWED_RESOURCE_DOMAINS_PATTERN: Pattern by lazy {
+    val domains = ALLOWED_RESOURCE_DOMAINS.joinToString(
+        separator = "|",
+        transform = { Pattern.quote(it) }
+    )
+    Pattern.compile("^https://(www)?($domains)/")
+}
 
 val THEME_KEYS = arrayOf(
     "manifest",

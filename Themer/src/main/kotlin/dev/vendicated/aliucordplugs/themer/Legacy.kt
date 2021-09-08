@@ -27,7 +27,7 @@ fun convertLegacyTheme(theme: Theme, json: JSONObject) {
             "author", "version", "name", "license", "updater" -> manifest.puts(json, key)
 
             "background_url" -> background.puts(json, key, "url")
-            "background_transparency" -> background.putInt(json, key, "alpha")
+            "background_transparency" -> background.putInt(json, "background_transparency", "overlay_alpha")
 
             "font" -> fonts.puts(json, key, "*")
 

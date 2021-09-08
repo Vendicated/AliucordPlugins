@@ -10,47 +10,103 @@
 
 package dev.vendicated.aliucordplugs.themer
 
-import android.graphics.BitmapFactory
-import android.graphics.Typeface
+import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
+import android.renderscript.*
 import androidx.core.graphics.ColorUtils
 import com.aliucord.*
 import java.io.File
+import java.io.FileNotFoundException
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.TimeUnit
 
 object ThemeLoader {
     val themes = ArrayList<Theme>()
 
-    private fun loadFont(id: Int, url: String) {
-        Utils.threadPool.execute {
-            try {
-                Http.Request(url).execute().run {
-                    val file = File(Utils.appActivity.cacheDir, "font-$id.ttf")
-                    saveToFile(file)
-                    ResourceManager.putFont(id, Typeface.createFromFile(file))
-                }
-            } catch (ex: Throwable) {
-                logger.error("Failed to load font $url", ex)
-            }
+    private fun getThemeCacheDir(theme: Theme): File {
+        val cacheDir = File(Utils.appContext.cacheDir, "Themer-Cache").also {
+            if (!it.exists()) it.mkdir()
+        }
+
+        return File(cacheDir, theme.file.name).also {
+            if (!it.exists()) it.mkdir()
         }
     }
 
-    private fun loadBackground(url: String) {
-        Utils.threadPool.execute {
+    private fun getResourceWithCache(theme: Theme, name: String, url: String): File {
+        if (url.startsWith("file://"))
+            return File(url.removePrefix("file://")).also {
+                if (!it.exists()) throw FileNotFoundException(it.absolutePath)
+            }
+
+        val cachePrefKey = "${theme.name}-cached-$name"
+        val cacheDir = getThemeCacheDir(theme)
+        val file = File(cacheDir, name)
+        if (!file.exists() || Themer.mSettings.getString(cachePrefKey, "") != url) {
+            // Enforce privacy
+            if (!ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(url).find())
+                throw IllegalArgumentException("URL $url is not allowed. Please use one of >> ${ALLOWED_RESOURCE_DOMAINS.joinToString()} <<")
+
+            Utils.log("Fetching $url")
             try {
-                Http.Request(url).execute().stream().use { stream ->
-                    val bitmap = BitmapFactory.decodeStream(stream)
-                    ResourceManager.customBg = BitmapDrawable(Utils.appActivity.resources, bitmap)
-                    Themer.appContainer?.let {
-                        Utils.mainThread.post {
-                            Themer.appContainer!!.background = ResourceManager.customBg
-                            Themer.appContainer = null
-                        }
+                Utils.threadPool.submit {
+                    Http.Request(url).use {
+                        it.execute().saveToFile(file)
+                        Themer.mSettings.setString(cachePrefKey, url)
                     }
                 }
-            } catch (th: Throwable) {
-                logger.error("Failed to load background $url", th)
-                Themer.appContainer = null
+                    // UGLY: Blocks UI thread - necessary to ensure they are loaded in time.
+                    // Resources are cached so this point is only reached on first load
+                    .get(10, TimeUnit.SECONDS)
+            } catch (ex: ExecutionException) {
+                throw ex.cause ?: ex
             }
+        }
+        return file
+    }
+
+    private fun loadFont(theme: Theme, id: Int, url: String) {
+        try {
+            val font = getResourceWithCache(theme, "font_$id", url)
+            ResourceManager.putFont(id, Typeface.createFromFile(font))
+        } catch (th: Throwable) {
+            theme.error("Failed to load font $url with id $id", th)
+        }
+    }
+
+    private fun darkenBitmap(bm: Bitmap, alpha: Int) = Canvas(bm).run {
+        drawARGB(alpha, 0, 0, 0)
+        drawBitmap(bm, Matrix(), Paint())
+    }
+
+    // https://stackoverflow.com/a/23119957/11590009
+    private fun blurBitmap(bm: Bitmap, blurRadius: Double) {
+        val rs = RenderScript.create(Utils.appContext)
+        val input = Allocation.createFromBitmap(rs, bm)
+        val output = Allocation.createTyped(rs, input.type)
+
+        with (ScriptIntrinsicBlur.create(rs, Element.U8_4(rs))) {
+            setRadius(blurRadius.toFloat())
+            setInput(input)
+            forEach(output)
+        }
+
+        output.copyTo(bm)
+    }
+
+    private fun loadBackground(theme: Theme, url: String, overlayAlpha: Int, blurRadius: Double) {
+        if (overlayAlpha == 0xFF) return
+        try {
+            val bg = getResourceWithCache(theme, "background", url)
+            val bitmap = BitmapFactory.decodeFile(bg.absolutePath, BitmapFactory.Options().apply {
+                inMutable = true
+            })
+            if (overlayAlpha > 0) darkenBitmap(bitmap, overlayAlpha)
+            if (blurRadius > 0) blurBitmap(bitmap, blurRadius)
+
+            ResourceManager.customBg = BitmapDrawable(Utils.appActivity.resources, bitmap)
+        } catch (th: Throwable) {
+            theme.error("Failed to load background $url", th)
         }
     }
 
@@ -78,8 +134,6 @@ object ThemeLoader {
 
 
     private fun loadTheme(theme: Theme): Boolean {
-        ResourceManager.bgOpacity = DEFAULT_BACKGROUND_OPACITY
-
         try {
             if (!theme.convertIfLegacy())
                 theme.update()
@@ -87,27 +141,22 @@ object ThemeLoader {
             val json = theme.json()
 
             json.optJSONObject("background")?.run {
-                keys().forEach {
-                    when (it) {
-                        "url" -> loadBackground(getString(it))
-                        "alpha" -> {
-                            val v = getInt(it)
-                            if (v !in 0..255) throw IndexOutOfBoundsException("background_transparency must be 0-255, was $v")
-                            ResourceManager.bgOpacity = v
-                        }
-                        else -> logger.warn("[${theme.name}] Unrecognised key: background.$it")
-                    }
+                if (has("url")) {
+                    val alpha = optInt("overlay_alpha", DEFAULT_OVERLAY_ALPHA)
+                    if (alpha !in 0..0xFF)
+                        throw IndexOutOfBoundsException("overlay_alpha must be 0-255, was $alpha")
+                    loadBackground(theme, getString("url"), alpha, optDouble("blur_radius"))
                 }
             }
 
             json.optJSONObject("fonts")?.run {
                 keys().forEach {
-                    if (it == "*") loadFont(-1, getString(it))
+                    if (it == "*") loadFont(theme, -1, getString(it))
                     else try {
                         val font = Constants.Fonts::class.java.getField(it)
-                        loadFont(font[null] as Int, getString(it))
+                        loadFont(theme, font[null] as Int, getString(it))
                     } catch (ex: ReflectiveOperationException) {
-                        logger.error("No such font: $it", ex)
+                        theme.error("No such font: $it", ex)
                     }
                 }
             }

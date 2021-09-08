@@ -28,7 +28,6 @@ private val attrs = HashMap<Int, Int>()
 
 object ResourceManager {
     var customBg = null as BitmapDrawable?
-    var bgOpacity = DEFAULT_BACKGROUND_OPACITY
 
     fun getColorReplacement(color: Int) = getNameByColor(color)?.let {
         getColorForName(it)

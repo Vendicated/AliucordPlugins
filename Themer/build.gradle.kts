@@ -1,4 +1,4 @@
-version = "3.0.0"
+version = "3.1.0"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
@@ -6,6 +6,16 @@ aliucord.changelog.set(
     
     # Future Roadmap
     * Implement full transparency
+    # Add Fonts tab to theme editor
+    # Add background_overlay_color variable
+    
+    # 3.1.0
+    # Implement background/font caching
+    # Fix inconsistent font application
+    # Add background overlay alpha variable to darken backgrounds (0-255, 0 = no overlay, 1-255 = black overlay with this alpha)
+    # Add background blur variable (blur might look doodoo I will probably have to work on this more)
+    # Fix background image getting squished when opening the keyboard
+    # Add support for local backgrounds/fonts in the form of file uris (file:///full/path/to/file)
     
     # 3.0.0
     * Revamp theme format (see README for details)

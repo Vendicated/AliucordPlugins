@@ -71,6 +71,6 @@ class ManifestTab(data: JSONObject) : TextInputTab(
 )
 
 class BackgroundTab(data: JSONObject) : TextInputTab(
-    "Background", arrayOf("url", "alpha"),
+    "Background", arrayOf("url", "overlay_alpha", "blur_radius"),
     Validators::background, data
 )

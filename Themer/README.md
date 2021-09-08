@@ -35,7 +35,8 @@ Simply open the plugin settings, click new theme and go crazy! Check the pins in
   },
   "background": {
     "url": "background-url",
-    "alpha": 150
+    "overlay_alpha": 150,
+    "blur_radius": 1.7
   },
   "fonts": {
     "*": "everywhere-font-url",

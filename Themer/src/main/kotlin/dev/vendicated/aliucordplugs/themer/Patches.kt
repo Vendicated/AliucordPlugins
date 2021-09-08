@@ -65,29 +65,26 @@ fun addPatches(patcher: PatcherAPI) {
 
 private fun PatcherAPI.setBackgrounds() {
     val containerId = Utils.getResId("widget_tabs_host_container", "id")
+    val chatBgId = Utils.getResId("widget_home_panel_center_chat", "id")
+    val chatId = Utils.getResId("panel_center", "id")
+
     patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
+        if (ResourceManager.customBg == null) return@PinePatchFn
         val clazz = callFrame.thisObject.javaClass
         val className = clazz.simpleName
         var view = callFrame.args[0] as View
         val transparencyMode = Themer.mSettings.transparencyMode
         if (className == "WidgetChatList") {
-            if (transparencyMode == TransparencyMode.FULL) {
-                while (view.id != containerId) view = view.parent as View
+            val id = if (transparencyMode == TransparencyMode.FULL) containerId else chatId
+            while (view.id != id) {
+                view = view.parent as View
+                if (view.id == chatBgId) view.background = null
             }
-            if (ResourceManager.customBg != null)
-                view.background = ResourceManager.customBg
-            else
-                Themer.appContainer = view
+            view.background = ResourceManager.customBg
         } else if ((transparencyMode == TransparencyMode.CHAT_SETTINGS || transparencyMode == TransparencyMode.FULL) && (className.lowercase()
                 .contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
         ) {
-            ResourceManager.customBg?.let { bg ->
-                var tint = ResourceManager.getColorForName("primary_dark_600")
-                if (tint != null || view.context.getColor(R.c.primary_dark_600).also { tint = it } != 0) {
-                    bg.colorFilter = PorterDuffColorFilter(tint!!, PorterDuff.Mode.DARKEN)
-                }
-                view.background = bg
-            }
+            view.background = ResourceManager.customBg
         }
     })
 }

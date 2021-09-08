@@ -11,6 +11,7 @@
 package dev.vendicated.aliucordplugs.themer.settings.editor.tabs
 
 import android.util.Patterns
+import java.io.File
 import java.util.regex.Pattern
 
 private val versionPattern: Pattern by lazy {
@@ -29,14 +30,16 @@ object Validators {
     }
 
     fun background(key: String, s: String) = when (key) {
-        "url" -> urlValidator(s)
-        "alpha" -> tryOrFalse { s.toInt() in 0..256 }
+        "url" -> urlValidator(s) || File(s.removePrefix("file://")).exists()
+        "overlay_alpha" -> tryOrFalse { s.toInt() in 0..0xFF }
+        "blur_radius" -> tryOrFalse { s.toDouble() >= 0 }
         else -> throw NotImplementedError(key)
     }
 }
 
 val converters = mapOf<String, (s: String) -> Any>(
-    "alpha" to { it.toInt() }
+    "overlay_alpha" to { it.toInt() },
+    "blur_radius" to { it.toDouble() }
 )
 
 private fun tryOrFalse(fn: () -> Boolean) = try {
