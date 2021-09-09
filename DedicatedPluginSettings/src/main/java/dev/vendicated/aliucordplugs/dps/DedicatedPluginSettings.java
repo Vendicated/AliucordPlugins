@@ -45,9 +45,8 @@ public class DedicatedPluginSettings extends Plugin {
             getBinding.setAccessible(true);
 
             patcher.patch(WidgetSettings.class.getDeclaredMethod("onViewBound", View.class), new PinePatchFn(callFrame -> {
+                widgetSettings = (WidgetSettings) callFrame.thisObject;
                 Utils.mainThread.postDelayed(() -> {
-                    var widgetSettings = (WidgetSettings) callFrame.thisObject;
-
                     var layout = (ViewGroup) ((ViewGroup) ((ViewGroup) callFrame.args[0]).getChildAt(1)).getChildAt(0);
                     var ctx = layout.getContext();
 
@@ -61,7 +60,7 @@ public class DedicatedPluginSettings extends Plugin {
                     layout.addView(header, ++idx);
 
                     recycler = new RecyclerView(ctx);
-                    recycler.setAdapter((adapter = new PluginsAdapter(widgetSettings.getParentFragmentManager())));
+                    recycler.setAdapter((adapter = new PluginsAdapter()));
                     recycler.setLayoutManager(new LinearLayoutManager(ctx));
                     layout.addView(recycler, ++idx);
                 }, 2000);
@@ -98,8 +97,11 @@ public class DedicatedPluginSettings extends Plugin {
         }));
     }
 
+    static WidgetSettings widgetSettings;
+
     @Override
     public void stop(Context context) {
+        widgetSettings = null;
         patcher.unpatchAll();
         if (recycler != null) {
             header.setVisibility(View.GONE);

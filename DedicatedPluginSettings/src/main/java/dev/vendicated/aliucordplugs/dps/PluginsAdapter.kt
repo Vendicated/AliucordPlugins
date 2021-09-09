@@ -20,7 +20,7 @@ import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentManager
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aliucord.*
 import com.aliucord.entities.Plugin
@@ -43,7 +43,7 @@ private operator fun Int.not() =
             )
     }
 
-private var drawables = hashMapOf(
+private val drawables = hashMapOf(
     "fallback" to !ic_slash_command_24dp,
     // Ven
     "TapTap" to !ic_raised_hand_action_24dp,
@@ -68,7 +68,7 @@ private var drawables = hashMapOf(
     "CustomBadges" to !ic_staff_badge_blurple_24dp
 )
 
-class PluginsAdapter(private val fm: FragmentManager) : RecyclerView.Adapter<ViewHolder>() {
+class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     val data = PluginManager.plugins.values.filter {
         PluginManager.isPluginEnabled(it.getName()) && it.settingsTab != null
     }.sortedBy {
@@ -80,7 +80,9 @@ class PluginsAdapter(private val fm: FragmentManager) : RecyclerView.Adapter<Vie
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         ViewHolder(
             this,
-            TextView(parent.context, null, 0, R.h.UiKit_Settings_Item_Icon)
+            TextView(parent.context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+                typeface = ResourcesCompat.getFont(parent.context, Constants.Fonts.whitney_medium)
+            }
         )
 
     @SuppressLint("SetTextI18n")
@@ -108,17 +110,26 @@ class PluginsAdapter(private val fm: FragmentManager) : RecyclerView.Adapter<Vie
     }
 
     fun onEntryClicked(ctx: Context, position: Int) {
-        val p = data[position]
-        try {
-            if (p.settingsTab.type == Plugin.SettingsTab.Type.PAGE && p.settingsTab.page != null) {
-                val page = ReflectUtils.invokeConstructorWithArgs(p.settingsTab.page, *(p.settingsTab.args ?: emptyArray()))
-                Utils.openPageWithProxy(ctx, page)
-            } else if (p.settingsTab.type == Plugin.SettingsTab.Type.BOTTOM_SHEET && p.settingsTab.bottomSheet != null) {
-                ReflectUtils.invokeConstructorWithArgs(p.settingsTab.bottomSheet, *(p.settingsTab.args ?: emptyArray()))
-                    .show(fm, p.getName() + "Settings")
+        with (data[position]) {
+            try {
+                val args = settingsTab.args ?: emptyArray()
+                when {
+                    settingsTab.type == Plugin.SettingsTab.Type.PAGE && settingsTab.page != null -> {
+                        ReflectUtils.invokeConstructorWithArgs(settingsTab.page, *args).let {
+                            Utils.openPageWithProxy(ctx, it)
+                        }
+                    }
+                    settingsTab.type == Plugin.SettingsTab.Type.BOTTOM_SHEET && settingsTab.bottomSheet != null -> {
+                        ReflectUtils.invokeConstructorWithArgs(settingsTab.bottomSheet, *args)
+                            .show(
+                                DedicatedPluginSettings.widgetSettings?.parentFragmentManager ?: return,
+                                getName() + "Settings"
+                            )
+                    }
+                }
+            } catch (th: Throwable) {
+                PluginManager.logger.error(ctx, "Failed to launch plugin settings", th)
             }
-        } catch (th: Throwable) {
-            PluginManager.logger.error(ctx, "Failed to launch plugin settings", th)
         }
     }
 }
