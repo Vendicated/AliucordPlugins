@@ -15,6 +15,7 @@ import android.graphics.drawable.BitmapDrawable
 import android.renderscript.*
 import androidx.core.graphics.ColorUtils
 import com.aliucord.*
+import com.aliucord.utils.ReflectUtils
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.ExecutionException
@@ -154,8 +155,11 @@ object ThemeLoader {
                 keys().forEach {
                     if (it == "*") loadFont(theme, -1, getString(it))
                     else try {
-                        val font = Constants.Fonts::class.java.getField(it)
-                        loadFont(theme, font[null] as Int, getString(it))
+                        loadFont(
+                            theme,
+                            ReflectUtils.getField(Constants.Fonts::class.java, null, it) as Int,
+                            getString(it)
+                        )
                     } catch (ex: ReflectiveOperationException) {
                         theme.error("No such font: $it", ex)
                     }

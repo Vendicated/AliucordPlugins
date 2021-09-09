@@ -88,16 +88,20 @@ private fun PatcherAPI.setBackgrounds() {
     })
 }
 
-private fun PatcherAPI.patchGetFont() {
-    val fontHook = PinePrePatchFn { callFrame ->
-        val font = ResourceManager.getFontForId(callFrame.args[1] as Int) ?: ResourceManager.getDefaultFont()
+fun fontHook(idx: Int) =
+    PinePrePatchFn { callFrame ->
+        val font = ResourceManager.getFontForId(callFrame.args[idx] as Int) ?: ResourceManager.getDefaultFont()
         font?.let {
             callFrame.result = it
         }
     }
 
-    ResourcesCompat::class.java.declaredMethods.forEach {
-        if (it.name == "loadFont") patch(it, fontHook)
+private fun PatcherAPI.patchGetFont() {
+     ResourcesCompat::class.java.declaredMethods.forEach {
+        if (it.name == "loadFont") {
+            val idIndex = it.parameterTypes.indexOfFirst { p -> p == Int::class.java }
+            patch(it, fontHook(idIndex))
+        }
     }
 }
 

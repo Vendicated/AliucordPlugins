@@ -1,4 +1,4 @@
-version = "3.1.3"
+version = "3.1.4"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
@@ -6,6 +6,9 @@ aliucord.changelog.set(
     
     # Future Roadmap
     * Implement full transparency
+    
+    # 3.1.4
+    * Improve font hook 2: Electric Boogaloo!
     
     # 3.1.3
     * Improve font hook.
