@@ -2,6 +2,9 @@
 
 Click a Plugin's name to open a more detailed explanation
 
+- ### [Themer](Themer/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/Themer.zip?raw=true)
+Create and apply custom themes
+
 - ### [EmojiUtility](EmojiUtility/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/EmojiUtility.zip?raw=true)
 Adds lots of emoji utility, such as cloning and downloading
 
@@ -13,6 +16,9 @@ Download and install plugins without ever leaving the Discord app
 
 - ### [ViewProfileImages](ViewProfileImages/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/ViewProfileImages.zip?raw=true)
 Allows you to open user or server avatars/banners by tapping them, similar to attachments or embeds.
+
+- ### [DedicatedPluginSettings](DedicatedPluginSettings/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/DedicatedPluginSettings.zip?raw=true)
+Dedicated plugin settings on the main settings screen, similar to Powercord
 
 - ### [TapTap](TapTap/README.md) - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/TapTap.zip?raw=true)
 Double-tap someone elses message to quick reply, double tap your own to quick edit
