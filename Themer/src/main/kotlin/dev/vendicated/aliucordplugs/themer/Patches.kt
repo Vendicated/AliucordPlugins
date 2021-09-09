@@ -17,7 +17,6 @@ import android.content.res.Resources
 import android.graphics.*
 import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
-import android.os.Handler
 import android.util.TypedValue
 import android.view.*
 import android.widget.TextView
@@ -97,27 +96,9 @@ private fun PatcherAPI.patchGetFont() {
         }
     }
 
-    // None of these call each other and the underlying private method is not stable across Android versions so oh boy 3 patches here we go
-    val m1 = ResourcesCompat::class.java.getDeclaredMethod("getFont", Context::class.java, Int::class.javaPrimitiveType)
-    val m2 = ResourcesCompat::class.java.getDeclaredMethod(
-        "getFont",
-        Context::class.java,
-        Int::class.javaPrimitiveType,
-        ResourcesCompat.FontCallback::class.java,
-        Handler::class.java
-    )
-    val m3 = ResourcesCompat::class.java.getDeclaredMethod(
-        "getFont",
-        Context::class.java,
-        Int::class.javaPrimitiveType,
-        TypedValue::class.java,
-        Int::class.javaPrimitiveType,
-        ResourcesCompat.FontCallback::class.java
-    )
-
-    patch(m1, fontHook)
-    patch(m2, fontHook)
-    patch(m3, fontHook)
+    ResourcesCompat::class.java.declaredMethods.forEach {
+        if (it.name == "loadFont") patch(it, fontHook)
+    }
 }
 
 private fun PatcherAPI.patchGetColor() {
@@ -140,7 +121,6 @@ private fun PatcherAPI.patchSetColor(enableTransparency: Boolean) {
             ResourceManager.getNameByColor(callFrame.args[0] as Int)?.let { name ->
                 ResourceManager.getColorForName(name)?.let { color ->
                     callFrame.args[0] = color
-                    // TODO: Set alpha if background colour
                 }
             }
         } else Action1 { callFrame: CallFrame ->

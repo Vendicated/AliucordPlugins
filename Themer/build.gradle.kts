@@ -1,4 +1,4 @@
-version = "3.1.2"
+version = "3.1.3"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
@@ -6,8 +6,9 @@ aliucord.changelog.set(
     
     # Future Roadmap
     * Implement full transparency
-    * Add Fonts tab to theme editor
-    * Add background_overlay_color variable
+    
+    # 3.1.3
+    * Improve font hook.
     
     # 3.1.2
     * Add allowed hosts section to editor

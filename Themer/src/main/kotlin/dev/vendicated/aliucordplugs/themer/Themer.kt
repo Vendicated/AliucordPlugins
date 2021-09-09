@@ -28,9 +28,9 @@ class Themer : Plugin() {
 
     override fun start(ctx: Context) {
         mSettings = settings
+        addPatches(patcher)
         ResourceManager.init(ctx)
         ThemeLoader.loadThemes(true)
-        addPatches(patcher)
     }
 
     override fun stop(context: Context) {

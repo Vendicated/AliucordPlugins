@@ -39,7 +39,7 @@ object ResourceManager {
     fun getDrawableTintForId(id: Int) = drawableTints[id]
     fun getAttrForId(id: Int) = attrs[id]
     fun getFontForId(id: Int) = fonts[id]
-    fun getDefaultFont() = fonts[-1]
+    fun getDefaultFont() = getFontForId(-1)
 
     fun init(ctx: Context) {
         R.c::class.java.declaredFields.forEach {
