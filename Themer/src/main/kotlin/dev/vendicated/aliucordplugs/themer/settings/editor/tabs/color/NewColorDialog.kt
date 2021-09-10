@@ -10,27 +10,41 @@
 
 package dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color
 
-import android.graphics.Color
-import android.graphics.drawable.ShapeDrawable
+import android.annotation.SuppressLint
+import android.app.Dialog
+import android.content.Context
+import android.graphics.*
+import android.graphics.drawable.*
 import android.graphics.drawable.shapes.RectShape
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.View.TEXT_ALIGNMENT_CENTER
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.*
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.*
+import com.aliucord.Utils
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.TextInput
 import com.aliucord.widgets.BottomSheet
 import com.lytefast.flexinput.R
+import dev.vendicated.aliucordplugs.themer.logger
+
+enum class ColorDialogType {
+    SIMPLE_COLORS,
+    COLORS,
+    DRAWABLES
+}
 
 class NewColorDialog(
+    private val type: ColorDialogType,
     private val options: List<String>,
-    private val callback: (s: String) -> Unit
+    private val callback: (s: String) -> Unit,
 ) : BottomSheet() {
+    @SuppressLint("SetTextI18n")
     override fun onViewCreated(view: View, bundle: Bundle?) {
         super.onViewCreated(view, bundle)
 
@@ -38,10 +52,20 @@ class NewColorDialog(
         val p = DimenUtils.getDefaultPadding()
         val p2 = p / 2
 
-        val adapter = AutoCompleteAdapter(options) {
+        val adapter = AutoCompleteAdapter(type, options) {
             callback.invoke(it)
             dismiss()
         }
+
+        if (type != ColorDialogType.SIMPLE_COLORS)
+            TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).run {
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
+                    setMargins(p, p, p, 0)
+                    textAlignment = TEXT_ALIGNMENT_CENTER
+                }
+                text = "Tip: Long press an entry to preview it!"
+                addView(this)
+            }
 
         TextInput(ctx).run {
             hint = ctx.getString(R.g.search)
@@ -77,6 +101,7 @@ class NewColorDialog(
 }
 
 private class AutoCompleteAdapter(
+    private val type: ColorDialogType,
     private val items: List<String>,
     private val callback: (s: String) -> Unit
 ) : RecyclerView.Adapter<AutoCompleteViewHolder>(), Filterable {
@@ -89,12 +114,54 @@ private class AutoCompleteAdapter(
         )
 
     override fun onBindViewHolder(holder: AutoCompleteViewHolder, position: Int) {
-        (holder.itemView as TextView).text = filteredItems[position]
+        (holder.itemView as TextView).text = items[position]
     }
 
     override fun getItemCount() = filteredItems.size
 
     fun onClick(position: Int) = callback.invoke(filteredItems[position])
+
+    fun onLongClick(ctx: Context, position: Int) {
+        val name = items[position]
+
+        try {
+            var drawable = null as Drawable?
+            when (type) {
+                ColorDialogType.COLORS -> {
+                    val id = Utils.getResId(name, "color")
+                    drawable = GradientDrawable().apply {
+                        shape = GradientDrawable.OVAL
+                        setColor(ContextCompat.getColor(ctx, id))
+                        DimenUtils.dpToPx(100).let {
+                            setSize(it, it)
+                        }
+                    }
+                }
+                ColorDialogType.DRAWABLES -> {
+                    val id = Utils.getResId(name, "drawable")
+                    drawable = ContextCompat.getDrawable(ctx, id)
+                }
+                ColorDialogType.SIMPLE_COLORS -> {
+                    Utils.showToast(ctx, "Sorry, no preview.")
+                }
+            }
+
+            Dialog(ctx).run {
+                requestWindowFeature(Window.FEATURE_NO_TITLE)
+                window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+                addContentView(
+                    ImageView(ctx).apply { setImageDrawable(drawable) },
+                    RelativeLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                )
+
+                show()
+            }
+
+        } catch (th: Throwable) {
+            logger.error(ctx, "Failed to open preview", th)
+        }
+    }
 
     override fun getFilter(): Filter = filter
 
@@ -114,7 +181,7 @@ private class AutoCompleteAdapter(
 
         override fun publishResults(constraint: CharSequence?, results: FilterResults) {
             val data = results.values as ArrayList<String>
-            DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
                 override fun getOldListSize() = filteredItems.size
 
                 override fun getNewListSize() = results.count
@@ -123,8 +190,9 @@ private class AutoCompleteAdapter(
                     filteredItems[oldItemPosition].equals(data[newItemPosition])
 
                 override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = true
-            }).dispatchUpdatesTo(this@AutoCompleteAdapter)
+            })
             filteredItems = data
+            diff.dispatchUpdatesTo(this@AutoCompleteAdapter)
         }
     }
 }
@@ -137,6 +205,10 @@ private class AutoCompleteViewHolder(
         itemView.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
         itemView.setOnClickListener {
             adapter.onClick(adapterPosition)
+        }
+        itemView.setOnLongClickListener {
+            adapter.onLongClick(it.context, adapterPosition)
+            true
         }
     }
 }

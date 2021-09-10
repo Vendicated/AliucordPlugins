@@ -40,6 +40,7 @@ private val fabId: Int by lazy {
 }
 
 class ColorTab(
+    private val type: ColorDialogType,
     private val header: String,
     private val data: JSONObject,
     private val autoCompleteOptions: Lazy<List<String>>
@@ -88,7 +89,7 @@ class ColorTab(
 
         layout.findViewById<FloatingActionButton>(fabId).run {
             setOnClickListener {
-                NewColorDialog(autoCompleteOptions.value) {
+                NewColorDialog(type, autoCompleteOptions.value) {
                     adapter.addItem(ColorTuple(it, Color.BLACK))
                 }.show(parentFragmentManager, "New Color")
             }

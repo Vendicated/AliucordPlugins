@@ -1,4 +1,4 @@
-version = "3.1.4"
+version = "3.2.0"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
@@ -7,9 +7,11 @@ aliucord.changelog.set(
     # Future Roadmap
     * Implement full transparency
     
-    # 3.1.4
-    * Improve font hook 2: Electric Boogaloo!
     
+    # 3.2.0
+    * Add Material You support (Android 12 only) - [Learn more](https://material.io/blog/announcing-material-you) - [Colors](https://developer.android.com/reference/android/R.color#system_accent1_0)
+    * Add Color and Drawable Viewer to the Theme Editor
+
     # 3.1.3
     * Improve font hook.
     

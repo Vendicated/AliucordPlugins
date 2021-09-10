@@ -97,7 +97,7 @@ fun fontHook(idx: Int) =
     }
 
 private fun PatcherAPI.patchGetFont() {
-     ResourcesCompat::class.java.declaredMethods.forEach {
+    ResourcesCompat::class.java.declaredMethods.forEach {
         if (it.name == "loadFont") {
             val idIndex = it.parameterTypes.indexOfFirst { p -> p == Int::class.java }
             patch(it, fontHook(idIndex))

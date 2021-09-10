@@ -12,10 +12,13 @@ package dev.vendicated.aliucordplugs.themer
 
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
+import android.os.Build
 import android.renderscript.*
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
 import com.aliucord.*
 import com.aliucord.utils.ReflectUtils
+import org.json.JSONObject
 import java.io.File
 import java.io.FileNotFoundException
 import java.util.concurrent.ExecutionException
@@ -112,6 +115,24 @@ object ThemeLoader {
         }
     }
 
+
+    private fun parseColor(json: JSONObject, key: String): Int {
+        val v = json.getString(key)
+        return if (v.startsWith("system_")) {
+            if (Build.VERSION.SDK_INT < 31)
+                throw UnsupportedOperationException("system_ colours are only supported on Android 12.")
+
+            try {
+                ContextCompat.getColor(
+                    Utils.appContext,
+                    ReflectUtils.getField(android.R.color::class.java, null, v) as Int
+                )
+            } catch (th: Throwable) {
+                throw IllegalArgumentException("No such color: $v")
+            }
+        } else v.toInt()
+    }
+
     fun loadThemes(shouldLoad: Boolean) {
         themes.clear()
 
@@ -168,7 +189,7 @@ object ThemeLoader {
 
             json.optJSONObject("simple_colors")?.run {
                 keys().forEach {
-                    val v = getInt(it)
+                    val v = parseColor(this, it)
                     when (it) {
                         "accent" -> {
                             ResourceManager.putColors(SIMPLE_ACCENT_NAMES, v)
@@ -209,10 +230,10 @@ object ThemeLoader {
                 if (has("brand_500"))
                     ResourceManager.putDrawableTint(
                         "ic_nitro_rep",
-                        getInt("brand_500")
+                        parseColor(this, "brand_500")
                     )
                 keys().forEach {
-                    val v = getInt(it)
+                    val v = parseColor(this, it)
                     ResourceManager.putColor(it, v)
                     ResourceManager.putAttr(it, v)
                 }
@@ -220,7 +241,7 @@ object ThemeLoader {
 
             json.optJSONObject("drawable_tints")?.run {
                 keys().forEach {
-                    ResourceManager.putDrawableTint(it, getInt(it))
+                    ResourceManager.putDrawableTint(it, parseColor(this, it))
                 }
             }
 

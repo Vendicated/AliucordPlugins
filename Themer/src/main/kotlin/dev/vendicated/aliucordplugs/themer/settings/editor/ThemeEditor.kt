@@ -25,6 +25,7 @@ import com.lytefast.flexinput.R
 import dev.vendicated.aliucordplugs.themer.*
 import dev.vendicated.aliucordplugs.themer.settings.ThemerSettings
 import dev.vendicated.aliucordplugs.themer.settings.editor.tabs.*
+import dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color.ColorDialogType
 import dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color.ColorTab
 import org.json.JSONObject
 
@@ -70,13 +71,13 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
                 .show(parentFragmentManager, "Edit fonts")
         })
 
-        addView(buildColorEntry(ctx, "Simple Colors", R.d.ic_accessibility_24dp, lazy {
+        addView(buildColorEntry(ctx, ColorDialogType.SIMPLE_COLORS, "Simple Colors", R.d.ic_accessibility_24dp, lazy {
             SIMPLE_KEYS.toList()
         }))
-        addView(buildColorEntry(ctx, "Colors", R.d.ic_theme_24dp, lazy {
+        addView(buildColorEntry(ctx, ColorDialogType.COLORS, "Colors", R.d.ic_theme_24dp, lazy {
             R.c::class.java.declaredFields.map { it.name }
         }))
-        addView(buildColorEntry(ctx, "Drawable Tints", R.d.ic_emoji_24dp, lazy {
+        addView(buildColorEntry(ctx, ColorDialogType.DRAWABLES, "Drawable Tints", R.d.ic_emoji_24dp, lazy {
             R.d::class.java.declaredFields.map { it.name }
         }))
 
@@ -89,10 +90,10 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
         }
     }
 
-    private fun buildColorEntry(ctx: Context, title: String, drawableId: Int, autocompleteOptions: Lazy<List<String>>) =
+    private fun buildColorEntry(ctx: Context, type: ColorDialogType, title: String, drawableId: Int, autocompleteOptions: Lazy<List<String>>) =
         buildEntry(ctx, title, drawableId) {
             val key = title.lowercase().replace(" ", "_")
-            Utils.openPageWithProxy(it.context, ColorTab(title, json.getJSONObject(key), autocompleteOptions))
+            Utils.openPageWithProxy(it.context, ColorTab(type, title, json.getJSONObject(key), autocompleteOptions))
         }
 
     private fun buildEntry(ctx: Context, title: String, drawableId: Int, onClick: View.OnClickListener) =
