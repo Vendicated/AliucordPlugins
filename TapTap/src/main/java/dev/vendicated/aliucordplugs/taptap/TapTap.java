@@ -6,13 +6,14 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
-*/
+ */
 
 package dev.vendicated.aliucordplugs.taptap;
 
 import android.content.Context;
 import android.os.Handler;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
 
 import androidx.core.widget.NestedScrollView;
@@ -20,14 +21,13 @@ import androidx.core.widget.NestedScrollView;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
+import com.aliucord.patcher.PineInsteadFn;
 import com.aliucord.patcher.PinePatchFn;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
-
-import top.canyie.pine.Pine;
-import top.canyie.pine.callback.MethodReplacement;
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler;
 
 @AliucordPlugin
 public class TapTap extends Plugin {
@@ -45,36 +45,37 @@ public class TapTap extends Plugin {
     private int clicks = 0;
 
     @Override
-    public void start(Context ctx) {
+    public void start(Context ctx) throws Throwable {
         final int editId = Utils.getResId("dialog_chat_actions_edit", "id");
         final int replyId = Utils.getResId("dialog_chat_actions_reply", "id");
 
         Utils.mainThread.post(() -> widgetChatListActions = new WidgetChatListActions());
 
-        patcher.patch("com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler", "onMessageClicked", new Class<?>[] { Message.class, boolean.class }, new MethodReplacement() {
-            @Override
-            protected Object replaceCall(Pine.CallFrame callFrame) {
-                if (busy) return null;
-                busy = true;
-                var msg = (Message) callFrame.args[0];
-                clicks++;
-                handler.postDelayed(() -> {
-                    if (clicks >= 2) {
-                        if (isMe(msg)) {
-                            WidgetChatListActions.access$editMessage(widgetChatListActions, msg);
-                        } else {
-                            WidgetChatListActions.access$replyMessage(widgetChatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
-                        }
+        patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new PineInsteadFn(callFrame -> {
+            if (busy) return null;
+            busy = true;
+            var msg = (Message) callFrame.args[0];
+            clicks++;
+            handler.postDelayed(() -> {
+                if (clicks >= 2) {
+                    if (isMe(msg)) {
+                        WidgetChatListActions.access$editMessage(widgetChatListActions, msg);
                     } else {
-                        if ((boolean) callFrame.args[1])
-                            StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
+                        WidgetChatListActions.access$replyMessage(widgetChatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
+                        if (settings.getBool("openKeyboard", false)) {
+                            var imm = (InputMethodManager) Utils.appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                        }
                     }
-                    clicks = 0;
-                }, settings.getInt("doubleTapWindow", defaultDelay));
-                busy = false;
-                return null;
-            }
-        });
+                } else {
+                    if ((boolean) callFrame.args[1])
+                        StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
+                }
+                clicks = 0;
+            }, settings.getInt("doubleTapWindow", defaultDelay));
+            busy = false;
+            return null;
+        }));
 
         togglePatch = () -> {
             if (settings.getBool("hideButtons", false)) {
