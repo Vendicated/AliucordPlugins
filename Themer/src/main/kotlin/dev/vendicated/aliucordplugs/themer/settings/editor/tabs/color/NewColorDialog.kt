@@ -90,7 +90,7 @@ class NewColorDialog(
             val decoration = DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
             ShapeDrawable(RectShape()).run {
                 setTint(Color.TRANSPARENT)
-                intrinsicHeight = DimenUtils.getDefaultPadding()
+                intrinsicHeight = DimenUtils.getDefaultPadding() / 2
                 decoration.setDrawable(this)
             }
             addItemDecoration(decoration)

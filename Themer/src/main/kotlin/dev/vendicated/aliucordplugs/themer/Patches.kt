@@ -39,6 +39,7 @@ import rx.functions.Action1
 import top.canyie.pine.Pine.CallFrame
 import top.canyie.pine.callback.MethodHook
 import java.io.*
+import java.net.URLDecoder
 import java.util.regex.Pattern
 
 
@@ -202,7 +203,6 @@ const val THEMES_CHANNEL_ID = 824357609778708580L
 
 @SuppressLint("SetTextI18n")
 private fun PatcherAPI.addDownloadButton() {
-    val viewId = View.generateViewId()
     val badUrlMatcher = Pattern.compile("http[^\\s]+\\.json")
 
     patch(
@@ -210,50 +210,54 @@ private fun PatcherAPI.addDownloadButton() {
         "configureUI",
         arrayOf<Class<*>>(WidgetChatListActions.Model::class.java),
         PinePatchFn { callFrame: CallFrame ->
-            val layout = ((callFrame.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
-            if (layout == null || layout.findViewById<View?>(viewId) != null) return@PinePatchFn
+            val layout =
+                ((callFrame.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
+                    ?: return@PinePatchFn
+
             val ctx = layout.context
             val msg = (callFrame.args[0] as WidgetChatListActions.Model).message
             if (msg.channelId == THEMES_CHANNEL_ID) {
-                var url: String? = null
-                var name: String? = null
-                msg.attachments.forEach {
-                    if (it.url.endsWith(".json")) {
-                        url = it.url
-                        name = it.filename
-                    }
+                val drawable = ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.mutate()?.apply {
+                    setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
                 }
-                if (url == null && msg.content != null) {
+
+                HashMap<String, String>().apply {
+                    msg.attachments.forEach {
+                        if (it.url.endsWith(".json")) {
+                            put(it.filename, it.url)
+                        }
+                    }
                     badUrlMatcher.matcher(msg.content).run {
-                        if (find()) {
-                            url = group()
-                            name = url!!.substringAfterLast('/')
+                        while (find()) {
+                            val url = group()
+                            val name = url.substringAfterLast('/')
+                            put(name, url)
                         }
                     }
-                }
-
-                url?.let {
+                }.forEach { (name, url) ->
                     TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).run {
-                        id = viewId
-                        text = "Install $name"
-                        ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.let {
-                            it.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
-                            setCompoundDrawablesRelativeWithIntrinsicBounds(it, null, null, null)
-                        }
+                        val prettyName =
+                            URLDecoder.decode(name, "UTF-8")
+                                .replace('_', ' ')
+                                .replace('-', ' ')
+                                .removeSuffix(".json")
 
+                        text = "Install $prettyName"
+                        setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, null, null, null)
                         setOnClickListener {
                             Utils.threadPool.execute {
                                 try {
-                                    Http.Request(url).execute().run {
-                                        saveToFile(File(THEME_DIR, name!!))
+                                    Http.Request(url).use {
+                                        it.execute().saveToFile(File(THEME_DIR, name))
                                         ThemeLoader.loadThemes(false)
-                                        Utils.showToast(ctx, "Successfully installed theme $name")
+                                        Utils.showToast(ctx, "Successfully installed theme $prettyName")
                                     }
                                 } catch (ex: Throwable) {
-                                    logger.error(ctx, "Failed to install theme $name", ex)
+                                    logger.error(ctx, "Failed to install theme $prettyName", ex)
                                 }
                             }
                         }
+
                         layout.addView(this, 1)
                     }
                 }

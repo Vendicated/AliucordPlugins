@@ -1,4 +1,4 @@
-version = "3.2.0"
+version = "3.2.1"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
@@ -7,6 +7,12 @@ aliucord.changelog.set(
     # Future Roadmap
     * Implement full transparency
     
+    
+    # 3.2.1
+    * Theme Downloader: Support multiple themes in one message
+    * Add i.ibb.co to allowed domains
+    * Fix text being cut off in editor
+    * Make editor validator more leniant 
     
     # 3.2.0
     * Add Material You support (Android 12 only) - [Learn more](https://material.io/blog/announcing-material-you) - [Colors](https://developer.android.com/reference/android/R.color#system_accent1_0)

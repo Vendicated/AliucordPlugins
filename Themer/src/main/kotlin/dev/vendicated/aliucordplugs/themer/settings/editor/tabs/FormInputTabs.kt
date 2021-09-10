@@ -107,7 +107,7 @@ object Validators {
     }
 
     private val versionPattern: Pattern by lazy {
-        Pattern.compile("^(\\d{1,2}\\.){2,}\\d{1,2}$")
+        Pattern.compile("^(\\d{1,2}\\.)+\\d{1,2}$")
     }
 
     private fun urlValidator(s: String) =

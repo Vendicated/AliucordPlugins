@@ -21,6 +21,7 @@ import android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
+import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.ToolbarButton
@@ -51,13 +52,15 @@ class ColorViewHolder(private val adapter: ColorAdapter, layout: LinearLayout) :
         }
 
         textView = TextView(ctx, null, 0, R.h.UiKit_Settings_Item).apply {
-            layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, dp48).apply {
+            layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
                 weight = 1f
             }
             setOnClickListener {
                 adapter.onEntryClicked(adapterPosition, it.context)
             }
             layout.addView(this)
+
+            TextViewCompat.setAutoSizeTextTypeWithDefaults(this, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM)
         }
 
         colorCircleView = LinearLayout(ctx).apply {
