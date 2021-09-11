@@ -20,16 +20,20 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
-import android.view.View.TEXT_ALIGNMENT_CENTER
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.*
+import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import androidx.core.widget.TextViewCompat
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.*
 import com.aliucord.Utils
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.TextInput
+import com.aliucord.views.ToolbarButton
 import com.aliucord.widgets.BottomSheet
+import com.discord.utilities.color.ColorCompat
 import com.lytefast.flexinput.R
 import dev.vendicated.aliucordplugs.themer.logger
 
@@ -52,32 +56,21 @@ class NewColorDialog(
         val p = DimenUtils.getDefaultPadding()
         val p2 = p / 2
 
-        val adapter = AutoCompleteAdapter(type, options) {
+        val adapter = AutoCompleteAdapter(ctx, parentFragmentManager, type, options) {
             callback.invoke(it)
             dismiss()
         }
-
-        if (type != ColorDialogType.SIMPLE_COLORS)
-            TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).run {
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
-                    setMargins(p, p, p, 0)
-                    textAlignment = TEXT_ALIGNMENT_CENTER
-                }
-                text = "Tip: Long press an entry to preview it!"
-                addView(this)
-            }
 
         TextInput(ctx).run {
             hint = ctx.getString(R.g.search)
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 setMargins(p, p2, p, p2)
             }
-            val input = editText!!
-            input.addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-                override fun afterTextChanged(_editable: Editable?) {
-                    adapter.filter.filter(input.text.toString())
+            editText?.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
+                override fun afterTextChanged(e: Editable) {
+                    adapter.filter.filter(e.toString())
                 }
             })
             linearLayout.addView(this)
@@ -101,28 +94,47 @@ class NewColorDialog(
 }
 
 private class AutoCompleteAdapter(
+    ctx: Context,
+    private val fm: FragmentManager,
     private val type: ColorDialogType,
-    private val items: List<String>,
+    private val originalData: List<String>,
     private val callback: (s: String) -> Unit
 ) : RecyclerView.Adapter<AutoCompleteViewHolder>(), Filterable {
-    var filteredItems = ArrayList(items)
+    var data = ArrayList(originalData)
+
+    val infoDrawable = ContextCompat.getDrawable(ctx, R.d.ic_info_24dp)?.apply {
+        setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
+    }
+    val previewDrawable = ContextCompat.getDrawable(ctx, R.d.ic_spectate)?.apply {
+        setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         AutoCompleteViewHolder(
             this,
-            TextView(parent.context, null, 0, R.h.UiKit_Settings_Item_Icon)
+            LinearLayout(parent.context)
         )
 
     override fun onBindViewHolder(holder: AutoCompleteViewHolder, position: Int) {
-        (holder.itemView as TextView).text = items[position]
+        holder.textView.text = data[position]
     }
 
-    override fun getItemCount() = filteredItems.size
+    override fun getItemCount() = data.size
 
-    fun onClick(position: Int) = callback.invoke(filteredItems[position])
+    fun onClick(position: Int) = callback.invoke(data[position])
 
-    fun onLongClick(ctx: Context, position: Int) {
-        val name = items[position]
+/*    fun onInfoClick(position: Int) {
+        val name = data[position]
+
+        ConfirmDialog()
+            .setTitle(name)
+            .setDescription(info)
+            .show(fm, "Documentation Dialog")
+    }
+ */
+
+    fun onPreviewClick(ctx: Context, position: Int) {
+        val name = data[position]
 
         try {
             var drawable = null as Drawable?
@@ -142,7 +154,7 @@ private class AutoCompleteAdapter(
                     drawable = ContextCompat.getDrawable(ctx, id)
                 }
                 ColorDialogType.SIMPLE_COLORS -> {
-                    Utils.showToast(ctx, "Sorry, no preview.")
+                    return Utils.showToast(ctx, "Sorry, no preview.")
                 }
             }
 
@@ -168,30 +180,30 @@ private class AutoCompleteAdapter(
     private val filter = object : Filter() {
         override fun performFiltering(constraint: CharSequence?) = FilterResults().apply {
             if (constraint == null) {
-                count = items.size
-                values = items
+                values = originalData
+                count = originalData.size
             } else {
-                values = items.filter {
-                    it.contains(constraint, true)
-                }.apply {
-                    count = size
+                originalData.filter { it.contains(constraint, true) }.let {
+                    values = it
+                    count = it.size
                 }
             }
         }
 
+        @Suppress("UNCHECKED_CAST")
         override fun publishResults(constraint: CharSequence?, results: FilterResults) {
-            val data = results.values as ArrayList<String>
+            val newData = results.values as ArrayList<String>
             val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
-                override fun getOldListSize() = filteredItems.size
+                override fun getOldListSize() = data.size
 
                 override fun getNewListSize() = results.count
 
                 override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int) =
-                    filteredItems[oldItemPosition].equals(data[newItemPosition])
+                    data[oldItemPosition].equals(newData[newItemPosition])
 
                 override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int) = true
             })
-            filteredItems = data
+            data = newData
             diff.dispatchUpdatesTo(this@AutoCompleteAdapter)
         }
     }
@@ -199,16 +211,52 @@ private class AutoCompleteAdapter(
 
 private class AutoCompleteViewHolder(
     private val adapter: AutoCompleteAdapter,
-    itemView: TextView
-) : RecyclerView.ViewHolder(itemView) {
+    layout: LinearLayout
+) : RecyclerView.ViewHolder(layout) {
+    val textView: TextView
+    // val infoIcon: AppCompatImageButton
+    val viewIcon: AppCompatImageButton
+
     init {
-        itemView.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        itemView.setOnClickListener {
-            adapter.onClick(adapterPosition)
+        layout.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+
+        val m = DimenUtils.getDefaultPadding() / 2
+        textView = TextView(layout.context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+            layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
+                weight = 1f
+            }
+            TextViewCompat.setAutoSizeTextTypeWithDefaults(this, TextViewCompat.AUTO_SIZE_TEXT_TYPE_UNIFORM)
+            setOnClickListener {
+                adapter.onClick(adapterPosition)
+            }
+
+            layout.addView(this)
         }
-        itemView.setOnLongClickListener {
-            adapter.onLongClick(it.context, adapterPosition)
-            true
+
+        val params = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
+            leftMargin = m
+            rightMargin = m
+        }
+
+        /*
+        infoIcon = ToolbarButton(layout.context).apply {
+            setImageDrawable(adapter.infoDrawable, false)
+            layoutParams = params
+            setOnClickListener {
+                adapter.onInfoClick(adapterPosition)
+            }
+
+            layout.addView(this)
+        }*/
+
+        viewIcon = ToolbarButton(layout.context).apply {
+            setImageDrawable(adapter.previewDrawable, false)
+            layoutParams = params
+            setOnClickListener {
+                adapter.onPreviewClick(it.context, adapterPosition)
+            }
+
+            layout.addView(this)
         }
     }
 }

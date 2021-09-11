@@ -34,6 +34,7 @@ val THEME_DIR = File(Constants.BASE_PATH, "themes")
 val ALLOWED_RESOURCE_DOMAINS = arrayOf(
     "github.com",
     "raw.githubusercontent.com",
+    "gitlab.com",
     "cdn.discordapp.com",
     "media.discordapp.net",
     "i.imgur.com",

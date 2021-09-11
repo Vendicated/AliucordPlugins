@@ -203,6 +203,8 @@ const val THEMES_CHANNEL_ID = 824357609778708580L
 
 @SuppressLint("SetTextI18n")
 private fun PatcherAPI.addDownloadButton() {
+    val emojiTrayId = Utils.getResId("dialog_chat_actions_add_reaction_emojis_list", "id")
+    val id = View.generateViewId()
     val badUrlMatcher = Pattern.compile("http[^\\s]+\\.json")
 
     patch(
@@ -213,6 +215,10 @@ private fun PatcherAPI.addDownloadButton() {
             val layout =
                 ((callFrame.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
                     ?: return@PinePatchFn
+
+            if (layout.findViewById<View>(id) != null) return@PinePatchFn
+
+            val idx = if (emojiTrayId == 0) 1 else layout.indexOfChild(layout.findViewById(emojiTrayId)) + 1
 
             val ctx = layout.context
             val msg = (callFrame.args[0] as WidgetChatListActions.Model).message
@@ -236,6 +242,7 @@ private fun PatcherAPI.addDownloadButton() {
                     }
                 }.forEach { (name, url) ->
                     TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).run {
+                        this.id = id
                         val prettyName =
                             URLDecoder.decode(name, "UTF-8")
                                 .replace('_', ' ')
@@ -258,7 +265,7 @@ private fun PatcherAPI.addDownloadButton() {
                             }
                         }
 
-                        layout.addView(this, 1)
+                        layout.addView(this, idx)
                     }
                 }
             }

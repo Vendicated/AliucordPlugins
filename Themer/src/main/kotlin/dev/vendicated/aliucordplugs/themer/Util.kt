@@ -24,3 +24,10 @@ fun JSONObject.toColorArray() = ArrayList<ColorTuple>().apply {
     }
     sortBy { it.name }
 }
+
+fun verifyUntrustedUrl(url: String) {
+    if (!ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(url).find())
+        throw IllegalArgumentException(
+            "URL $url is not allowed. Please use one of: >> ${ALLOWED_RESOURCE_DOMAINS.joinToString()} <<"
+        )
+}

@@ -76,16 +76,15 @@ class ColorTab(
 
         val layout = LayoutInflater.from(ctx)
             .inflate(layoutId, linearLayout, false)
-            .also { addView(it) }
+            .also { addView(it) } as ViewGroup
 
+
+        layout.getChildAt(0).layoutParams.height = 0
 
         layout.findViewById<RecyclerView>(recyclerId).apply {
             this.adapter = adapter
             layoutManager = LinearLayoutManager(ctx)
         }
-
-        // Remove Toolbar. This makes the search sticky for some reason
-        (layout as ViewGroup).removeViewAt(0)
 
         layout.findViewById<FloatingActionButton>(fabId).run {
             setOnClickListener {

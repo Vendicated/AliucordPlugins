@@ -48,8 +48,7 @@ object ThemeLoader {
         val file = File(cacheDir, name)
         if (!file.exists() || Themer.mSettings.getString(cachePrefKey, "") != url) {
             // Enforce privacy
-            if (!ALLOWED_RESOURCE_DOMAINS_PATTERN.matcher(url).find())
-                throw IllegalArgumentException("URL $url is not allowed. Please use one of >> ${ALLOWED_RESOURCE_DOMAINS.joinToString()} <<")
+            verifyUntrustedUrl(url)
 
             try {
                 Utils.threadPool.submit {
