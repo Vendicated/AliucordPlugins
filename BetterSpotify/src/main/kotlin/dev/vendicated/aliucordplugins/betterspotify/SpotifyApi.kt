@@ -8,7 +8,7 @@
  * http://www.apache.org/licenses/LICENSE-2.0
 */
 
-package dev.vendicated.aliucordplugins.spotifylistenalong
+package dev.vendicated.aliucordplugins.betterspotify
 
 import com.aliucord.Http
 import com.aliucord.Utils
@@ -18,8 +18,10 @@ import com.discord.stores.StoreStream
 import com.discord.utilities.platform.Platform
 import com.discord.utilities.rest.RestAPI
 import com.discord.utilities.spotify.SpotifyApiClient
+import dev.vendicated.aliucordplugins.betterspotify.models.PlayerInfo
+import kotlin.math.abs
 
-const val baseUrl = "https://api.spotify.com/v1/me/player"
+private const val baseUrl = "https://api.spotify.com/v1/me/player"
 
 // The spotify api gives me fucking brain damage i swear to god
 // You can either specify album or playlist uris as "context_uri" String or track uris as "uris" array
@@ -48,7 +50,7 @@ object SpotifyApi {
         return token
     }
 
-    private fun request(endpoint: String, method: String = "PUT", data: Any? = null) {
+    private fun request(endpoint: String, method: String = "PUT", data: Any? = null, cb: ((Http.Response) -> Unit)? = null) {
         Utils.threadPool.execute {
             val token = getToken() ?: run {
                     Utils.showToast(
@@ -71,6 +73,7 @@ object SpotifyApi {
                                     .execute()
 
                         res.assertOk()
+                        cb?.invoke(res)
                     }
             } catch (th: Throwable) {
                 if (th is Http.HttpException && th.statusCode == 401) {
@@ -80,6 +83,12 @@ object SpotifyApi {
                     logger.error(th)
             }
         }
+    }
+
+    private fun getPlayerInfo(cb: (PlayerInfo) -> Unit) {
+        request("", "GET", cb = {
+            cb.invoke(it.json(PlayerInfo::class.java))
+        })
     }
 
     fun playSong(id: String, position_ms: Int) {
@@ -95,6 +104,9 @@ object SpotifyApi {
     }
 
     fun seek(position_ms: Int) {
-        request("seek?position_ms=$position_ms")
+        getPlayerInfo {
+            if (abs(it.progress_ms - position_ms) > 5000)
+                request("seek?position_ms=$position_ms")
+        }
     }
 }

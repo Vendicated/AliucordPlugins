@@ -1,4 +1,4 @@
-include(":SpotifyListenAlong")
+include(":BetterSpotify")
 include(":Brainfuck")
 include(":CheckLinks")
 include(":AnimateApngs")
