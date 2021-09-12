@@ -23,23 +23,38 @@ const val baseUrl = "https://api.spotify.com/v1/me/player"
 
 // The spotify api gives me fucking brain damage i swear to god
 // You can either specify album or playlist uris as "context_uri" String or track uris as "uris" array
-class SongBody(val uris: List<String>)
+class SongBody(val uris: List<String>, val position_ms: Int = 0)
 
 object SpotifyApi {
-    private fun request(endpoint: String, method: String, data: Any) {
-        Utils.threadPool.execute {
-            val token = RestAPI.AppHeadersProvider.INSTANCE.spotifyToken
+    private val client: SpotifyApiClient by lazy {
+        ReflectUtils.getField(StoreStream.getSpotify(), "spotifyApiClient") as SpotifyApiClient
+    }
+
+    private var token: String? = null
+    private fun getToken(): String? {
+        if (token == null) {
+            token = RestAPI.AppHeadersProvider.INSTANCE.spotifyToken
                 ?: try {
-                    val client = ReflectUtils.getField(StoreStream.getSpotify(), "spotifyApiClient")
-                    val accountId = ReflectUtils.getField(client!!, "spotifyAccountId")
-                    val res = RestAPI.api.getConnectionAccessToken(Platform.SPOTIFY.name.lowercase(), accountId as String)
+                    val accountId = ReflectUtils.getField(client, "spotifyAccountId")
+                    val res = RestAPI.api
+                        .getConnectionAccessToken(Platform.SPOTIFY.name.lowercase(), accountId as String)
                         .getResultBlocking()
                     res.second?.let { throw it }
                     res.first!!.accessToken
                 } catch (th: Throwable) {
+                    null
+                }
+        }
+        return token
+    }
+
+    private fun request(endpoint: String, method: String = "PUT", data: Any? = null) {
+        Utils.threadPool.execute {
+            val token = getToken() ?: run {
                     Utils.showToast(
                         Utils.appContext,
-                        "Failed to yoink Spotify token from Discord. Make sure your spotify is running")
+                        "Failed to get Spotify token from Discord. Make sure your spotify is running."
+                    )
                     return@execute
                 }
 
@@ -47,21 +62,39 @@ object SpotifyApi {
                 Http.Request("$baseUrl/$endpoint", method)
                     .setHeader("Authorization", "Bearer $token")
                     .use {
-                        it.executeWithJson(data).run {
-                            assertOk()
-                        }
+                        val res =
+                            if (data != null)
+                                it.executeWithJson(data)
+                            else
+                                it
+                                    .setHeader("Content-Type", "application/json")
+                                    .execute()
+
+                        res.assertOk()
                     }
             } catch (th: Throwable) {
                 if (th is Http.HttpException && th.statusCode == 401) {
-                    val client = ReflectUtils.getField(StoreStream.getSpotify(), "spotifyApiClient")
-                    SpotifyApiClient.`access$refreshSpotifyToken`(client as SpotifyApiClient)
+                    SpotifyApiClient.`access$refreshSpotifyToken`(client)
+                    this.token = null
                 } else
                     logger.error(th)
             }
         }
     }
 
-    fun playSong(id: String) {
-        request("play", "PUT", SongBody(listOf("spotify:track:$id")))
+    fun playSong(id: String, position_ms: Int) {
+        request("play", "PUT", SongBody(listOf("spotify:track:$id"), position_ms))
+    }
+
+    fun pause() {
+        request("pause")
+    }
+
+    fun resume() {
+        request("play")
+    }
+
+    fun seek(position_ms: Int) {
+        request("seek?position_ms=$position_ms")
     }
 }

@@ -73,15 +73,20 @@ class SpotifyListenAlong : Plugin() {
             })
     }
 
+    override fun stop(context: Context) {
+        patcher.unpatchAll()
+        commands.unregisterAll()
+
+        stopListening()
+    }
+
     private fun configureButton(btn: MaterialButton, userId: Long) {
         with (btn) {
             when (userId) {
                 hostId -> {
                     text = "Stop listening along"
                     setOnClickListener {
-                        subscription?.unsubscribe()
-                        subscription = null
-                        hostId = null
+                        stopListening()
                         configureButton(btn, userId)
                     }
                 }
@@ -100,15 +105,20 @@ class SpotifyListenAlong : Plugin() {
         }
     }
 
-    override fun stop(context: Context) {
-        patcher.unpatchAll()
-        commands.unregisterAll()
-        subscription?.unsubscribe()
+    private fun stopListening() {
+        subscription?.let {
+            it.unsubscribe()
+            SpotifyApi.pause()
+        }
         subscription = null
+        currentSong = null
+        hostId = null
     }
 
+    private var currentSong: String? = null
     private var hostId: Long? = null
     private var subscription: Subscription? = null
+
     private fun listenAlong(userId: Long) {
         Utils.showToast(Utils.appContext, "Listening along...")
         subscription?.unsubscribe()
@@ -129,7 +139,17 @@ class SpotifyListenAlong : Plugin() {
                 p.activities.forEach {
                     if (ActivityUtilsKt.isSpotifyActivity(it)) {
                         val songId = it.n()
-                        SpotifyApi.playSong(songId)
+
+                        val timestamps = it.o()
+                        val start = timestamps.c()
+                        val offset = (System.currentTimeMillis() - start).toInt()
+
+                        if (songId == currentSong)
+                            SpotifyApi.seek(offset)
+                        else
+                            SpotifyApi.playSong(songId, offset)
+
+                        currentSong = songId
                     }
                 }
             }
