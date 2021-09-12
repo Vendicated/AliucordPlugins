@@ -1,3 +1,4 @@
+include(":SpotifyListenAlong")
 include(":Brainfuck")
 include(":CheckLinks")
 include(":AnimateApngs")
