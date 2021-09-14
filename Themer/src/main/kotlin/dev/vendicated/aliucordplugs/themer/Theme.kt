@@ -64,8 +64,10 @@ class Theme(
                     Http.Request(it).use { req ->
                         val res = req.execute().text()
                         val json = JSONObject(res)
-                        if (json.has("version") && Updater.isOutdated("Theme $name", version, json.getString("version"))) {
+                        val remoteVersion = (json.optJSONObject("manifest") ?: json).optString("version")
+                        if (remoteVersion.isNotEmpty() && Updater.isOutdated("Theme $name", version, remoteVersion)) {
                             file.writeText(res)
+                            info("Successfully updated: $version -> $remoteVersion")
                         }
                     }
                 } catch (ex: Throwable) {
@@ -76,6 +78,10 @@ class Theme(
 
     fun error(msg: String, throwable: Throwable? = null) {
         logger.error("[${name.uppercase()}] $msg", throwable)
+    }
+
+    fun info(msg: String) {
+        logger.info("[${name.uppercase()}] $msg")
     }
 
     companion object {

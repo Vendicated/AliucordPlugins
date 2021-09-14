@@ -1,4 +1,4 @@
-version = "3.2.2"
+version = "3.2.3"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
@@ -7,6 +7,11 @@ aliucord.changelog.set(
     # Future Roadmap
     * Implement full transparency
     
+    
+    # 3.2.3
+    * Fix theme updater
+    * Editor: Don't show autocomplete by default
+    * Editor: Fix changing color while they are filtered
     
     # 3.2.2
     * Editor: Fix bug when searching in "new" tab

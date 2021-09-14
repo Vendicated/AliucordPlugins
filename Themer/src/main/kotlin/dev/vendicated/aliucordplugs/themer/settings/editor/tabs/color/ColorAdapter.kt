@@ -29,7 +29,7 @@ class ColorAdapter(
     val items: ArrayList<ColorTuple>
 ) : RecyclerView.Adapter<ColorViewHolder>(), Filterable {
     private val layoutHeight = DimenUtils.dpToPx(64)
-    private var filteredItems = ArrayList(items)
+    var filteredItems = ArrayList(items)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         ColorViewHolder(this, com.aliucord.widgets.LinearLayout(parent.context).apply {

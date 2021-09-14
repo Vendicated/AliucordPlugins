@@ -23,17 +23,15 @@ import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.*
-import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
 import androidx.core.widget.TextViewCompat
 import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.*
 import com.aliucord.Utils
 import com.aliucord.utils.DimenUtils
-import com.aliucord.views.TextInput
-import com.aliucord.views.ToolbarButton
+import com.aliucord.views.*
+import com.aliucord.views.Button
 import com.aliucord.widgets.BottomSheet
-import com.discord.utilities.color.ColorCompat
 import com.lytefast.flexinput.R
 import dev.vendicated.aliucordplugs.themer.logger
 
@@ -76,6 +74,17 @@ class NewColorDialog(
             linearLayout.addView(this)
         }
 
+        Button(ctx).apply {
+            text = "Show Options"
+            setOnClickListener {
+                adapter.showOptions = !adapter.showOptions
+                text = if (adapter.showOptions) "Hide Options" else "Show Options"
+                adapter.notifyDataSetChanged()
+            }
+        }.also {
+            addView(it)
+        }
+
         RecyclerView(ctx).run {
             this.adapter = adapter
             layoutManager = LinearLayoutManager(ctx)
@@ -101,13 +110,14 @@ private class AutoCompleteAdapter(
     private val callback: (s: String) -> Unit
 ) : RecyclerView.Adapter<AutoCompleteViewHolder>(), Filterable {
     var data = ArrayList(originalData)
+    var showOptions = false
 
-    val infoDrawable = ContextCompat.getDrawable(ctx, R.d.ic_info_24dp)?.apply {
+/*    val infoDrawable = ContextCompat.getDrawable(ctx, R.d.ic_info_24dp)?.apply {
         setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
     }
     val previewDrawable = ContextCompat.getDrawable(ctx, R.d.ic_spectate)?.apply {
         setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
-    }
+    }*/
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         AutoCompleteViewHolder(
@@ -119,7 +129,7 @@ private class AutoCompleteAdapter(
         holder.textView.text = data[position]
     }
 
-    override fun getItemCount() = data.size
+    override fun getItemCount() = if (showOptions) data.size else 0
 
     fun onClick(position: Int) = callback.invoke(data[position])
 
@@ -215,12 +225,11 @@ private class AutoCompleteViewHolder(
 ) : RecyclerView.ViewHolder(layout) {
     val textView: TextView
     // val infoIcon: AppCompatImageButton
-    val viewIcon: AppCompatImageButton
+    // val viewIcon: AppCompatImageButton
 
     init {
         layout.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
 
-        val m = DimenUtils.getDefaultPadding() / 2
         textView = TextView(layout.context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
             layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
                 weight = 1f
@@ -229,14 +238,19 @@ private class AutoCompleteViewHolder(
             setOnClickListener {
                 adapter.onClick(adapterPosition)
             }
+            setOnLongClickListener {
+                adapter.onPreviewClick(it.context, adapterPosition)
+                true
+            }
 
             layout.addView(this)
         }
 
-        val params = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
+/*        val params = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
+            val m = DimenUtils.getDefaultPadding() / 2
             leftMargin = m
             rightMargin = m
-        }
+        }*/
 
         /*
         infoIcon = ToolbarButton(layout.context).apply {
@@ -249,7 +263,7 @@ private class AutoCompleteViewHolder(
             layout.addView(this)
         }*/
 
-        viewIcon = ToolbarButton(layout.context).apply {
+/*        viewIcon = ToolbarButton(layout.context).apply {
             setImageDrawable(adapter.previewDrawable, false)
             layoutParams = params
             setOnClickListener {
@@ -257,6 +271,6 @@ private class AutoCompleteViewHolder(
             }
 
             layout.addView(this)
-        }
+        }*/
     }
 }

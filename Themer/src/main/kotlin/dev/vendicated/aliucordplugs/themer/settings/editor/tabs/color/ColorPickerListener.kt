@@ -17,7 +17,7 @@ class ColorPickerListener(
     override fun onColorReset(color: Int) {}
 
     override fun onColorSelected(_id: Int, color: Int) {
-        adapter.items[position].let {
+        adapter.filteredItems[position].let {
             it.color = color
             adapter.json.put(it.name, color)
         }
