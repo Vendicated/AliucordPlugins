@@ -20,6 +20,17 @@ Simply install the plugin and install a theme from the #themes channel on the Al
 
 Simply open the plugin settings, click new theme and go crazy! Check the pins in the #theme-development for help.
 
+### Example Theme
+
+⚠️ Requires you to enable "Full Transparency" in the plugin settings
+
+[Download](https://cdn.discordapp.com/attachments/852332951542956052/887844412745482310/Firefly.json) | [Source](https://raw.githubusercontent.com/Vendicated/AliucordPlugins/main/Themer/Firefly.json)
+
+![](https://cdn.discordapp.com/attachments/852332951542956052/887844097367359528/Screenshot_20210916-010358.png)
+![](https://cdn.discordapp.com/attachments/852332951542956052/887844110860431450/Screenshot_20210916-010234.png)
+![](https://cdn.discordapp.com/attachments/852332951542956052/887844126178021426/Screenshot_20210916-010151.png)
+![](https://cdn.discordapp.com/attachments/852332951542956052/887844139780161536/Screenshot_20210916-010204.png)
+
 ### Theme spec (SUBJECT TO CHANGE)
 ```json
 {
