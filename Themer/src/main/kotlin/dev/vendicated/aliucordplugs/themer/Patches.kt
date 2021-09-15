@@ -15,27 +15,33 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.*
-import android.graphics.drawable.ColorDrawable
-import android.graphics.drawable.Drawable
+import android.graphics.drawable.*
+import android.os.Bundle
 import android.util.TypedValue
 import android.view.*
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.ColorUtils
+import androidx.fragment.app.FragmentContainerView
 import com.aliucord.*
 import com.aliucord.api.PatcherAPI
 import com.aliucord.fragments.SettingsPage
 import com.aliucord.patcher.PinePatchFn
 import com.aliucord.patcher.PinePrePatchFn
+import com.aliucord.utils.ReflectUtils
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.filename
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.url
-import com.discord.app.AppFragment
+import com.discord.app.*
+import com.discord.databinding.WidgetChatListAdapterItemEmbedBinding
 import com.discord.utilities.color.ColorCompat
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
+import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed
 import com.google.android.material.textfield.TextInputLayout
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.lytefast.flexinput.R
-import rx.functions.Action1
 import top.canyie.pine.Pine.CallFrame
 import top.canyie.pine.callback.MethodHook
 import java.io.*
@@ -45,12 +51,11 @@ import java.util.regex.Pattern
 
 fun addPatches(patcher: PatcherAPI) {
     patcher.run {
-        val enableTransparency = Themer.mSettings.transparencyMode != TransparencyMode.NONE
-        if (enableTransparency) setBackgrounds()
+        if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
 
         patchGetFont()
         patchGetColor()
-        patchSetColor(enableTransparency)
+        patchSetColor()
         patchColorStateLists()
         tintDrawables()
         themeAttributes()
@@ -64,29 +69,118 @@ fun addPatches(patcher: PatcherAPI) {
 }
 
 private fun PatcherAPI.setBackgrounds() {
-    val containerId = Utils.getResId("widget_tabs_host_container", "id")
-    val chatBgId = Utils.getResId("widget_home_panel_center_chat", "id")
     val chatId = Utils.getResId("panel_center", "id")
 
-    patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
-        if (ResourceManager.customBg == null) return@PinePatchFn
-        val clazz = callFrame.thisObject.javaClass
-        val className = clazz.simpleName
-        var view = callFrame.args[0] as View
-        val transparencyMode = Themer.mSettings.transparencyMode
-        if (className == "WidgetChatList") {
-            val id = if (transparencyMode == TransparencyMode.FULL) containerId else chatId
-            while (view.id != id) {
-                view = view.parent as View
-                if (view.id == chatBgId) view.background = null
+    val transparencyMode = Themer.mSettings.transparencyMode
+    if (transparencyMode == TransparencyMode.FULL) {
+        val rootId = Utils.getResId("action_bar_root", "id")
+
+        patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
+            if (ResourceManager.customBg == null) return@PinePatchFn
+            var view = callFrame.args[0] as View
+            val c = callFrame.thisObject::class.java
+            val cName = c.name
+
+            // Discord uses a dialog to show these which makes it so that the chat still shows underneath which makes these
+            // unreadable. Thus set their background to the wallpaper
+            if (cName == "com.discord.widgets.user.search.WidgetGlobalSearch" ||
+                cName == "com.discord.widgets.user.WidgetUserMentions"
+            ) {
+                view.background = ResourceManager.customBg
+                // Add darken overlay
+                (view as ViewGroup).addView(
+                    View(view.context).apply {
+                        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                        background = ColorDrawable().apply {
+                            color = ColorUtils.setAlphaComponent(Color.BLACK, 100)
+                        }
+                    }, 0
+                )
+
             }
+
+            // Two while loops to first find the root layout or return if it doesn't exist
+            // Then go even deeper to find the root root layout
+            while (view.id != rootId)
+                view = view.parent as View? ?: return@PinePatchFn
+            while (true) {
+                if (view.parent !is View) break
+                view = view.parent as View
+            }
+
             view.background = ResourceManager.customBg
-        } else if ((transparencyMode == TransparencyMode.CHAT_SETTINGS || transparencyMode == TransparencyMode.FULL) && (className.lowercase()
-                .contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
-        ) {
-            view.background = ResourceManager.customBg
-        }
-    })
+
+            val shouldDarken =
+                cName == "com.discord.widgets.debugging.WidgetDebugging" ||
+                        cName == "com.discord.widgets.search.WidgetSearch" ||
+                        cName.contains("setting", true) ||
+                        SettingsPage::class.java.isAssignableFrom(c)
+
+            // Add overlay to darken pages, as they would otherwise be too bright
+            if (shouldDarken) {
+                ((callFrame.args[0] as View).parent as ViewGroup).let {
+                    if (it !is FragmentContainerView)
+                        it.addView(
+                            View(view.context).apply {
+                                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                                background = ColorDrawable().apply {
+                                    color = ColorUtils.setAlphaComponent(Color.BLACK, 100)
+                                }
+                            }, 0
+                        )
+                }
+            }
+        })
+
+        // Patch for BottomSheet transparency
+        patch(AppBottomSheet::class.java.getDeclaredMethod("onViewCreated", View::class.java, Bundle::class.java), PinePatchFn {
+            ((it.args[0] as View).parent as View).background = null
+        })
+
+        // Fix attachment/embed spoiler overlay being transparent
+
+        val cfgAt =
+            WidgetChatListAdapterItemAttachment::class.java.getDeclaredMethod("configureUI", WidgetChatListAdapterItemAttachment.Model::class.java)
+        patch(cfgAt, PinePrePatchFn { cf ->
+            val binding = WidgetChatListAdapterItemAttachment.`access$getBinding$p`(cf.thisObject as WidgetChatListAdapterItemAttachment)
+            binding.root.findViewById<View?>(Utils.getResId("chat_list_item_attachment_spoiler", "id"))?.let {
+                val bgColor = (it.background as ColorDrawable?)?.color ?: return@let
+                it.setBackgroundColor(ColorUtils.setAlphaComponent(bgColor, 0xFF))
+            }
+        })
+
+        val cfgEm =
+            WidgetChatListAdapterItemEmbed::class.java.getDeclaredMethod("configureUI", WidgetChatListAdapterItemEmbed.Model::class.java)
+        patch(cfgEm, PinePrePatchFn { cf ->
+            val binding = ReflectUtils.getField(cf.thisObject, "binding") as WidgetChatListAdapterItemEmbedBinding
+            binding.root.findViewById<View?>(Utils.getResId("chat_list_item_embed_spoiler", "id"))?.let {
+                val bgColor = (it.background as ColorDrawable?)?.color ?: return@let
+                it.setBackgroundColor(ColorUtils.setAlphaComponent(bgColor, 0xFF))
+            }
+        })
+    } else {
+        val containerId = Utils.getResId("widget_tabs_host_container", "id")
+        val chatBgId = Utils.getResId("widget_home_panel_center_chat", "id")
+
+        patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
+            if (ResourceManager.customBg == null) return@PinePatchFn
+            val clazz = callFrame.thisObject.javaClass
+            val className = clazz.simpleName
+            var view = callFrame.args[0] as View
+            if (className == "WidgetChatList") {
+                val id = if (transparencyMode == TransparencyMode.FULL) containerId else chatId
+                while (view.id != id) {
+                    view = view.parent as View
+                    if (view.id == chatBgId) view.background = null
+                }
+                view.background = ResourceManager.customBg
+            } else if ((transparencyMode == TransparencyMode.CHAT_SETTINGS || transparencyMode == TransparencyMode.FULL) && (className.lowercase()
+                    .contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
+            ) {
+                view.background = ResourceManager.customBg
+            }
+        })
+    }
 }
 
 fun fontHook(idx: Int) =
@@ -119,20 +213,14 @@ private fun PatcherAPI.patchGetColor() {
     patch(Resources::class.java.getDeclaredMethod("getColor", Int::class.javaPrimitiveType, Resources.Theme::class.java), patchGetColor.invoke(0))
 }
 
-private fun PatcherAPI.patchSetColor(enableTransparency: Boolean) {
+private fun PatcherAPI.patchSetColor() {
     patch(
         ColorDrawable::class.java.getDeclaredMethod("setColor", Int::class.javaPrimitiveType),
-        PinePrePatchFn(if (enableTransparency) Action1 { callFrame: CallFrame ->
-            ResourceManager.getNameByColor(callFrame.args[0] as Int)?.let { name ->
-                ResourceManager.getColorForName(name)?.let { color ->
-                    callFrame.args[0] = color
-                }
-            }
-        } else Action1 { callFrame: CallFrame ->
+        PinePrePatchFn { callFrame ->
             ResourceManager.getColorReplacement(callFrame.args[0] as Int)?.let {
                 callFrame.args[0] = it
             }
-        })
+        }
     )
 }
 

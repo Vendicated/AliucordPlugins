@@ -76,7 +76,7 @@ object ThemeLoader {
         }
     }
 
-    private fun darkenBitmap(bm: Bitmap, alpha: Int) = Canvas(bm).run {
+    fun darkenBitmap(bm: Bitmap, alpha: Int) = Canvas(bm).run {
         drawARGB(alpha, 0, 0, 0)
         drawBitmap(bm, Matrix(), Paint())
     }
@@ -216,6 +216,8 @@ object ThemeLoader {
                             ResourceManager.putAttr(it, v)
                         }
                         "active_channel" -> {
+                            ResourceManager.putDrawableTint("drawable_overlay_channels_selected_dark", v)
+                            ResourceManager.putDrawableTint("drawable_overlay_channels_selected_light", v)
                             ResourceManager.putDrawableTint("drawable_overlay_channels_active_dark", v)
                             ResourceManager.putDrawableTint("drawable_overlay_channels_active_light", v)
                             ResourceManager.putColor(it, v)

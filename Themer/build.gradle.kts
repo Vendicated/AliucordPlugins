@@ -1,12 +1,10 @@
-version = "3.2.3"
+version = "3.3.1"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
-    
-    # Future Roadmap
+    # 3.3.1
     * Implement full transparency
-    
     
     # 3.2.3
     * Fix theme updater

@@ -89,7 +89,7 @@ class ThemerSettings : SettingsPage() {
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "None", "No transparency"),
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Chat", "Chat is transparent"),
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Chat & Settings", "Chat and Settings page are transparent"),
-            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Full", "Everything is transparent. NOT IMPLEMENTED YET"),
+            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Full", "Everything is transparent. Will only work with themes specifically made for it."),
         ).let { radios ->
             val manager = RadioManager(radios)
             manager.a(radios[Themer.mSettings.transparencyMode.value])
