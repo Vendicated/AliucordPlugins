@@ -1,0 +1,22 @@
+{
+    "manifest": {
+        "author": "Ven#8810",
+        "version": "1.0.0",
+        "name": "Firefly",
+        "updater": "https:\/\/raw.githubusercontent.com\/Vendicated\/AliucordPlugins\/main\/Themer\/Firefly.json"
+    },
+    "background": {
+        "url": "https:\/\/media.discordapp.net\/attachments\/811263527239024640\/887828992164511764\/797185.png",
+        "overlay_alpha": 0,
+        "blur_radius": 0
+    },
+    "fonts": {},
+    "simple_colors": {
+        "background": 1224736768,
+        "background_secondary": 603979776,
+        "accent": -2058867,
+        "mention_highlight": 1054905741
+    },
+    "colors": {},
+    "drawable_tints": {}
+}
