@@ -13,6 +13,7 @@ package dev.vendicated.aliucordplugs.themer
 import android.content.Context
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import androidx.core.graphics.ColorUtils
 import com.aliucord.Utils
 import com.lytefast.flexinput.R
@@ -28,6 +29,7 @@ private val attrs = HashMap<Int, Int>()
 
 object ResourceManager {
     var customBg = null as BitmapDrawable?
+    var animatedBgUri = null as Uri?
 
     fun getColorReplacement(color: Int) = getNameByColor(color)?.let {
         getColorForName(it)
@@ -55,6 +57,7 @@ object ResourceManager {
         drawableTints.clear()
         attrs.clear()
         customBg = null
+        animatedBgUri = null
     }
 
     internal fun putFont(id: Int, font: Typeface) {

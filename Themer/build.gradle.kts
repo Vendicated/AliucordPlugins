@@ -1,8 +1,12 @@
-version = "3.3.1"
+version = "3.4.0"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    
+    # 3.4.0
+    * Add animated wallpaper support (.gif only)
+    
     # 3.3.1
     * Implement full transparency
     

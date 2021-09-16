@@ -19,6 +19,7 @@ import android.graphics.drawable.*
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.*
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -39,6 +40,7 @@ import com.discord.utilities.color.ColorCompat
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed
+import com.facebook.drawee.view.SimpleDraweeView
 import com.google.android.material.textfield.TextInputLayout
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.lytefast.flexinput.R
@@ -68,33 +70,52 @@ fun addPatches(patcher: PatcherAPI) {
     }
 }
 
+val backgroundId = View.generateViewId()
+private fun setBackground(view: View, parent: ViewGroup = view as ViewGroup) {
+    if (ResourceManager.animatedBgUri != null) {
+        if (parent is FragmentContainerView || parent.findViewById<View>(backgroundId) != null) return
+
+        SimpleDraweeView(parent.context).run {
+            this.id = backgroundId
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+            controller = c.f.g.a.a.b.a().run /*  Fresco.newDraweeControllerBuilder() */ {
+                f(ResourceManager.animatedBgUri) // setUri(Uri)
+                m = true // mAutoPlayAnimations
+                a() // build()
+            }
+            (parent).addView(this, 0)
+        }
+    } else if (ResourceManager.customBg != null) {
+        view.background = ResourceManager.customBg
+    }
+}
+
 private fun PatcherAPI.setBackgrounds() {
     val chatId = Utils.getResId("panel_center", "id")
 
     val transparencyMode = Themer.mSettings.transparencyMode
     if (transparencyMode == TransparencyMode.FULL) {
         val rootId = Utils.getResId("action_bar_root", "id")
-
         patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
-            if (ResourceManager.customBg == null) return@PinePatchFn
+            if (ResourceManager.customBg == null && ResourceManager.animatedBgUri == null) return@PinePatchFn
             var view = callFrame.args[0] as View
-            val c = callFrame.thisObject::class.java
-            val cName = c.name
+            val clazz = callFrame.thisObject::class.java
+            val cName = clazz.name
 
             // Discord uses a dialog to show these which makes it so that the chat still shows underneath which makes these
             // unreadable. Thus set their background to the wallpaper
             if (cName == "com.discord.widgets.user.search.WidgetGlobalSearch" ||
                 cName == "com.discord.widgets.user.WidgetUserMentions"
             ) {
-                view.background = ResourceManager.customBg
+                setBackground(view)
                 // Add darken overlay
                 (view as ViewGroup).addView(
                     View(view.context).apply {
-                        layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                        layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
                         background = ColorDrawable().apply {
                             color = ColorUtils.setAlphaComponent(Color.BLACK, 100)
                         }
-                    }, 0
+                    }, if (ResourceManager.animatedBgUri != null) 1 else 0
                 )
 
             }
@@ -108,13 +129,13 @@ private fun PatcherAPI.setBackgrounds() {
                 view = view.parent as View
             }
 
-            view.background = ResourceManager.customBg
+            setBackground(view)
 
             val shouldDarken =
                 cName == "com.discord.widgets.debugging.WidgetDebugging" ||
                         cName == "com.discord.widgets.search.WidgetSearch" ||
                         cName.contains("setting", true) ||
-                        SettingsPage::class.java.isAssignableFrom(c)
+                        SettingsPage::class.java.isAssignableFrom(clazz)
 
             // Add overlay to darken pages, as they would otherwise be too bright
             if (shouldDarken) {
@@ -122,7 +143,7 @@ private fun PatcherAPI.setBackgrounds() {
                     if (it !is FragmentContainerView)
                         it.addView(
                             View(view.context).apply {
-                                layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
                                 background = ColorDrawable().apply {
                                     color = ColorUtils.setAlphaComponent(Color.BLACK, 100)
                                 }
@@ -159,25 +180,26 @@ private fun PatcherAPI.setBackgrounds() {
             }
         })
     } else {
-        val containerId = Utils.getResId("widget_tabs_host_container", "id")
         val chatBgId = Utils.getResId("widget_home_panel_center_chat", "id")
 
         patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
-            if (ResourceManager.customBg == null) return@PinePatchFn
+            if (ResourceManager.customBg == null && ResourceManager.animatedBgUri == null) return@PinePatchFn
             val clazz = callFrame.thisObject.javaClass
             val className = clazz.simpleName
             var view = callFrame.args[0] as View
             if (className == "WidgetChatList") {
-                val id = if (transparencyMode == TransparencyMode.FULL) containerId else chatId
-                while (view.id != id) {
+                while (view.id != chatId) {
                     view = view.parent as View
                     if (view.id == chatBgId) view.background = null
                 }
-                view.background = ResourceManager.customBg
-            } else if ((transparencyMode == TransparencyMode.CHAT_SETTINGS || transparencyMode == TransparencyMode.FULL) && (className.lowercase()
-                    .contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
+                setBackground(view)
+            } else if (
+                transparencyMode == TransparencyMode.CHAT_SETTINGS && (className.lowercase().contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
             ) {
-                view.background = ResourceManager.customBg
+                if (ResourceManager.animatedBgUri != null)
+                    logger.warn("Animated backgrounds aren't supported on the Chat & Settings setting")
+                else
+                    setBackground(view)
             }
         })
     }

@@ -12,6 +12,7 @@ package dev.vendicated.aliucordplugs.themer
 
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.os.Build
 import android.renderscript.*
 import androidx.core.content.ContextCompat
@@ -102,6 +103,11 @@ object ThemeLoader {
         if (overlayAlpha == 0xFF) return
         try {
             val bg = getResourceWithCache(theme, "background", url)
+            if (url.endsWith(".gif")) {
+                ResourceManager.animatedBgUri = Uri.fromFile(bg)
+                return
+            }
+
             val bitmap = BitmapFactory.decodeFile(bg.absolutePath, BitmapFactory.Options().apply {
                 inMutable = true
             })
