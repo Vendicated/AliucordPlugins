@@ -30,6 +30,7 @@ private val attrs = HashMap<Int, Int>()
 object ResourceManager {
     var customBg = null as BitmapDrawable?
     var animatedBgUri = null as Uri?
+    var overlayAlpha = 0
 
     fun getColorReplacement(color: Int) = getNameByColor(color)?.let {
         getColorForName(it)

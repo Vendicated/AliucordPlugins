@@ -1,9 +1,13 @@
-version = "3.4.0"
+version = "3.4.1"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
     
+    # 3.4.1
+    * Make overlay_alpha work for animated backgrounds
+    * Fix bug where settings pages would become darker every re-render
+
     # 3.4.0
     * Add animated wallpaper support (.gif only)
     

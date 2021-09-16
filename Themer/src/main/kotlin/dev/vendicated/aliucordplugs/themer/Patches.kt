@@ -83,8 +83,11 @@ private fun setBackground(view: View, parent: ViewGroup = view as ViewGroup) {
                 m = true // mAutoPlayAnimations
                 a() // build()
             }
-            (parent).addView(this, 0)
+            parent.addView(this, 0)
         }
+
+        if (ResourceManager.overlayAlpha != 0)
+            view.background = ColorDrawable(ColorUtils.setAlphaComponent(Color.BLACK, ResourceManager.overlayAlpha))
     } else if (ResourceManager.customBg != null) {
         view.background = ResourceManager.customBg
     }
@@ -92,6 +95,8 @@ private fun setBackground(view: View, parent: ViewGroup = view as ViewGroup) {
 
 private fun PatcherAPI.setBackgrounds() {
     val chatId = Utils.getResId("panel_center", "id")
+
+    val id = View.generateViewId()
 
     val transparencyMode = Themer.mSettings.transparencyMode
     if (transparencyMode == TransparencyMode.FULL) {
@@ -139,17 +144,17 @@ private fun PatcherAPI.setBackgrounds() {
 
             // Add overlay to darken pages, as they would otherwise be too bright
             if (shouldDarken) {
-                ((callFrame.args[0] as View).parent as ViewGroup).let {
-                    if (it !is FragmentContainerView)
-                        it.addView(
-                            View(view.context).apply {
-                                layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                                background = ColorDrawable().apply {
-                                    color = ColorUtils.setAlphaComponent(Color.BLACK, 100)
-                                }
-                            }, 0
-                        )
-                }
+                val parent = (callFrame.args[0] as View).parent as ViewGroup
+                if (parent !is FragmentContainerView && parent.findViewById<View>(id) == null)
+                    parent.addView(
+                        View(view.context).apply {
+                            this.id = id
+                            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                            background = ColorDrawable().apply {
+                                color = ColorUtils.setAlphaComponent(Color.BLACK, 100)
+                            }
+                        }, 0
+                    )
             }
         })
 

@@ -105,6 +105,7 @@ object ThemeLoader {
             val bg = getResourceWithCache(theme, "background", url)
             if (url.endsWith(".gif")) {
                 ResourceManager.animatedBgUri = Uri.fromFile(bg)
+                ResourceManager.overlayAlpha = overlayAlpha
                 return
             }
 
@@ -162,6 +163,7 @@ object ThemeLoader {
 
 
     private fun loadTheme(theme: Theme): Boolean {
+        ResourceManager.overlayAlpha = 0
         try {
             if (!theme.convertIfLegacy())
                 theme.update()

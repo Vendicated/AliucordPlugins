@@ -1,7 +1,7 @@
 {
     "manifest": {
         "author": "Ven#8810",
-        "version": "1.0.0",
+        "version": "1.0.1",
         "name": "Firefly",
         "updater": "https:\/\/raw.githubusercontent.com\/Vendicated\/AliucordPlugins\/main\/Themer\/Firefly.json"
     },
@@ -15,7 +15,7 @@
         "background": 1224736768,
         "background_secondary": 603979776,
         "accent": -2058867,
-        "mention_highlight": 1054905741
+        "mention_highlight": 669029773
     },
     "colors": {},
     "drawable_tints": {}
