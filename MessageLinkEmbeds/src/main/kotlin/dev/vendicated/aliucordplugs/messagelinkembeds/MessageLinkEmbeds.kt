@@ -26,6 +26,7 @@ import com.aliucord.wrappers.embeds.ImageWrapper.Companion.url
 import com.aliucord.wrappers.embeds.ImageWrapper.Companion.width
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper.Companion.color
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper.Companion.description
+import com.aliucord.wrappers.embeds.MessageEmbedWrapper.Companion.rawFields
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper.Companion.rawImage
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper.Companion.rawThumbnail
 import com.aliucord.wrappers.embeds.MessageEmbedWrapper.Companion.rawVideo
@@ -38,8 +39,10 @@ import com.aliucord.wrappers.embeds.VideoWrapper.Companion.height
 import com.aliucord.wrappers.embeds.VideoWrapper.Companion.proxyUrl
 import com.aliucord.wrappers.embeds.VideoWrapper.Companion.url
 import com.aliucord.wrappers.embeds.VideoWrapper.Companion.width
+import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.filename
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.height
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.proxyUrl
+import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.size
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.url
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.width
 import com.discord.api.message.embed.EmbedType
@@ -48,6 +51,7 @@ import com.discord.models.message.Message
 import com.discord.models.user.CoreUser
 import com.discord.stores.StoreStream
 import com.discord.utilities.SnowflakeUtils
+import com.discord.utilities.file.FileUtilsKt
 import com.discord.utilities.icon.IconUtils
 import com.discord.utilities.permissions.PermissionUtils
 import com.discord.utilities.rest.RestAPI
@@ -78,7 +82,6 @@ private fun addEmbed(
 ) {
     val eb = MessageEmbedBuilder()
         .setUrl(url)
-        .setDescription(msg.content)
         .setTimestamp(UtcDateTime(SnowflakeUtils.toTimestamp(messageId)))
 
     val author = CoreUser(msg.author).apply {
@@ -90,20 +93,34 @@ private fun addEmbed(
         )
     }
 
+    var description = msg.content
+    val descSuffix = StringBuilder()
     var setColor = false
     var setThumb = false
     var setImg = false
     var setVideo = false
-    var setDesc = msg.content?.isEmpty() == false
+    var setFields = false
 
-    msg.attachments.firstOrNull()?.let { a ->
-        if (videoLinkPattern.matcher(a.url).find()) {
-            eb.setType(EmbedType.VIDEO)
-            eb.setVideo(a.url, a.proxyUrl, a.height, a.width)
-            setVideo = true
+    msg.attachments.forEach { a ->
+        if (a.height != null) {
+            if (videoLinkPattern.matcher(a.url).find()) {
+                if (!setVideo) {
+                    eb.setVideo(a.url, a.proxyUrl, a.height, a.width)
+                    eb.setType(EmbedType.VIDEO)
+                    setVideo = true
+                }
+            } else if (!setImg) {
+                eb.setImage(a.url, a.proxyUrl, a.height, a.width)
+                setImg = true
+            }
         } else {
-            eb.setImage(a.url, a.proxyUrl, a.height, a.width)
-            setImg = true
+            descSuffix
+                .append(":paperclip:  ")
+                .append('[').append(a.filename).append(']')
+                .append('(').append(a.url).append(')')
+                .append(' ')
+                .append('(').append(FileUtilsKt.getSizeSubtitle(a.size)).append(')')
+                .append("\n\n")
         }
     }
 
@@ -132,11 +149,19 @@ private fun addEmbed(
             setImg = true
             eb.setType(EmbedType.VIDEO)
         }
-        if (!setDesc && it.description?.isEmpty() == false) {
-            eb.setDescription(it.description)
-            setDesc = true
+        if (description == null && it.description?.isEmpty() == false) {
+            description = it.description
+        }
+        if (!setFields && it.rawFields?.isEmpty() == false) {
+            eb.setFields(it.rawFields)
+            setFields = true
         }
     }
+
+    descSuffix.toString().run {
+        if (isNotEmpty()) description += "\n\n$this".removeSuffix("\n\n")
+    }
+    eb.setDescription(description)
 
     StoreStream.getChannels().getChannel(channelId)?.run {
         val guildStore = StoreStream.getGuilds()
@@ -158,7 +183,7 @@ private fun addEmbed(
         try {
             ReflectUtils.setField(originalMsg, "embeds", originalMsg.embeds.toMutableList())
         } catch (th: Throwable) {
-            return logger.error(th)
+            return logger.error("Failed to make embeds field mutable", th)
         }
     }
 
@@ -211,14 +236,12 @@ class MessageLinkEmbeds : Plugin() {
                     if (m != null) {
                         addEmbed(msg, m, url, messageId, channelId)
                     } else {
-                        val channel =
-                            StoreStream.getChannels().getChannel(channelId) ?: return@PinePatchFn
-                        val myPerms = StoreStream.getPermissions().permissionsByChannel[channelId]
                         if (!PermissionUtils.INSTANCE.hasAccess(
-                                channel,
-                                myPerms
+                                StoreStream.getChannels().getChannel(channelId) ?: return@PinePatchFn,
+                                StoreStream.getPermissions().permissionsByChannel[channelId]
                             )
                         ) return@PinePatchFn
+
                         worker.execute {
                             RestAPI.api.getChannelMessagesAround(channelId, 1, messageId)
                                 .getResultBlocking().run {
