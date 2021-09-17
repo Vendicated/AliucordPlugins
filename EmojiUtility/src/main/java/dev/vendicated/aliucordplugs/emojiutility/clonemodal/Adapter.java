@@ -12,14 +12,12 @@ package dev.vendicated.aliucordplugs.emojiutility.clonemodal;
 
 import android.content.Context;
 import android.view.*;
-import android.widget.RelativeLayout;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.aliucord.Utils;
 import com.discord.models.guild.Guild;
-import com.discord.utilities.color.ColorCompat;
 import com.discord.utilities.extensions.SimpleDraweeViewExtensionsKt;
 import com.lytefast.flexinput.R;
 
@@ -45,15 +43,15 @@ public class Adapter extends RecyclerView.Adapter<ViewHolder> {
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         var layout = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
-        return new ViewHolder(this, (RelativeLayout) layout);
+        return new ViewHolder(this, (ViewGroup) layout);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         var guild = guilds.get(position);
 
-        var color = Integer.valueOf(ColorCompat.getThemedColor(holder.itemView.getContext(), R.b.colorBackgroundPrimary));
         if (guild.getIcon() != null) {
+            var color = holder.icon.getContext().getColor(R.c.primary_dark_600);
             SimpleDraweeViewExtensionsKt.setGuildIcon(holder.icon, false, guild, 0, null, color, null, null, true, null);
             holder.iconText.setVisibility(View.GONE);
         } else {

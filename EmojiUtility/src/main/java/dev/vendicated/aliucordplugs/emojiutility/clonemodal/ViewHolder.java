@@ -11,7 +11,7 @@
 package dev.vendicated.aliucordplugs.emojiutility.clonemodal;
 
 import android.view.View;
-import android.widget.RelativeLayout;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -32,7 +32,7 @@ public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickL
     public final TextView iconText;
     public final TextView name;
 
-    public ViewHolder(Adapter adapter, @NonNull RelativeLayout layout) {
+    public ViewHolder(Adapter adapter, @NonNull ViewGroup layout) {
         super(layout);
         this.adapter = adapter;
 
