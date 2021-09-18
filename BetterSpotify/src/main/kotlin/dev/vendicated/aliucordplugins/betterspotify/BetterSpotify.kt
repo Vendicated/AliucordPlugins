@@ -22,6 +22,8 @@ import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PinePatchFn
+import com.aliucord.utils.RxUtils
+import com.aliucord.utils.RxUtils.createActionSubscriber
 import com.aliucord.utils.RxUtils.subscribe
 import com.discord.models.presence.Presence
 import com.discord.models.user.User
@@ -35,7 +37,7 @@ import com.google.android.material.button.MaterialButton
 import com.lytefast.flexinput.R
 import rx.Subscriber
 import rx.Subscription
-import kotlin.math.abs
+import java.util.concurrent.TimeUnit
 
 val logger = Logger("BetterSpotify")
 
@@ -80,16 +82,16 @@ class BetterSpotify : Plugin() {
                 StoreSpotify::class.java,
                 StoreSpotify.SpotifyState::class.java
             ), PinePatchFn { cf ->
+                if (subscription == null ) return@PinePatchFn
                 val state = cf.args[1] as StoreSpotify.SpotifyState?
-                if (subscription == null || endTimestamp == null) return@PinePatchFn
-                state?.let {
-                    if (!it.playing || it.track?.id != currentSong) {
-                        val now = System.currentTimeMillis()
-                        val end = endTimestamp ?: now
-                        if (abs(now - end) > 5000) {
-                            stopListening()
-                        }
-                    }
+                if (state?.playing == false) {
+                    RxUtils.timer(10, TimeUnit.SECONDS).subscribe(
+                        createActionSubscriber({
+                            SpotifyApi.getPlayerInfo {  p ->
+                                if (!p.is_playing) stopListening()
+                            }
+                        })
+                    )
                 }
         })
     }
@@ -126,22 +128,6 @@ class BetterSpotify : Plugin() {
         }
     }
 
-    private fun stopListening(shouldPause: Boolean = false) {
-        subscription?.let {
-            Utils.showToast(Utils.appContext, "The listening party has ended!")
-            it.unsubscribe()
-            if (shouldPause) SpotifyApi.pause()
-        }
-        subscription = null
-        currentSong = null
-        hostId = null
-    }
-
-    private var currentSong: String? = null
-    private var hostId: Long? = null
-    private var subscription: Subscription? = null
-    private var endTimestamp: Long? = null
-
     private fun listenAlong(userId: Long) {
         Utils.showToast(Utils.appContext, "Listening along...")
         subscription?.unsubscribe()
@@ -149,9 +135,7 @@ class BetterSpotify : Plugin() {
         val obs = StoreStream.getPresences().observePresenceForUser(userId)
         hostId = userId
         subscription = obs.subscribe(object : Subscriber<Presence>() {
-            override fun onCompleted() {
-                stopListening()
-            }
+            override fun onCompleted() {}
 
             override fun onError(th: Throwable) {
                 logger.error("Error while listening along to $userId", th)
@@ -174,10 +158,27 @@ class BetterSpotify : Plugin() {
                             SpotifyApi.seek(offset)
                         else
                             SpotifyApi.playSong(songId, offset)
-
                     }
                 }
             }
         })
+    }
+
+    companion object {
+        private var currentSong: String? = null
+        private var hostId: Long? = null
+        private var subscription: Subscription? = null
+        private var endTimestamp: Long? = null
+
+        fun stopListening(shouldPause: Boolean = false, skipToast: Boolean = false) {
+            subscription?.let {
+                if (!skipToast) Utils.showToast(Utils.appContext, "The listening party has ended!")
+                it.unsubscribe()
+                if (shouldPause) SpotifyApi.pause()
+            }
+            subscription = null
+            currentSong = null
+            hostId = null
+        }
     }
 }

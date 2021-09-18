@@ -13,12 +13,16 @@ package dev.vendicated.aliucordplugins.betterspotify
 import com.aliucord.Http
 import com.aliucord.Utils
 import com.aliucord.utils.ReflectUtils
+import com.aliucord.utils.RxUtils
+import com.aliucord.utils.RxUtils.createActionSubscriber
 import com.aliucord.utils.RxUtils.getResultBlocking
+import com.aliucord.utils.RxUtils.subscribe
 import com.discord.stores.StoreStream
 import com.discord.utilities.platform.Platform
 import com.discord.utilities.rest.RestAPI
 import com.discord.utilities.spotify.SpotifyApiClient
 import dev.vendicated.aliucordplugins.betterspotify.models.PlayerInfo
+import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 private const val baseUrl = "https://api.spotify.com/v1/me/player"
@@ -50,15 +54,16 @@ object SpotifyApi {
         return token
     }
 
+    private var didTokenRefresh = false
     private fun request(endpoint: String, method: String = "PUT", data: Any? = null, cb: ((Http.Response) -> Unit)? = null) {
         Utils.threadPool.execute {
             val token = getToken() ?: run {
-                    Utils.showToast(
-                        Utils.appContext,
-                        "Failed to get Spotify token from Discord. Make sure your spotify is running."
-                    )
-                    return@execute
-                }
+                Utils.showToast(
+                    Utils.appContext,
+                    "Failed to get Spotify token from Discord. Make sure your spotify is running."
+                )
+                return@execute
+            }
 
             try {
                 Http.Request("$baseUrl/$endpoint", method)
@@ -76,16 +81,37 @@ object SpotifyApi {
                         cb?.invoke(res)
                     }
             } catch (th: Throwable) {
-                if (th is Http.HttpException && th.statusCode == 401) {
-                    SpotifyApiClient.`access$refreshSpotifyToken`(client)
-                    this.token = null
-                } else
-                    logger.error(th)
+                if (th is Http.HttpException) {
+                    when (th.statusCode) {
+                        401 -> {
+                            if (!didTokenRefresh) {
+                                didTokenRefresh = true
+                                SpotifyApiClient.`access$refreshSpotifyToken`(client)
+                                this.token = null
+                                RxUtils.timer(5, TimeUnit.SECONDS).subscribe(
+                                    createActionSubscriber({
+                                        request(endpoint, method, data, cb)
+                                    })
+                                )
+                            } else {
+                                BetterSpotify.stopListening(skipToast = true)
+                                logger.error(Utils.appContext, "Got \"Unauthorized\" Error. Try relinking Spotify")
+                            }
+                            return@execute
+                        }
+                        404 -> {
+                            BetterSpotify.stopListening(skipToast = true)
+                            logger.error(Utils.appContext, "Failed to play. Make sure your Spotify is running", th)
+                            return@execute
+                        }
+                    }
+                    logger.error(Utils.appContext, "Failed to play that song :( Check the debug log", th)
+                }
             }
         }
     }
 
-    private fun getPlayerInfo(cb: (PlayerInfo) -> Unit) {
+    fun getPlayerInfo(cb: (PlayerInfo) -> Unit) {
         request("", "GET", cb = {
             cb.invoke(it.json(PlayerInfo::class.java))
         })
@@ -96,11 +122,11 @@ object SpotifyApi {
     }
 
     fun pause() {
-        request("pause")
+        request("pause", "PUT")
     }
 
     fun resume() {
-        request("play")
+        request("play", "PUT")
     }
 
     fun seek(position_ms: Int) {
