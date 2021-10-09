@@ -13,13 +13,13 @@ package dev.vendicated.aliucordplugs.brainfuck;
 import android.content.Context;
 import android.net.Uri;
 
+import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.CommandContext;
 import com.aliucord.entities.Plugin;
 import com.discord.api.commands.ApplicationCommandType;
 import com.discord.api.premium.PremiumTier;
-import com.discord.models.commands.ApplicationCommandOption;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,14 +31,14 @@ public class Brainfuck extends Plugin {
     @Override
     public void start(Context context) {
         var toBrainfuckOptions = Arrays.asList(
-                new ApplicationCommandOption(ApplicationCommandType.STRING, "text", "Ascii text to convert to brainfuck", null, true, true, null, null),
-                new ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether to send the result visible for everyone", null, false, false, null, null)
+                Utils.createCommandOption(ApplicationCommandType.STRING, "text", "Ascii text to convert to brainfuck", null, true, true),
+                Utils.createCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether to send the result visible for everyone")
         );
 
         var brainfuckOptions = Arrays.asList(
-                new ApplicationCommandOption(ApplicationCommandType.STRING, "brainfuck", "Brainfuck to evaluate", null, true, true, null, null),
-                new ApplicationCommandOption(ApplicationCommandType.STRING, "stdin", "Stdin for comma operator", null, false, false, null, null),
-                new ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether to send the result visible for everyone", null, false, false, null, null)
+                Utils.createCommandOption(ApplicationCommandType.STRING, "brainfuck", "Brainfuck to evaluate", null, true, true),
+                Utils.createCommandOption(ApplicationCommandType.STRING, "stdin", "Stdin for comma operator"),
+                Utils.createCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether to send the result visible for everyone")
         );
 
         commands.registerCommand("tobrainfuck", "Converts plain ascii text to brainfuck", toBrainfuckOptions, ctx -> {

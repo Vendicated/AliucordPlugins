@@ -23,7 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.aliucord.*;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
 import com.aliucord.views.Divider;
 import com.discord.widgets.settings.WidgetSettings;
 import com.lytefast.flexinput.R;
@@ -44,10 +44,10 @@ public class DedicatedPluginSettings extends Plugin {
             final var getBinding = WidgetSettings.class.getDeclaredMethod("getBinding");
             getBinding.setAccessible(true);
 
-            patcher.patch(WidgetSettings.class.getDeclaredMethod("onViewBound", View.class), new PinePatchFn(callFrame -> {
-                widgetSettings = (WidgetSettings) callFrame.thisObject;
+            patcher.patch(WidgetSettings.class.getDeclaredMethod("onViewBound", View.class), new Hook(param -> {
+                widgetSettings = (WidgetSettings) param.thisObject;
                 Utils.mainThread.postDelayed(() -> {
-                    var layout = (ViewGroup) ((ViewGroup) ((ViewGroup) callFrame.args[0]).getChildAt(1)).getChildAt(0);
+                    var layout = (ViewGroup) ((ViewGroup) ((ViewGroup) param.args[0]).getChildAt(1)).getChildAt(0);
                     var ctx = layout.getContext();
 
                     int idx = layout.indexOfChild(layout.findViewById(Utils.getResId("developer_options_divider", "id")));
@@ -71,8 +71,8 @@ public class DedicatedPluginSettings extends Plugin {
             recycler.setVisibility(View.VISIBLE);
         }
 
-        patcher.patch(PluginManager.class.getDeclaredMethod("startPlugin", String.class), new PinePatchFn(callFrame -> {
-            var name = (String) callFrame.args[0];
+        patcher.patch(PluginManager.class.getDeclaredMethod("startPlugin", String.class), new Hook(param -> {
+            var name = (String) param.args[0];
             Plugin p;
             if (adapter != null && (p = PluginManager.plugins.get(name)) != null && p.settingsTab != null) {
                 var data = adapter.getData();
@@ -83,8 +83,8 @@ public class DedicatedPluginSettings extends Plugin {
             }
         }));
 
-        patcher.patch(PluginManager.class.getDeclaredMethod("stopPlugin", String.class), new PinePatchFn(callFrame -> {
-            var name = (String) callFrame.args[0];
+        patcher.patch(PluginManager.class.getDeclaredMethod("stopPlugin", String.class), new Hook(param -> {
+            var name = (String) param.args[0];
             Plugin p;
             if (adapter != null && (p = PluginManager.plugins.get(name)) != null) {
                 var data = adapter.getData();

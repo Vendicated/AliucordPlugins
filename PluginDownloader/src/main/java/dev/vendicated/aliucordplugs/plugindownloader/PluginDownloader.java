@@ -23,7 +23,7 @@ import com.aliucord.Constants;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.lytefast.flexinput.R;
@@ -39,13 +39,13 @@ public class PluginDownloader extends Plugin {
 
     @Override
     public void start(Context context) {
-        patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new PinePatchFn(callFrame -> {
-            var _this = (WidgetChatListActions) callFrame.thisObject;
+        patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[] {WidgetChatListActions.Model.class} , new Hook(param -> {
+            var _this = (WidgetChatListActions) param.thisObject;
             var rootView = (NestedScrollView) _this.requireView();
             var layout = (LinearLayout) rootView.getChildAt(0);
             if (layout == null || layout.findViewById(id) != null) return;
             var ctx = layout.getContext();
-            var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
+            var msg = ((WidgetChatListActions.Model) param.args[0]).getMessage();
             if (msg == null || msg.getContent() == null) return;
             String content = msg.getContent();
             long channelId = msg.getChannelId();
@@ -89,6 +89,14 @@ public class PluginDownloader extends Plugin {
                         _this.dismiss();
                     });
                     layout.addView(view, 1);
+            } else if (msg.getGuildId() == 892331318862573578L) {
+                if (repoPattern.matcher(content).find() || zipPattern.matcher(content).find()) {
+                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
+                    view.setId(id);
+                    view.setText("Open Plugin Downloader");
+                    view.setOnClickListener(e -> Utils.launchUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
+                    layout.addView(view, 1);
+                }
             }
         }));
     }

@@ -20,8 +20,7 @@ import com.aliucord.Logger;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
-import com.aliucord.patcher.PinePrePatchFn;
+import com.aliucord.patcher.*;
 import com.aliucord.utils.ReflectUtils;
 import com.discord.api.message.attachment.MessageAttachment;
 import com.discord.databinding.WidgetGuildProfileSheetBinding;
@@ -98,15 +97,15 @@ public class ViewProfileImages extends Plugin {
         // This patch is needed to allow size query parameter. This function naively adds ?width=x&height=x to the URI
         // so avatar urls become https://cdn.discord.com/.../...?size=2048?width=... which breaks the size parameter
         // so we end up with the 128x128 avatar. Enjoy your pixels ;)
-        patcher.patch(WidgetMedia.class.getDeclaredMethod("getFormattedUrl", Context.class, Uri.class), new PinePrePatchFn(callFrame -> {
-            var uri = (callFrame.args[1]).toString();
-            if (uri.contains("?size=")) callFrame.setResult(uri);
+        patcher.patch(WidgetMedia.class.getDeclaredMethod("getFormattedUrl", Context.class, Uri.class), new Hook(param -> {
+            var uri = (param.args[1]).toString();
+            if (uri.contains("?size=")) param.setResult(uri);
         }));
 
-        patcher.patch(UserProfileHeaderView.class.getDeclaredMethod("configureBanner", UserProfileHeaderViewModel.ViewState.Loaded.class), new PinePatchFn(callFrame -> {
-            var binding = UserProfileHeaderView.access$getBinding$p((UserProfileHeaderView) callFrame.thisObject);
+        patcher.patch(UserProfileHeaderView.class.getDeclaredMethod("configureBanner", UserProfileHeaderViewModel.ViewState.Loaded.class), new Hook(param -> {
+            var binding = UserProfileHeaderView.access$getBinding$p((UserProfileHeaderView) param.thisObject);
             var root = binding.getRoot();
-            var data = (UserProfileHeaderViewModel.ViewState.Loaded) callFrame.args[0];
+            var data = (UserProfileHeaderViewModel.ViewState.Loaded) param.args[0];
             if (data.getEditable()) return;
             var user = data.getUser();
 
@@ -135,15 +134,15 @@ public class ViewProfileImages extends Plugin {
             }
         }));
 
-        patcher.patch(WidgetGuildProfileSheet.class.getDeclaredMethod("configureUI", WidgetGuildProfileSheetViewModel.ViewState.Loaded.class), new PinePatchFn(callFrame -> {
+        patcher.patch(WidgetGuildProfileSheet.class.getDeclaredMethod("configureUI", WidgetGuildProfileSheetViewModel.ViewState.Loaded.class), new Hook(param -> {
             try {
-                var data = (WidgetGuildProfileSheetViewModel.ViewState.Loaded) callFrame.args[0];
+                var data = (WidgetGuildProfileSheetViewModel.ViewState.Loaded) param.args[0];
                 final var guildId = data.getGuildId();
                 final var guildName = data.getGuildName();
                 final var iconHash = data.getGuildIcon();
                 final var bannerHash = data.getBanner().getHash();
 
-                var binding = (WidgetGuildProfileSheetBinding) getBindingMethod.invoke(callFrame.thisObject);
+                var binding = (WidgetGuildProfileSheetBinding) getBindingMethod.invoke(param.thisObject);
                 if (binding == null) return;
                 var root = (NestedScrollView) binding.getRoot();
 

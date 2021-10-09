@@ -11,7 +11,7 @@
 package dev.vendicated.aliucordplugs.emojiutility;
 
 import android.annotation.SuppressLint;
-import android.content.*;
+import android.content.Context;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -20,9 +20,7 @@ import android.widget.LinearLayout;
 import com.aliucord.Utils;
 import com.aliucord.api.PatcherAPI;
 import com.aliucord.api.SettingsAPI;
-import com.aliucord.patcher.PinePatchFn;
-import com.aliucord.patcher.PinePrePatchFn;
-import dev.vendicated.aliucordplugs.emojiutility.clonemodal.Modal;
+import com.aliucord.patcher.*;
 import com.aliucord.utils.DimenUtils;
 import com.aliucord.views.Button;
 import com.discord.app.AppBottomSheet;
@@ -38,9 +36,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
+import dev.vendicated.aliucordplugs.emojiutility.clonemodal.Modal;
 import kotlin.jvm.functions.Function1;
-import top.canyie.pine.Pine;
-import top.canyie.pine.callback.MethodHook;
 
 @SuppressWarnings({"UnusedReturnValue"})
 public class Patches {
@@ -72,20 +69,16 @@ public class Patches {
     }
 
     @SuppressLint("SetTextI18n")
-    public static Runnable emojiModalExtraButtons(Context ctx, PatcherAPI patcher) throws Throwable {
+    public static Runnable emojiModalExtraButtons(Context _context, PatcherAPI patcher) throws Throwable {
         final int layoutId = View.generateViewId();
-        var clipboard = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
 
         var getEmojiIdAndType = WidgetEmojiSheet.class.getDeclaredMethod("getEmojiIdAndType");
         getEmojiIdAndType.setAccessible(true);
         var getBinding = WidgetEmojiSheet.class.getDeclaredMethod("getBinding");
         getBinding.setAccessible(true);
 
-        return patcher.patch(WidgetEmojiSheet.class.getDeclaredMethod("configureButtons", boolean.class, boolean.class, Guild.class), new MethodHook() {
-            @Override
-            public void afterCall(Pine.CallFrame callFrame) throws Throwable {
-                super.afterCall(callFrame);
-
+        return patcher.patch(WidgetEmojiSheet.class.getDeclaredMethod("configureButtons", boolean.class, boolean.class, Guild.class), new Hook(callFrame -> {
+            try {
                 var args = callFrame.args;
                 var _this = callFrame.thisObject;
 
@@ -115,9 +108,8 @@ public class Patches {
                 var copyLinkButton = new Button(ctx);
                 copyLinkButton.setText("Copy Link");
                 copyLinkButton.setOnClickListener(v -> {
-                    var clip = ClipData.newPlainText("Copy emoji link", url);
-                    clipboard.setPrimaryClip(clip);
-                    Utils.showToast(ctx, "Copied to clipboard");
+                    Utils.setClipboard("copy url", url);
+                    Utils.showToast("Copied to clipboard");
                 });
 
                 var saveButton = new Button(ctx);
@@ -181,8 +173,8 @@ public class Patches {
                 }
 
                 rootLayout.addView(pluginButtonLayout, idx);
-            }
-        });
+            } catch (Throwable ignored) {}
+            }));
     }
 
     public static Runnable keepEmojiPickerOpen(PatcherAPI patcher) throws Throwable {
@@ -197,7 +189,7 @@ public class Patches {
                 EmojiPickerNavigator.launchBottomSheet(
                         actions.getParentFragmentManager(),
                         e -> WidgetChatListActions.access$addReaction(actions, e),
-                        EmojiPickerContextType.CHAT,
+                        EmojiPickerContextType.Chat.INSTANCE,
                         () -> { isLongPress.set(false); actions.dismiss(); return null; }
                 );
 
@@ -229,11 +221,11 @@ public class Patches {
         return patcher.patch(
                 "com.discord.widgets.chat.input.emoji.EmojiPickerViewModel$Companion", "buildEmojiListItems",
                 new Class<?>[]{ Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class },
-                new PinePrePatchFn(callFrame -> {
-                    var emojis = (Collection<? extends Emoji>) callFrame.args[0];
+                new Hook(param -> {
+                    var emojis = (Collection<? extends Emoji>) param.args[0];
                     if (!(emojis instanceof ArrayList)) {
                         emojis = new ArrayList<>(emojis);
-                        callFrame.args[0] = emojis;
+                        param.args[0] = emojis;
                     }
                     emojis.removeIf(e -> !e.isUsable());
                 })

@@ -1,3 +1,13 @@
+/*
+ * Ven's Aliucord Plugins
+ * Copyright (C) 2021 Vendicated
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+*/
+
 package dev.vendicated.aliucordplugs.taptap
 
 import android.annotation.SuppressLint
@@ -17,18 +27,6 @@ import com.discord.utilities.view.text.TextWatcher
 import com.discord.views.CheckedSetting
 import com.google.android.material.card.MaterialCardView
 import com.lytefast.flexinput.R
-
-/*
- * Ven's Aliucord Plugins
- * Copyright (C) 2021 Vendicated
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * http://www.apache.org/licenses/LICENSE-2.0
-*/
-
-
 
 class TapTapSettings(private val plugin: TapTap) : SettingsPage() {
     @SuppressLint("SetTextI18n")

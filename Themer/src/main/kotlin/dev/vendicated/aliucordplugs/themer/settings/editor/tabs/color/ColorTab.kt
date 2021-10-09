@@ -28,7 +28,7 @@ import dev.vendicated.aliucordplugs.themer.toColorArray
 import org.json.JSONObject
 
 private val layoutId: Int by lazy {
-    Utils.getResId("widget_server_settings_roles_list", "layout")
+    Utils.getResId("widget_server_settings_roles", "layout")
 }
 
 private val recyclerId: Int by lazy {

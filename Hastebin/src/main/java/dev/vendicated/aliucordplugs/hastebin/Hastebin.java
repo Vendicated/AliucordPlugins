@@ -13,11 +13,11 @@ package dev.vendicated.aliucordplugs.hastebin;
 import android.content.Context;
 
 import com.aliucord.Http;
+import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.api.CommandsAPI;
 import com.aliucord.entities.Plugin;
 import com.discord.api.commands.ApplicationCommandType;
-import com.discord.models.commands.ApplicationCommandOption;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -32,8 +32,8 @@ public class Hastebin extends Plugin {
     @Override
     public void start(Context context) {
         var arguments = Arrays.asList(
-            new ApplicationCommandOption(ApplicationCommandType.STRING, "text", "The text to upload", null, true, true, null, null),
-            new ApplicationCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether the message should be visible for everyone", null, false, true, null, null)
+            Utils.createCommandOption(ApplicationCommandType.STRING, "text", "The text to upload", null, true),
+            Utils.createCommandOption(ApplicationCommandType.BOOLEAN, "send", "Whether the message should be visible for everyone")
         );
 
         commands.registerCommand(

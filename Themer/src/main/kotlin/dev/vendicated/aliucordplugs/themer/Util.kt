@@ -18,6 +18,10 @@ var SettingsAPI.transparencyMode
     get() = TransparencyMode.from(getInt("transparencyMode", TransparencyMode.NONE.value))
     set(v) = setInt("transparencyMode", v.value)
 
+var SettingsAPI.enableFontHook
+    get() = getBool("enableFontHook", false)
+    set(v) = setBool("enableFontHook", v)
+
 fun JSONObject.toColorArray() = ArrayList<ColorTuple>().apply {
     keys().forEach {
         add(ColorTuple(it, getInt(it)))

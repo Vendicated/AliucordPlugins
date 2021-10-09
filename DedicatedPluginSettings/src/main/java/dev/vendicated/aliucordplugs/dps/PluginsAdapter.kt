@@ -45,12 +45,14 @@ private operator fun Int.not() =
 
 private val drawables = hashMapOf(
     "fallback" to !ic_slash_command_24dp,
+
     // Ven
     "TapTap" to !ic_raised_hand_action_24dp,
     "Themer" to !ic_theme_24dp,
     "Hastebin" to !ic_link_white_24dp,
     "ImageUploader" to !ic_uploads_image_dark,
     "EmojiUtility" to !ic_emoji_24dp,
+
     // Juby
     "Experiments" to !ic_security_24dp,
     "UserDetails" to !ic_my_account_24dp,
@@ -58,14 +60,33 @@ private val drawables = hashMapOf(
     "CustomTimestamps" to !ic_clock_black_24dp,
     "CustomNicknameFormat" to !ic_account_circle_white_24dp,
     "RemoveZoomLimit" to !ic_search_white_24dp,
-    // Moth
+
+    // zt
+    "AlwaysAnimate" to !ic_play_arrow_24dp,
+    "BetterMediaViewer" to !ic_videocam_white_24dp,
+    "NoBurnIn" to !ic_x_red_24dp,
     "RotatedChat" to !com.yalantis.ucrop.R.c.ucrop_rotate, // This is from https://github.com/Yalantis/uCrop lmao
     "RoleColorEverywhere" to !ic_theme_24dp,
+
     // Xinto
     "LayoutController" to !design_ic_visibility_off,
+    "NitroSpoof" to !drawable_ic_nitro,
+
     // Wing
     "GuildProfiles" to !ic_members_24dp,
-    "CustomBadges" to !ic_staff_badge_blurple_24dp
+    "CustomBadges" to !ic_staff_badge_blurple_24dp,
+
+    // Patchouli
+    "CopyInsteadOfShareImages" to !ic_link_white_24dp,
+    "MediaPickerPatcher" to !ic_gallery_24dp,
+
+    // HalalKing
+    "MarqueeEverywhere" to !ic_play_arrow_24dp,
+    "PersistSettings" to !ic_settings_24dp,
+    "UserBG" to !ic_image_upload,
+
+    // js6pak
+    "WhoReacted" to !ic_reaction_24dp
 )
 
 class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {

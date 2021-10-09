@@ -52,7 +52,7 @@ public final class PluginSettings extends SettingsPage {
         button.setText("Save");
         button.setOnClickListener(v -> {
             settings.setString("mirror", editText.getText().toString().replaceFirst("/+$", ""));
-            Utils.showToast(ctx, "Saved!");
+            Utils.showToast("Saved!");
             close();
         });
 

@@ -21,8 +21,7 @@ import androidx.core.widget.NestedScrollView;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PineInsteadFn;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.*;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
@@ -51,10 +50,10 @@ public class TapTap extends Plugin {
 
         Utils.mainThread.post(() -> widgetChatListActions = new WidgetChatListActions());
 
-        patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new PineInsteadFn(callFrame -> {
+        patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
             if (busy) return null;
             busy = true;
-            var msg = (Message) callFrame.args[0];
+            var msg = (Message) param.args[0];
             clicks++;
             handler.postDelayed(() -> {
                 if (clicks >= 2) {
@@ -63,12 +62,12 @@ public class TapTap extends Plugin {
                     } else {
                         WidgetChatListActions.access$replyMessage(widgetChatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
                         if (settings.getBool("openKeyboard", false)) {
-                            var imm = (InputMethodManager) Utils.appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            var imm = (InputMethodManager) Utils.getAppContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
                         }
                     }
                 } else {
-                    if ((boolean) callFrame.args[1])
+                    if ((boolean) param.args[1])
                         StoreStream.Companion.getMessagesLoader().jumpToMessage(msg.getChannelId(), msg.getId());
                 }
                 clicks = 0;
@@ -80,11 +79,11 @@ public class TapTap extends Plugin {
         togglePatch = () -> {
             if (settings.getBool("hideButtons", false)) {
                 if (unpatch == null)
-                    unpatch = patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[]{WidgetChatListActions.Model.class}, new PinePatchFn(callFrame -> {
-                        var _this = (WidgetChatListActions) callFrame.thisObject;
+                    unpatch = patcher.patch(WidgetChatListActions.class, "configureUI", new Class<?>[]{WidgetChatListActions.Model.class}, new Hook(param -> {
+                        var _this = (WidgetChatListActions) param.thisObject;
                         var rootView = (NestedScrollView) _this.requireView();
                         var layout = (LinearLayout) rootView.getChildAt(0);
-                        var msg = ((WidgetChatListActions.Model) callFrame.args[0]).getMessage();
+                        var msg = ((WidgetChatListActions.Model) param.args[0]).getMessage();
                         if (isMe(msg)) {
                             layout.findViewById(editId).setVisibility(View.GONE);
                         } else {

@@ -24,7 +24,9 @@ public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickL
     private static final int iconId = Utils.getResId("user_profile_adapter_item_server_image", "id");
     private static final int iconTextId = Utils.getResId("user_profile_adapter_item_server_text", "id");
     private static final int serverNameId = Utils.getResId("user_profile_adapter_item_server_name", "id");
-    private static final int serverNickId = Utils.getResId("user_profile_adapter_item_server_nick", "id");
+    private static final int identityBarrierId = Utils.getResId("guild_member_identity_barrier", "id");
+    private static final int serverAvatarId = Utils.getResId("guild_member_avatar", "id");
+    private static final int serverNickId = Utils.getResId("user_profile_adapter_item_user_display_name", "id");
 
     private final Adapter adapter;
 
@@ -40,7 +42,9 @@ public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickL
         iconText = layout.findViewById(iconTextId);
         name = layout.findViewById(serverNameId);
 
-        // Hide nick text
+        // Hide server profile stuff
+        layout.findViewById(identityBarrierId).setVisibility(View.GONE);
+        layout.findViewById(serverAvatarId).setVisibility(View.GONE);
         layout.findViewById(serverNickId).setVisibility(View.GONE);
 
         layout.setOnClickListener(this);

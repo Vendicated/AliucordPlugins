@@ -1,8 +1,12 @@
-version = "3.4.1"
+version = "3.4.2"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    
+    # 3.4.2
+    * Discord 96.0 update
+    * Font hook is now toggleable via a switch due to a bug that makes the font weird
     
     # 3.4.1
     * Make overlay_alpha work for animated backgrounds

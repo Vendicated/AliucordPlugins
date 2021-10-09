@@ -12,11 +12,11 @@ package dev.vendicated.aliucordplugs.themer
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.ColorStateList
-import android.content.res.Resources
+import android.content.res.*
 import android.graphics.*
 import android.graphics.drawable.*
 import android.os.Bundle
+import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -29,8 +29,7 @@ import androidx.fragment.app.FragmentContainerView
 import com.aliucord.*
 import com.aliucord.api.PatcherAPI
 import com.aliucord.fragments.SettingsPage
-import com.aliucord.patcher.PinePatchFn
-import com.aliucord.patcher.PinePrePatchFn
+import com.aliucord.patcher.*
 import com.aliucord.utils.ReflectUtils
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.filename
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.url
@@ -44,8 +43,6 @@ import com.facebook.drawee.view.SimpleDraweeView
 import com.google.android.material.textfield.TextInputLayout
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.lytefast.flexinput.R
-import top.canyie.pine.Pine.CallFrame
-import top.canyie.pine.callback.MethodHook
 import java.io.*
 import java.net.URLDecoder
 import java.util.regex.Pattern
@@ -55,7 +52,7 @@ fun addPatches(patcher: PatcherAPI) {
     patcher.run {
         if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
 
-        patchGetFont()
+        if (Themer.mSettings.enableFontHook) patchGetFont()
         patchGetColor()
         patchSetColor()
         patchColorStateLists()
@@ -101,10 +98,10 @@ private fun PatcherAPI.setBackgrounds() {
     val transparencyMode = Themer.mSettings.transparencyMode
     if (transparencyMode == TransparencyMode.FULL) {
         val rootId = Utils.getResId("action_bar_root", "id")
-        patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
-            if (ResourceManager.customBg == null && ResourceManager.animatedBgUri == null) return@PinePatchFn
-            var view = callFrame.args[0] as View
-            val clazz = callFrame.thisObject::class.java
+        patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), Hook { param ->
+            if (ResourceManager.customBg == null && ResourceManager.animatedBgUri == null) return@Hook
+            var view = param.args[0] as View
+            val clazz = param.thisObject::class.java
             val cName = clazz.name
 
             // Discord uses a dialog to show these which makes it so that the chat still shows underneath which makes these
@@ -128,7 +125,7 @@ private fun PatcherAPI.setBackgrounds() {
             // Two while loops to first find the root layout or return if it doesn't exist
             // Then go even deeper to find the root root layout
             while (view.id != rootId)
-                view = view.parent as View? ?: return@PinePatchFn
+                view = view.parent as View? ?: return@Hook
             while (true) {
                 if (view.parent !is View) break
                 view = view.parent as View
@@ -144,7 +141,7 @@ private fun PatcherAPI.setBackgrounds() {
 
             // Add overlay to darken pages, as they would otherwise be too bright
             if (shouldDarken) {
-                val parent = (callFrame.args[0] as View).parent as ViewGroup
+                val parent = (param.args[0] as View).parent as ViewGroup
                 if (parent !is FragmentContainerView && parent.findViewById<View>(id) == null)
                     parent.addView(
                         View(view.context).apply {
@@ -159,7 +156,7 @@ private fun PatcherAPI.setBackgrounds() {
         })
 
         // Patch for BottomSheet transparency
-        patch(AppBottomSheet::class.java.getDeclaredMethod("onViewCreated", View::class.java, Bundle::class.java), PinePatchFn {
+        patch(AppBottomSheet::class.java.getDeclaredMethod("onViewCreated", View::class.java, Bundle::class.java), Hook {
             ((it.args[0] as View).parent as View).background = null
         })
 
@@ -167,7 +164,7 @@ private fun PatcherAPI.setBackgrounds() {
 
         val cfgAt =
             WidgetChatListAdapterItemAttachment::class.java.getDeclaredMethod("configureUI", WidgetChatListAdapterItemAttachment.Model::class.java)
-        patch(cfgAt, PinePrePatchFn { cf ->
+        patch(cfgAt, PreHook { cf ->
             val binding = WidgetChatListAdapterItemAttachment.`access$getBinding$p`(cf.thisObject as WidgetChatListAdapterItemAttachment)
             binding.root.findViewById<View?>(Utils.getResId("chat_list_item_attachment_spoiler", "id"))?.let {
                 val bgColor = (it.background as ColorDrawable?)?.color ?: return@let
@@ -177,7 +174,7 @@ private fun PatcherAPI.setBackgrounds() {
 
         val cfgEm =
             WidgetChatListAdapterItemEmbed::class.java.getDeclaredMethod("configureUI", WidgetChatListAdapterItemEmbed.Model::class.java)
-        patch(cfgEm, PinePrePatchFn { cf ->
+        patch(cfgEm, PreHook { cf ->
             val binding = ReflectUtils.getField(cf.thisObject, "binding") as WidgetChatListAdapterItemEmbedBinding
             binding.root.findViewById<View?>(Utils.getResId("chat_list_item_embed_spoiler", "id"))?.let {
                 val bgColor = (it.background as ColorDrawable?)?.color ?: return@let
@@ -187,11 +184,11 @@ private fun PatcherAPI.setBackgrounds() {
     } else {
         val chatBgId = Utils.getResId("widget_home_panel_center_chat", "id")
 
-        patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), PinePatchFn { callFrame: CallFrame ->
-            if (ResourceManager.customBg == null && ResourceManager.animatedBgUri == null) return@PinePatchFn
-            val clazz = callFrame.thisObject.javaClass
+        patch(AppFragment::class.java.getDeclaredMethod("onViewBound", View::class.java), Hook { param ->
+            if (ResourceManager.customBg == null && ResourceManager.animatedBgUri == null) return@Hook
+            val clazz = param.thisObject.javaClass
             val className = clazz.simpleName
-            var view = callFrame.args[0] as View
+            var view = param.args[0] as View
             if (className == "WidgetChatList") {
                 while (view.id != chatId) {
                     view = view.parent as View
@@ -199,7 +196,8 @@ private fun PatcherAPI.setBackgrounds() {
                 }
                 setBackground(view)
             } else if (
-                transparencyMode == TransparencyMode.CHAT_SETTINGS && (className.lowercase().contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
+                transparencyMode == TransparencyMode.CHAT_SETTINGS && (className.lowercase()
+                    .contains("settings") || SettingsPage::class.java.isAssignableFrom(clazz))
             ) {
                 if (ResourceManager.animatedBgUri != null)
                     logger.warn("Animated backgrounds aren't supported on the Chat & Settings setting")
@@ -211,10 +209,12 @@ private fun PatcherAPI.setBackgrounds() {
 }
 
 fun fontHook(idx: Int) =
-    PinePrePatchFn { callFrame ->
-        val font = ResourceManager.getFontForId(callFrame.args[idx] as Int) ?: ResourceManager.getDefaultFont()
+    PreHook { param ->
+        val font = ResourceManager.getFontForId(param.args[idx] as Int) ?: ResourceManager.getDefaultFont()
+        logger.debug("Patched loadFont")
         font?.let {
-            callFrame.result = it
+            logger.debug("Replaced font")
+            param.result = it
         }
     }
 
@@ -228,24 +228,21 @@ private fun PatcherAPI.patchGetFont() {
 }
 
 private fun PatcherAPI.patchGetColor() {
-    val patchGetColor: Function1<Int, MethodHook> = { idx ->
-        PinePrePatchFn { callFrame: CallFrame ->
-            ResourceManager.getColorForId(callFrame.args[idx] as Int)?.let {
-                callFrame.result = it
+    patch(Resources::class.java.getDeclaredMethod("getColor", Int::class.javaPrimitiveType, Resources.Theme::class.java),
+        PreHook { param ->
+            ResourceManager.getColorForId(param.args[0] as Int)?.let {
+                param.result = it
             }
         }
-    }
-
-    patch(ColorCompat::class.java.getDeclaredMethod("getThemedColor", Context::class.java, Int::class.javaPrimitiveType), patchGetColor.invoke(1))
-    patch(Resources::class.java.getDeclaredMethod("getColor", Int::class.javaPrimitiveType, Resources.Theme::class.java), patchGetColor.invoke(0))
+    )
 }
 
 private fun PatcherAPI.patchSetColor() {
     patch(
         ColorDrawable::class.java.getDeclaredMethod("setColor", Int::class.javaPrimitiveType),
-        PinePrePatchFn { callFrame ->
-            ResourceManager.getColorReplacement(callFrame.args[0] as Int)?.let {
-                callFrame.args[0] = it
+        PreHook { param ->
+            ResourceManager.getColorReplacement(param.args[0] as Int)?.let {
+                param.args[0] = it
             }
         }
     )
@@ -257,9 +254,9 @@ private fun PatcherAPI.patchColorStateLists() {
     // impossible to consistently resolve the correct name
     patch(
         ColorStateList::class.java.getDeclaredMethod("getColorForState", IntArray::class.java, Int::class.javaPrimitiveType),
-        PinePatchFn { callFrame: CallFrame ->
-            ResourceManager.getColorReplacement(callFrame.result as Int)?.let {
-                callFrame.result = it
+        Hook { param ->
+            ResourceManager.getColorReplacement(param.result as Int)?.let {
+                param.result = it
             }
         })
 }
@@ -271,25 +268,92 @@ private fun PatcherAPI.tintDrawables() {
             Int::class.javaPrimitiveType,
             Int::class.javaPrimitiveType,
             Resources.Theme::class.java
-        ), PinePatchFn { callFrame: CallFrame ->
-            ResourceManager.getDrawableTintForId(callFrame.args[0] as Int)?.let {
-                (callFrame.result as Drawable?)?.setTint(it)
+        ), Hook { param ->
+            ResourceManager.getDrawableTintForId(param.args[0] as Int)?.let {
+                (param.result as Drawable?)?.setTint(it)
             }
         })
 }
 
 private fun PatcherAPI.themeAttributes() {
+    // Okay just dont work then, dickhead
+    patch(ColorCompat::class.java.getDeclaredMethod("getThemedColor", Context::class.java, Int::class.javaPrimitiveType),
+        PreHook { cf ->
+            ResourceManager.getAttrForId(cf.args[1] as Int)?.let {
+                cf.result = it
+            }
+        }
+    )
+
+    fun setData(idxIdx: Int, outIdx: Int) =
+        Hook { cf ->
+            ResourceManager.getAttrForId(cf.args[idxIdx] as Int)?.let {
+                (cf.args[outIdx] as TypedValue).data = it
+            }
+        }
+
+    val bool = Boolean::class.javaPrimitiveType
+    val int = Int::class.javaPrimitiveType
+    val tv = TypedValue::class.java
+    val am = AssetManager::class.java
+    val res = Resources::class.java
+    val theme = Resources.Theme::class.java
+
+    patch(theme.getDeclaredMethod("resolveAttribute", int, tv, bool), setData(0, 1))
+    patch(res.getDeclaredMethod("getValue", int, tv, bool), setData(0, 1))
+    patch(res.getDeclaredMethod("getValueForDensity", int, int, tv, bool), setData(0, 2))
+    // patch(themeImpl.getDeclaredMethod("resolveAttribute", int, tv, bool), setData(0, 1))
+    patch(am.getDeclaredMethod("getResourceValue", int, int, tv, bool), setData(1, 2))
+
+
     patch(
         Resources.Theme::class.java.getDeclaredMethod(
-            "resolveAttribute",
-            Int::class.javaPrimitiveType,
-            TypedValue::class.java,
-            Boolean::class.javaPrimitiveType
-        ), PinePatchFn { callFrame: CallFrame ->
-            ResourceManager.getAttrForId(callFrame.args[0] as Int)?.let {
-                (callFrame.args[1] as TypedValue).data = it
+            "obtainStyledAttributes",
+            IntArray::class.java
+        ), Hook { cf ->
+            val typedArray = cf.result as TypedArray
+            val data = ReflectUtils.getField(typedArray, "mData") as IntArray
+            (cf.args[0] as IntArray).forEachIndexed { idx, id ->
+                ResourceManager.getAttrForId(id)?.let {
+                    data[idx + 1] = it
+                }
             }
-        })
+        }
+    )
+
+    patch(
+        Resources.Theme::class.java.getDeclaredMethod(
+            "obtainStyledAttributes",
+            Int::class.javaPrimitiveType,
+            IntArray::class.java
+        ), Hook { cf ->
+            val typedArray = cf.result as TypedArray
+            val data = ReflectUtils.getField(typedArray, "mData") as IntArray
+            (cf.args[1] as IntArray).forEachIndexed { idx, id ->
+                ResourceManager.getAttrForId(id)?.let {
+                    data[idx + 1] = it
+                }
+            }
+        }
+    )
+
+    patch(
+        Resources.Theme::class.java.getDeclaredMethod(
+            "obtainStyledAttributes",
+            AttributeSet::class.java,
+            IntArray::class.java,
+            Int::class.javaPrimitiveType,
+            Int::class.javaPrimitiveType
+        ), Hook { cf ->
+            val typedArray = cf.result as TypedArray
+            val data = ReflectUtils.getField(typedArray, "mData") as IntArray
+            (cf.args[1] as IntArray).forEachIndexed { idx, id ->
+                ResourceManager.getAttrForId(id)?.let {
+                    data[idx + 1] = it
+                }
+            }
+        }
+    )
 }
 
 private fun PatcherAPI.themeStatusBar() {
@@ -299,17 +363,17 @@ private fun PatcherAPI.themeStatusBar() {
             Window::class.java,
             Int::class.javaPrimitiveType,
             Boolean::class.javaPrimitiveType
-        ), PinePrePatchFn { callFrame ->
+        ), PreHook { param ->
             ResourceManager.getColorForName("statusbar")?.let {
-                callFrame.args[1] = it
+                param.args[1] = it
             }
         })
 }
 
 private fun PatcherAPI.themeTextInput() {
-    patch(TextInputLayout::class.java.getDeclaredMethod("calculateBoxBackgroundColor"), PinePrePatchFn { callFrame: CallFrame ->
+    patch(TextInputLayout::class.java.getDeclaredMethod("calculateBoxBackgroundColor"), PreHook { param ->
         ResourceManager.getColorForName("input_background")?.let {
-            callFrame.result = it
+            param.result = it
         }
     })
 }
@@ -326,17 +390,17 @@ private fun PatcherAPI.addDownloadButton() {
         WidgetChatListActions::class.java,
         "configureUI",
         arrayOf<Class<*>>(WidgetChatListActions.Model::class.java),
-        PinePatchFn { callFrame: CallFrame ->
+        Hook { param ->
             val layout =
-                ((callFrame.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
-                    ?: return@PinePatchFn
+                ((param.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
+                    ?: return@Hook
 
-            if (layout.findViewById<View>(id) != null) return@PinePatchFn
+            if (layout.findViewById<View>(id) != null) return@Hook
 
             val idx = if (emojiTrayId == 0) 1 else layout.indexOfChild(layout.findViewById(emojiTrayId)) + 1
 
             val ctx = layout.context
-            val msg = (callFrame.args[0] as WidgetChatListActions.Model).message
+            val msg = (param.args[0] as WidgetChatListActions.Model).message
             if (msg.channelId == THEMES_CHANNEL_ID) {
                 val drawable = ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.mutate()?.apply {
                     setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
@@ -372,7 +436,7 @@ private fun PatcherAPI.addDownloadButton() {
                                     Http.Request(url).use {
                                         it.execute().saveToFile(File(THEME_DIR, name))
                                         ThemeLoader.loadThemes(false)
-                                        Utils.showToast(ctx, "Successfully installed theme $prettyName")
+                                        Utils.showToast("Successfully installed theme $prettyName")
                                     }
                                 } catch (ex: Throwable) {
                                     logger.error(ctx, "Failed to install theme $prettyName", ex)
@@ -395,10 +459,10 @@ private fun PatcherAPI.patchColorPicker() {
      */
     try {
         patch(ColorPickerDialog::class.java.getDeclaredMethod("j"),
-            PinePatchFn { cf ->
-                val bundle = (cf.thisObject as ColorPickerDialog).arguments ?: return@PinePatchFn
+            Hook { param ->
+                val bundle = (param.thisObject as ColorPickerDialog).arguments ?: return@Hook
 
-                val view = cf.result as View
+                val view = param.result as View
                 val color = bundle.getInt("customButtonTextColor")
                 val font = ResourcesCompat.getFont(view.context, bundle.getInt("buttonFont"))
 

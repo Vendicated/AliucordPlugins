@@ -164,7 +164,7 @@ private class AutoCompleteAdapter(
                     drawable = ContextCompat.getDrawable(ctx, id)
                 }
                 ColorDialogType.SIMPLE_COLORS -> {
-                    return Utils.showToast(ctx, "Sorry, no preview.")
+                    Utils.showToast("Sorry, no preview.")
                 }
             }
 

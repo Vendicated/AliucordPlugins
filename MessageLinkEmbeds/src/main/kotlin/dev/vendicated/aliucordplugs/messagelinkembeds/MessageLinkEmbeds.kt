@@ -10,14 +10,14 @@
 package dev.vendicated.aliucordplugs.messagelinkembeds
 
 import android.content.Context
-import com.aliucord.Logger
+import com.aliucord.*
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.MessageEmbedBuilder
 import com.aliucord.entities.Plugin
-import com.aliucord.patcher.PinePatchFn
-import com.aliucord.patcher.PinePrePatchFn
+import com.aliucord.patcher.Hook
+import com.aliucord.patcher.PreHook
 import com.aliucord.utils.ReflectUtils
-import com.aliucord.utils.RxUtils.getResultBlocking
+import com.aliucord.utils.RxUtils.subscribe
 import com.aliucord.wrappers.ChannelWrapper.Companion.guildId
 import com.aliucord.wrappers.ChannelWrapper.Companion.name
 import com.aliucord.wrappers.embeds.ImageWrapper.Companion.height
@@ -202,14 +202,14 @@ class MessageLinkEmbeds : Plugin() {
                 Context::class.java,
                 String::class.java,
                 Function0::class.java
-            ), PinePrePatchFn { cf ->
-                val url = cf.args[1] as String
+            ), PreHook { param ->
+                val url = param.args[1] as String
                 val matcher = messageLinkPattern.matcher(url)
                 if (matcher.find()) {
                     val channelId = matcher.group(2)!!.toLong()
                     val messageId = matcher.group(3)!!.toLong()
                     StoreStream.getMessagesLoader().jumpToMessage(channelId, messageId)
-                    cf.result = null
+                    param.result = null
                 }
             }
         )
@@ -219,10 +219,10 @@ class MessageLinkEmbeds : Plugin() {
                 "processMessageText",
                 SimpleDraweeSpanTextView::class.java,
                 MessageEntry::class.java
-            ), PinePatchFn { callFrame ->
-                val msg = (callFrame.args[1] as MessageEntry).message
-                if (msg.isLoading) return@PinePatchFn
-                val matcher = messageLinkPattern.matcher(msg.content ?: return@PinePatchFn)
+            ), Hook { param ->
+                val msg = (param.args[1] as MessageEntry).message
+                if (msg.isLoading) return@Hook
+                val matcher = messageLinkPattern.matcher(msg.content ?: return@Hook)
                 while (matcher.find()) {
                     val url = matcher.group()
                     if (msg.embeds.any { it.url == url }) continue
@@ -237,27 +237,20 @@ class MessageLinkEmbeds : Plugin() {
                         addEmbed(msg, m, url, messageId, channelId)
                     } else {
                         if (!PermissionUtils.INSTANCE.hasAccess(
-                                StoreStream.getChannels().getChannel(channelId) ?: return@PinePatchFn,
+                                StoreStream.getChannels().getChannel(channelId) ?: return@Hook,
                                 StoreStream.getPermissions().permissionsByChannel[channelId]
                             )
-                        ) return@PinePatchFn
+                        ) return@Hook
 
                         worker.execute {
-                            RestAPI.api.getChannelMessagesAround(channelId, 1, messageId)
-                                .getResultBlocking().run {
-                                    if (second != null) logger.error(
-                                        "Failed to fetch message $url",
-                                        second
-                                    )
-                                    else if (first?.isEmpty() == false) {
-                                        Message(first!![0]).apply {
-                                            if (id == messageId) {
-                                                cache[id] = this
-                                                addEmbed(msg, this, url, messageId, channelId)
-                                            }
-                                        }
+                            RestAPI.api.getChannelMessagesAround(channelId, 1, messageId).subscribe {
+                                firstOrNull()?.let { Message(it) }?.run {
+                                    if (id == messageId) {
+                                        cache[id] = this
+                                        addEmbed(msg, this, url, messageId, channelId)
                                     }
                                 }
+                            }
                         }
                     }
                 }

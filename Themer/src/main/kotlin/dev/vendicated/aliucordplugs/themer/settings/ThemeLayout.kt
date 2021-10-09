@@ -50,10 +50,10 @@ class ThemeAdapter(private val fragment: SettingsPage, private val themes: Mutab
             dialog.dismiss()
             if (theme.file.delete()) {
                 themes.removeAt(position)
-                Utils.showToast(it.context, "Deleted theme ${theme.name}!")
+                Utils.showToast("Deleted theme ${theme.name}!")
                 notifyItemRemoved(position)
             } else {
-                Utils.showToast(it.context, "Failed to delete theme ${theme.name} :(")
+                Utils.showToast("Failed to delete theme ${theme.name} :(")
             }
         }
         dialog.show(fragment.parentFragmentManager, "Confirm Theme Uninstall")

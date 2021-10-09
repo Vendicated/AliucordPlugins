@@ -18,7 +18,7 @@ import com.aliucord.Http;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.PinePatchFn;
+import com.aliucord.patcher.Hook;
 import com.discord.api.message.embed.EmbedType;
 import com.discord.embed.RenderableEmbedMedia;
 import com.discord.widgets.chat.list.InlineMediaView;
@@ -54,13 +54,13 @@ public class AnimateApngs extends Plugin {
         int mediaResId = Utils.getResId("media_image", "id");
 
         var updateUI = InlineMediaView.class.getDeclaredMethod("updateUI", RenderableEmbedMedia.class, String.class, EmbedType.class, Integer.class, Integer.class, String.class);
-        patcher.patch(updateUI, new PinePatchFn(callFrame -> {
-            var media = (RenderableEmbedMedia) callFrame.args[0];
+        patcher.patch(updateUI, new Hook(param -> {
+            var media = (RenderableEmbedMedia) param.args[0];
             if (media == null || !media.a.endsWith(".png")) return;
 
             // media server serves them as regular pngs, only cdn serves actual apngs
             var url = media.a.replace("media.discordapp.net", "cdn.discordapp.com");
-            var binding = InlineMediaView.access$getBinding$p((InlineMediaView) callFrame.thisObject);
+            var binding = InlineMediaView.access$getBinding$p((InlineMediaView) param.thisObject);
             var view = (ImageView) binding.getRoot().findViewById(previewResId);
             initApng(view, url, media.b, media.c);
         }));
@@ -73,9 +73,9 @@ public class AnimateApngs extends Plugin {
         var getFormattedUrl = WidgetMedia.class.getDeclaredMethod("getFormattedUrl", Context.class, Uri.class);
         getFormattedUrl.setAccessible(true);
 
-        patcher.patch(WidgetMedia.class.getDeclaredMethod("configureMediaImage"), new PinePatchFn(callFrame -> {
+        patcher.patch(WidgetMedia.class.getDeclaredMethod("configureMediaImage"), new Hook(param -> {
             try {
-                var widgetMedia = (WidgetMedia) callFrame.thisObject;
+                var widgetMedia = (WidgetMedia) param.thisObject;
                 var url = (String) getFormattedUrl.invoke(widgetMedia, widgetMedia.requireContext(), uriField.get(widgetMedia));
                 if (url == null) return;
                 var match = pattern.matcher(url);

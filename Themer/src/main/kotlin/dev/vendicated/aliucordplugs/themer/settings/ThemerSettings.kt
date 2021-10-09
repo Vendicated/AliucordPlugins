@@ -105,6 +105,16 @@ class ThemerSettings : SettingsPage() {
         }
 
         addView(Divider(ctx))
+        addView(
+            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Font Hook", "Enables the font hook. May lead to weird font").apply {
+                isChecked = Themer.mSettings.enableFontHook
+                setOnCheckedListener {
+                    Themer.mSettings.enableFontHook = it
+                    promptRestart(view, this@ThemerSettings)
+                }
+            }
+        )
+        addView(Divider(ctx))
 
         TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header).run {
             text = "Themes"
@@ -144,7 +154,7 @@ class ThemerSettings : SettingsPage() {
                 dialog.setOnOkListener {
                     val name = dialog.input
                     if (name.isEmpty()) {
-                        Utils.showToast(ctx, "Cancelled.")
+                        Utils.showToast("Cancelled.")
                     } else {
                         Theme.create(name).let {
                             ThemeLoader.themes.add(0, it)

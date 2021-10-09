@@ -2,8 +2,11 @@
 
 Better Spotify integration.
 
-For now only adds listen along but I plan to add a player integration (spotify controls) and more in the future
+Features:
+- Listen Along - You MUST have spotify running for listen along to work! so play a song first then use it
+- Rich spotify embeds with play button like on desktop
+- Commands to send current song or album in chat (sendSpotifySong/sendSpotifyAlbum)
 
-You MUST have spotify running for listen along to work! so play a song first then use it
+![Screenshot](https://cdn.discordapp.com/attachments/852332951542956052/886711483227058216/Screenshot_20210912-223432.jpg)
 
-![](https://cdn.discordapp.com/attachments/852332951542956052/886711483227058216/Screenshot_20210912-223432.jpg)
+![Screenshot](https://cdn.discordapp.com/attachments/852332951542956052/896146433131028510/Screenshot_20211008-232535.jpg)

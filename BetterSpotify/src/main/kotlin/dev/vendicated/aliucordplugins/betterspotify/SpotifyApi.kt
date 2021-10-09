@@ -29,10 +29,11 @@ private const val baseUrl = "https://api.spotify.com/v1/me/player"
 
 // The spotify api gives me fucking brain damage i swear to god
 // You can either specify album or playlist uris as "context_uri" String or track uris as "uris" array
+@Suppress("Unused")
 class SongBody(val uris: List<String>, val position_ms: Int = 0)
 
 object SpotifyApi {
-    private val client: SpotifyApiClient by lazy {
+    val client: SpotifyApiClient by lazy {
         ReflectUtils.getField(StoreStream.getSpotify(), "spotifyApiClient") as SpotifyApiClient
     }
 
@@ -131,7 +132,9 @@ object SpotifyApi {
 
     fun seek(position_ms: Int) {
         getPlayerInfo {
-            if (abs(it.progress_ms - position_ms) > 5000)
+            if (!it.is_playing)
+                playSong(it.item.id, position_ms)
+            else if (abs(it.progress_ms - position_ms) > 5000)
                 request("seek?position_ms=$position_ms")
         }
     }

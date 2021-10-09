@@ -31,7 +31,7 @@ public final class PDUtil {
             var url = String.format("https://github.com/%s/%s/raw/builds/%s.zip", author, repo, name);
             var file = openPluginFile(name);
             if (file.exists()) {
-                Utils.showToast(ctx, String.format("Plugin %s already installed", name));
+                Utils.showToast(String.format("Plugin %s already installed", name));
                 return;
             }
             try {
@@ -40,11 +40,11 @@ public final class PDUtil {
                     res.pipe(out);
                     PluginManager.loadPlugin(ctx, file);
                     PluginManager.startPlugin(name);
-                    Utils.showToast(ctx, String.format("Plugin %s successfully downloaded", name));
+                    Utils.showToast(String.format("Plugin %s successfully downloaded", name));
                     Utils.mainThread.post(callback);
                 }
             } catch (IOException ex) {
-                Utils.showToast(ctx, String.format("Something went wrong while downloading plugin %s, sorry: %s", name, ex.getMessage()));
+                Utils.showToast(String.format("Something went wrong while downloading plugin %s, sorry: %s", name, ex.getMessage()));
                 if (file.exists())
                     //noinspection ResultOfMethodCallIgnored
                     file.delete();
