@@ -211,9 +211,7 @@ private fun PatcherAPI.setBackgrounds() {
 fun fontHook(idx: Int) =
     PreHook { param ->
         val font = ResourceManager.getFontForId(param.args[idx] as Int) ?: ResourceManager.getDefaultFont()
-        logger.debug("Patched loadFont")
         font?.let {
-            logger.debug("Replaced font")
             param.result = it
         }
     }
