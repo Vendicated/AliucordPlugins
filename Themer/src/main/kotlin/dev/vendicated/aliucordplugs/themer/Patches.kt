@@ -16,8 +16,6 @@ import android.content.res.*
 import android.graphics.*
 import android.graphics.drawable.*
 import android.os.Bundle
-import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
@@ -282,7 +280,7 @@ private fun PatcherAPI.themeAttributes() {
             }
         }
     )
-
+/*
     fun setData(idxIdx: Int, outIdx: Int) =
         Hook { cf ->
             ResourceManager.getAttrForId(cf.args[idxIdx] as Int)?.let {
@@ -352,6 +350,7 @@ private fun PatcherAPI.themeAttributes() {
             }
         }
     )
+    */
 }
 
 private fun PatcherAPI.themeStatusBar() {
