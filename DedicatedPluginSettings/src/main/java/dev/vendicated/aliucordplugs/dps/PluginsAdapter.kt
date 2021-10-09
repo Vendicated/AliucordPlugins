@@ -70,7 +70,7 @@ private val drawables = hashMapOf(
 
     // Xinto
     "LayoutController" to !design_ic_visibility_off,
-    "NitroSpoof" to !drawable_ic_nitro,
+    "NitroSpoof" to !ic_nitro_rep_24dp,
 
     // Wing
     "GuildProfiles" to !ic_members_24dp,
