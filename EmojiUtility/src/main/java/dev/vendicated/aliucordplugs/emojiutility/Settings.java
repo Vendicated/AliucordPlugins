@@ -54,7 +54,7 @@ public class Settings extends BottomSheet {
             commands.unregisterAll();
 
         try {
-            Patches.init(requireContext(), settings, patcher);
+            Patches.init(settings, patcher);
         } catch (Throwable th) {
             EmojiUtility.logger.error(requireContext(), "Something went wrong while initialising the patches :(", th);
         }

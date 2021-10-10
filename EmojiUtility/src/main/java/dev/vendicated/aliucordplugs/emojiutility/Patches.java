@@ -4,24 +4,28 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
+ * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
-*/
+ */
 
 package dev.vendicated.aliucordplugs.emojiutility;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.text.method.LinkMovementMethod;
+import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.LinearLayout;
+import android.widget.*;
+
+import androidx.viewbinding.ViewBinding;
 
 import com.aliucord.Utils;
 import com.aliucord.api.PatcherAPI;
 import com.aliucord.api.SettingsAPI;
 import com.aliucord.patcher.*;
 import com.aliucord.utils.DimenUtils;
+import com.aliucord.utils.ReflectUtils;
 import com.aliucord.views.Button;
 import com.discord.app.AppBottomSheet;
 import com.discord.databinding.WidgetEmojiSheetBinding;
@@ -31,12 +35,14 @@ import com.discord.utilities.textprocessing.node.EmojiNode;
 import com.discord.widgets.chat.input.emoji.*;
 import com.discord.widgets.chat.list.actions.*;
 import com.discord.widgets.emoji.WidgetEmojiSheet;
+import com.discord.widgets.user.profile.UserProfileHeaderView;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
 import dev.vendicated.aliucordplugs.emojiutility.clonemodal.Modal;
+import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
 @SuppressWarnings({"UnusedReturnValue"})
@@ -45,9 +51,11 @@ public class Patches {
     private static Runnable keepOpenUnhook;
     private static Runnable hideUnusableUnhook;
 
-    public static void init(Context ctx, SettingsAPI settings, PatcherAPI patcher) throws Throwable {
+    public static void init(SettingsAPI settings, PatcherAPI patcher) throws Throwable {
+        clickableStatusEmote(patcher);
+
         if (settings.getBool("extraButtons", true)) {
-            if (extraButtonsUnhook == null) extraButtonsUnhook = emojiModalExtraButtons(ctx, patcher);
+            if (extraButtonsUnhook == null) extraButtonsUnhook = emojiModalExtraButtons(patcher);
         } else if (extraButtonsUnhook != null) {
             extraButtonsUnhook.run();
             extraButtonsUnhook = null;
@@ -69,7 +77,7 @@ public class Patches {
     }
 
     @SuppressLint("SetTextI18n")
-    public static Runnable emojiModalExtraButtons(Context _context, PatcherAPI patcher) throws Throwable {
+    public static Runnable emojiModalExtraButtons(PatcherAPI patcher) throws Throwable {
         final int layoutId = View.generateViewId();
 
         var getEmojiIdAndType = WidgetEmojiSheet.class.getDeclaredMethod("getEmojiIdAndType");
@@ -77,10 +85,10 @@ public class Patches {
         var getBinding = WidgetEmojiSheet.class.getDeclaredMethod("getBinding");
         getBinding.setAccessible(true);
 
-        return patcher.patch(WidgetEmojiSheet.class.getDeclaredMethod("configureButtons", boolean.class, boolean.class, Guild.class), new Hook(callFrame -> {
+        return patcher.patch(WidgetEmojiSheet.class.getDeclaredMethod("configureButtons", boolean.class, boolean.class, Guild.class), new Hook(param -> {
             try {
-                var args = callFrame.args;
-                var _this = callFrame.thisObject;
+                var args = param.args;
+                var _this = param.thisObject;
 
                 var emoji = (EmojiNode.EmojiIdAndType.Custom) getEmojiIdAndType.invoke(_this);
                 if (emoji == null) return;
@@ -112,6 +120,16 @@ public class Patches {
                     Utils.showToast("Copied to clipboard");
                 });
 
+                var copyCodeButton = new Button(ctx);
+                copyCodeButton.setText("Copy Emoji Code");
+                copyCodeButton.setOnClickListener(v -> {
+                    Utils.setClipboard(
+                            "copy emoji code",
+                            String.format("<%s:%s:%s>", emoji.isAnimated() ? "a" : "", emoji.getName(), emoji.getId())
+                    );
+                    Utils.showToast("Copied to clipboard");
+                });
+
                 var saveButton = new Button(ctx);
                 EmojiDownloader.configureSaveButton(ctx, saveButton, fileName, id, animated);
 
@@ -122,12 +140,14 @@ public class Patches {
                 var buttonParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT);
                 buttonParams.setMargins(0, 0, 0, 0);
                 copyLinkButton.setLayoutParams(buttonParams);
+                copyCodeButton.setLayoutParams(buttonParams);
                 saveButton.setLayoutParams(buttonParams);
                 cloneButton.setLayoutParams(buttonParams);
 
                 var pluginButtonLayout = new com.aliucord.widgets.LinearLayout(ctx);
                 pluginButtonLayout.setId(layoutId);
                 pluginButtonLayout.addView(copyLinkButton);
+                pluginButtonLayout.addView(copyCodeButton);
                 pluginButtonLayout.addView(saveButton);
                 pluginButtonLayout.addView(cloneButton);
 
@@ -173,15 +193,16 @@ public class Patches {
                 }
 
                 rootLayout.addView(pluginButtonLayout, idx);
-            } catch (Throwable ignored) {}
-            }));
+            } catch (Throwable ignored) {
+            }
+        }));
     }
 
     public static Runnable keepEmojiPickerOpen(PatcherAPI patcher) throws Throwable {
         var isLongPress = new AtomicReference<>(false);
 
-        var unhook1 = patcher.patch(MoreEmojisViewHolder.class.getDeclaredMethod("onConfigure", int.class, EmojiItem.class), new PinePatchFn(callFrame -> {
-            var _this = (MoreEmojisViewHolder) callFrame.thisObject;
+        var unhook1 = patcher.patch(MoreEmojisViewHolder.class.getDeclaredMethod("onConfigure", int.class, EmojiItem.class), new Hook(param -> {
+            var _this = (MoreEmojisViewHolder) param.thisObject;
             _this.itemView.setOnLongClickListener(v -> {
                 isLongPress.set(true);
                 var actions = ((WidgetChatListActions$onViewCreated$2) MoreEmojisViewHolder.access$getAdapter$p(_this).getOnClickMoreEmojis()).this$0;
@@ -190,22 +211,26 @@ public class Patches {
                         actions.getParentFragmentManager(),
                         e -> WidgetChatListActions.access$addReaction(actions, e),
                         EmojiPickerContextType.Chat.INSTANCE,
-                        () -> { isLongPress.set(false); actions.dismiss(); return null; }
+                        () -> {
+                            isLongPress.set(false);
+                            actions.dismiss();
+                            return null;
+                        }
                 );
 
                 return true;
             });
         }));
 
-        var unhook2 = patcher.patch(AppBottomSheet.class.getDeclaredMethod("dismiss"), new PinePrePatchFn(callFrame -> {
-            if (isLongPress.get() && callFrame.thisObject instanceof WidgetChatListActions) callFrame.setResult(null);
+        var unhook2 = patcher.patch(AppBottomSheet.class.getDeclaredMethod("dismiss"), new PreHook(param -> {
+            if (isLongPress.get() && param.thisObject instanceof WidgetChatListActions) param.setResult(null);
         }));
 
-        var clazz = Class.forName("com.discord.widgets.chat.input.emoji.WidgetEmojiPickerSheet");
-        final var onEmojiPickedField = clazz.getDeclaredField("emojiPickerListenerDelegate");
+        final var onEmojiPickedField = WidgetEmojiPickerSheet.class.getDeclaredField("emojiPickerListenerDelegate");
         onEmojiPickedField.setAccessible(true);
 
-        var unhook3 = patcher.patch(clazz, "onEmojiPicked", new Class<?>[]{Emoji.class}, new PinePrePatchFn(callFrame -> {
+
+        var unhook3 = patcher.patch(WidgetEmojiPickerSheet.class, "onEmojiPicked", new Class<?>[]{Emoji.class}, new PreHook(callFrame -> {
             if (isLongPress.get()) try {
                 var listener = (EmojiPickerListener) onEmojiPickedField.get(callFrame.thisObject);
                 if (listener != null) listener.onEmojiPicked((Emoji) callFrame.args[0]);
@@ -213,14 +238,18 @@ public class Patches {
             } catch (Throwable ignored) { }
         }));
 
-        return () -> { unhook1.run(); unhook2.run(); unhook3.run(); };
+        return () -> {
+            unhook1.run();
+            unhook2.run();
+            unhook3.run();
+        };
     }
 
     // Credit: https://github.com/Juby210/Aliucord-plugins/blob/d8f6da1ad387c0f94796b8efce6915163aeebb5b/HideDisabledEmojis/src/main/java/com/aliucord/plugins/HideDisabledEmojis.java
     public static Runnable hideUnusableEmojis(PatcherAPI patcher) {
         return patcher.patch(
                 "com.discord.widgets.chat.input.emoji.EmojiPickerViewModel$Companion", "buildEmojiListItems",
-                new Class<?>[]{ Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class },
+                new Class<?>[]{Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class},
                 new Hook(param -> {
                     var emojis = (Collection<? extends Emoji>) param.args[0];
                     if (!(emojis instanceof ArrayList)) {
@@ -230,5 +259,25 @@ public class Patches {
                     emojis.removeIf(e -> !e.isUsable());
                 })
         );
+    }
+
+    public static void clickableStatusEmote(PatcherAPI patcher) throws Throwable {
+        patcher.patch(EmojiNode.RenderContext.DefaultImpls.class.getDeclaredMethod("onEmojiClicked", EmojiNode.RenderContext.class, EmojiNode.EmojiIdAndType.class),
+                new InsteadHook(param -> {
+                    WidgetEmojiSheet.Companion.enqueueNotice((EmojiNode.EmojiIdAndType) param.args[1]);
+                    return Unit.a;
+                }));
+
+        patcher.patch(
+                UserProfileHeaderView.class.getDeclaredConstructor(Context.class, AttributeSet.class),
+                new Hook(param -> {
+                    try {
+                        var view = (UserProfileHeaderView) param.thisObject;
+                        var binding = (ViewBinding) ReflectUtils.getField(view, "binding");
+                        var status = (TextView) binding.getRoot().findViewById(Utils.getResId("user_profile_header_custom_status", "id"));
+                        status.setMovementMethod(LinkMovementMethod.getInstance());
+                    } catch (Throwable ignored) {
+                    }
+                }));
     }
 }

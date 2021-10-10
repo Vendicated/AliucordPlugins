@@ -26,7 +26,7 @@ public class EmojiUtility extends Plugin {
 
     @Override
     public void start(Context ctx) throws Throwable {
-        Patches.init(ctx, settings, patcher);
+        Patches.init(settings, patcher);
         Commands.registerAll(commands);
     }
 
