@@ -375,7 +375,8 @@ private fun PatcherAPI.themeTextInput() {
     })
 }
 
-const val THEMES_CHANNEL_ID = 824357609778708580L
+const val THEME_DEV_CHANNEL = 868419532992172073L
+const val THEME_SUPPORT_CHANNEL = 875213883776847873L
 
 @SuppressLint("SetTextI18n")
 private fun PatcherAPI.addDownloadButton() {
@@ -398,11 +399,7 @@ private fun PatcherAPI.addDownloadButton() {
 
             val ctx = layout.context
             val msg = (param.args[0] as WidgetChatListActions.Model).message
-            if (msg.channelId == THEMES_CHANNEL_ID) {
-                val drawable = ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.mutate()?.apply {
-                    setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
-                }
-
+            if (msg.channelId == Constants.THEMES_CHANNEL_ID || msg.channelId == THEME_DEV_CHANNEL || msg.channelId == THEME_SUPPORT_CHANNEL) {
                 HashMap<String, String>().apply {
                     msg.attachments.forEach {
                         if (it.url.endsWith(".json")) {
@@ -426,6 +423,11 @@ private fun PatcherAPI.addDownloadButton() {
                                 .removeSuffix(".json")
 
                         text = "Install $prettyName"
+
+                        val drawable = ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.mutate()?.apply {
+                            setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
+                        }
+
                         setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, null, null, null)
                         setOnClickListener {
                             Utils.threadPool.execute {

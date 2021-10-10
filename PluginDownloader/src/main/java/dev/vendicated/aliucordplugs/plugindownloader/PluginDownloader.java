@@ -50,7 +50,7 @@ public class PluginDownloader extends Plugin {
             String content = msg.getContent();
             long channelId = msg.getChannelId();
 
-            if (channelId == Constants.PLUGIN_LINKS_UPDATES_CHANNEL_ID) {
+            if (channelId == Constants.PLUGIN_LINKS_UPDATES_CHANNEL_ID || channelId == Constants.PLUGIN_SUPPORT_CHANNEL_ID) {
                 var matcher = zipPattern.matcher(content);
                 while (matcher.find()) {
                     String author = matcher.group(1);
@@ -69,34 +69,26 @@ public class PluginDownloader extends Plugin {
                     layout.addView(view, 1);
                 }
             } else if (channelId == Constants.PLUGIN_LINKS_CHANNEL_ID) {
-                    var repoMatcher = repoPattern.matcher(content);
-                    if (!repoMatcher.find()) return; // zzzzzzz don't post junk
-                    String author = repoMatcher.group(1);
-                    String repo = repoMatcher.group(2);
+                var repoMatcher = repoPattern.matcher(content);
+                if (!repoMatcher.find()) return; // zzzzzzz don't post junk
+                String author = repoMatcher.group(1);
+                String repo = repoMatcher.group(2);
 
-                    var modal = new Modal(author, repo);
-                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
-                    view.setId(id);
-                    view.setText("Open Plugin Downloader");
-                    var icon = ContextCompat.getDrawable(ctx, R.d.ic_file_download_white_24dp);
-                    if (icon != null) {
-                        icon = icon.mutate();
-                        icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
-                        view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
-                    }
-                    view.setOnClickListener(e -> {
-                        Utils.openPageWithProxy(e.getContext(), modal);
-                        _this.dismiss();
-                    });
-                    layout.addView(view, 1);
-            } else if (msg.getGuildId() == 892331318862573578L) {
-                if (repoPattern.matcher(content).find() || zipPattern.matcher(content).find()) {
-                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
-                    view.setId(id);
-                    view.setText("Open Plugin Downloader");
-                    view.setOnClickListener(e -> Utils.launchUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ"));
-                    layout.addView(view, 1);
+                var modal = new Modal(author, repo);
+                var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
+                view.setId(id);
+                view.setText("Open Plugin Downloader");
+                var icon = ContextCompat.getDrawable(ctx, R.d.ic_file_download_white_24dp);
+                if (icon != null) {
+                    icon = icon.mutate();
+                    icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
+                    view.setCompoundDrawablesRelativeWithIntrinsicBounds(icon, null, null, null);
                 }
+                view.setOnClickListener(e -> {
+                    Utils.openPageWithProxy(e.getContext(), modal);
+                    _this.dismiss();
+                });
+                layout.addView(view, 1);
             }
         }));
     }
