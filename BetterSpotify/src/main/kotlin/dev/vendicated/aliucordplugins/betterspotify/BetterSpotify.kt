@@ -54,6 +54,15 @@ import java.util.concurrent.*
 val logger = Logger("BetterSpotify")
 val spotifyUrlRe = Regex("https://open.spotify.com/(\\w+)/(\\w+)")
 
+class BetterWebView(ctx: Context) : WebView(ctx) {
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        // Scrolling doesn't work without this
+        requestDisallowInterceptTouchEvent(true)
+        return super.onTouchEvent(event)
+    }
+}
+
 @AliucordPlugin
 @SuppressLint("SetTextI18n")
 class BetterSpotify : Plugin() {
@@ -147,7 +156,7 @@ class BetterSpotify : Plugin() {
 
             val ctx = layout.context
 
-            val webView = existingWebView ?: WebView(ctx).apply {
+            val webView = existingWebView ?: BetterWebView(ctx).apply {
                 id = widgetId
                 setBackgroundColor(Color.TRANSPARENT)
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
