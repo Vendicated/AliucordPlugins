@@ -31,7 +31,7 @@ public class AnimateApngs extends Plugin {
     private void initApng(ImageView view, String mediaUrl, Integer w, Integer h) {
         final var url = mediaUrl
                 // Strip proxy but only if they're discord domains
-                .replaceFirst("https://images-ext-1\\.discordapp.net/external/.*?/https/(media|cdn)\\.discordapp\\.(net|com)", "https://cdn.discordapp.com")
+                .replaceFirst("https://images-ext-.*?\\.discordapp.net/external/.*?/https/(media|cdn)\\.discordapp\\.(net|com)", "https://cdn.discordapp.com")
                 // media server serves them as regular pngs, only cdn serves actual apngs
                 .replace("media.discordapp.net", "cdn.discordapp.com");
 
