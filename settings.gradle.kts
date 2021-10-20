@@ -1,3 +1,4 @@
+include(":ShowBlockedMessages")
 include(":BetterSpotify")
 include(":Brainfuck")
 include(":CheckLinks")
