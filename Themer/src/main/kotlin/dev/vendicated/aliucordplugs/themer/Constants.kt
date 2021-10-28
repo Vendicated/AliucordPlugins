@@ -109,6 +109,7 @@ val SIMPLE_BG_SECONDARY_NAMES = arrayOf(
 
 val SIMPLE_ACCENT_ATTRS = arrayOf(
     "color_brand",
+    "brand_new_500",
     "colorControlBrandForeground",
     "colorControlActivated",
     "colorTextLink",
@@ -133,27 +134,49 @@ val SIMPLE_BG_SECONDARY_ATTRS = arrayOf(
     "theme_chat_spoiler_bg"
 )
 
-val ATTR_MAPPINGS = hashMapOf(
-    "brand_new" to arrayOf("color_brand"),
-    "brand_360" to arrayOf("colorControlBrandForeground"),
-    "primary_dark_800" to arrayOf(
-        "colorSurface",
-        "colorBackgroundFloating",
-        "colorTabsBackground"
-    ),
-    "brand_500" to arrayOf("colorControlActivated"),
-    "primary_660" to arrayOf("primary_660"),
-    "primary_600" to arrayOf("primary_600", "theme_chat_spoiler_inapp_bg"),
-    "primary_700" to arrayOf(
-        "primary_700",
-        "colorBackgroundTertiary",
-        "colorBackgroundSecondary",
-        "theme_chat_spoiler_bg"
-    ),
-    "primary_800" to arrayOf("primary_800"),
-    "primary_900" to arrayOf("primary_900"),
-    "link" to arrayOf("colorTextLink"),
-    "brand_500_alpha_20" to arrayOf("theme_chat_mention_background"),
-    "brand_new_530" to arrayOf("theme_chat_mention_foreground"),
-    "mention_highlight" to arrayOf("theme_chat_mentioned_me")
-)
+inline fun <reified T> pairOf(v: T) = v to v
+inline fun <reified T> pairOf(a: T, b: T) = Pair(a, b)
+
+val ATTR_MAPPINGS = HashMap<String, Array<String>>()
+
+fun initAttrMappings() {
+    ATTR_MAPPINGS.clear()
+    val map = mapOf(
+        pairOf("brand_new") to arrayOf("color_brand"),
+        pairOf("brand_new_360", "brand_new_500") to arrayOf("colorControlBrandForeground"),
+        pairOf("brand_new_260", "brand_new_530") to arrayOf("theme_chat_mention_foreground"),
+        pairOf("brand_new_500") to arrayOf("color_brand_500"),
+        pairOf("brand_360", "brand_500") to arrayOf("colorControlActivated"),
+        pairOf("brand_500_alpha_20", "brand_new_160") to arrayOf("theme_chat_mention_background"),
+        pairOf("link", "link_light") to arrayOf("colorTextLink"),
+        pairOf("mention_highlight") to arrayOf("theme_chat_mentioned_me"),
+
+        pairOf("primary_dark_600", "white") to arrayOf("colorBackgroundPrimary"),
+        pairOf("primary_dark_800", "white") to arrayOf(
+            "colorSurface",
+            "colorBackgroundFloating",
+            "colorTabsBackground"
+        ),
+        pairOf("primary_600", "primary_300") to arrayOf("primary_600", "theme_chat_spoiler_inapp_bg"),
+        pairOf("primary_630", "white_1") to arrayOf("theme_chat_code"),
+        pairOf("primary_660", "white_2") to arrayOf("primary_660", "theme_chat_codeblock_border"),
+        pairOf("primary_700", "primary_light_200") to arrayOf(
+            "primary_700",
+            "colorBackgroundTertiary",
+            "colorBackgroundSecondary",
+            "theme_chat_spoiler_bg"
+        ),
+        pairOf("primary_800", "primary_200") to arrayOf("primary_800"),
+        pairOf("primary_900", "primary_100") to arrayOf("primary_900"),
+    )
+
+    with(ATTR_MAPPINGS) {
+        val isLightMode = currentTheme == "light"
+        map.forEach { (k, v) ->
+            val key = if (isLightMode) k.second else k.first
+            if (containsKey(key)) {
+                put(key, arrayOf(*get(key)!!, *v))
+            } else put(key, v)
+        }
+    }
+}

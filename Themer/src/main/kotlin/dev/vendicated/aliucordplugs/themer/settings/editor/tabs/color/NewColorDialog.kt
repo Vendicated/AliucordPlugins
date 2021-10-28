@@ -51,7 +51,7 @@ class NewColorDialog(
         super.onViewCreated(view, bundle)
 
         val ctx = view.context
-        val p = DimenUtils.getDefaultPadding()
+        val p = DimenUtils.defaultPadding
         val p2 = p / 2
 
         val adapter = AutoCompleteAdapter(ctx, parentFragmentManager, type, options) {
@@ -92,7 +92,7 @@ class NewColorDialog(
             val decoration = DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
             ShapeDrawable(RectShape()).run {
                 setTint(Color.TRANSPARENT)
-                intrinsicHeight = DimenUtils.getDefaultPadding() / 2
+                intrinsicHeight = DimenUtils.defaultPadding / 2
                 decoration.setDrawable(this)
             }
             addItemDecoration(decoration)

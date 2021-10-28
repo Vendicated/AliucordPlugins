@@ -61,7 +61,7 @@ class ThemerSettings : SettingsPage() {
                 text = it
             }
             textAlignment = TEXT_ALIGNMENT_CENTER
-            DimenUtils.getDefaultPadding().let {
+            DimenUtils.defaultPadding.let {
                 setPadding(it, it, it, it)
             }
             movementMethod = LinkMovementMethod.getInstance()
@@ -106,7 +106,7 @@ class ThemerSettings : SettingsPage() {
 
         addView(Divider(ctx))
         addView(
-            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Font Hook", "Enables the font hook. May lead to weird font").apply {
+            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Fonts", "YOU MUST ENABLE THIS TO USE CUSTOM FONTS").apply {
                 isChecked = Themer.mSettings.enableFontHook
                 setOnCheckedListener {
                     Themer.mSettings.enableFontHook = it
@@ -134,7 +134,7 @@ class ThemerSettings : SettingsPage() {
             val decoration = DividerItemDecoration(ctx, DividerItemDecoration.VERTICAL)
             ShapeDrawable(RectShape()).run {
                 setTint(Color.TRANSPARENT)
-                intrinsicHeight = DimenUtils.getDefaultPadding()
+                intrinsicHeight = DimenUtils.defaultPadding
                 decoration.setDrawable(this)
             }
             addItemDecoration(decoration)
@@ -142,7 +142,7 @@ class ThemerSettings : SettingsPage() {
 
         Button(ctx).run {
             text = "New Theme"
-            DimenUtils.getDefaultPadding().let {
+            DimenUtils.defaultPadding.let {
                 setPadding(it, it, it, it)
             }
             setOnClickListener {
@@ -156,12 +156,18 @@ class ThemerSettings : SettingsPage() {
                     if (name.isEmpty()) {
                         Utils.showToast("Cancelled.")
                     } else {
-                        Theme.create(name).let {
-                            ThemeLoader.themes.add(0, it)
+                        try {
+                            ThemeLoader.themes.add(0, Theme.create(name))
                             recycler.adapter!!.notifyItemInserted(0)
+                            dialog.dismiss()
+                        } catch (ex: Throwable) {
+                            if (ex is ThemeException) {
+                                Utils.showToast(ex.message, true)
+                            } else {
+                                logger.error(Utils.appContext, "Something went wrong, sorry. Check the debug log for more info", ex)
+                            }
                         }
                     }
-                    dialog.dismiss()
                 }
 
                 dialog.show(parentFragmentManager, "New Theme")

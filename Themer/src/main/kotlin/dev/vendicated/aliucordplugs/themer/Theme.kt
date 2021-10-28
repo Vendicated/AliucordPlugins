@@ -17,6 +17,9 @@ import com.discord.stores.StoreStream
 import com.discord.utilities.user.UserUtils
 import org.json.JSONObject
 import java.io.File
+import java.io.IOException
+
+class ThemeException(override val message: String) : IOException(message)
 
 class Theme(
     val file: File
@@ -86,14 +89,19 @@ class Theme(
 
     companion object {
         fun create(name: String): Theme {
-            val file = File(THEME_DIR, "$name.json")
+            val file = File(THEME_DIR, "${name.trim()}.json")
+            if (file.exists()) throw ThemeException("A Theme with this name already exists.")
             val json = JSONObject()
                 .put("name", name)
                 .put("version", "1.0.0")
                 .put("author", StoreStream.getUsers().me.run {
                     "$username${UserUtils.INSTANCE.padDiscriminator(discriminator)}"
                 })
-            file.writeText(json.toString(4))
+            try {
+                file.writeText(json.toString(4))
+            } catch (ex: Throwable) {
+                throw ThemeException("Failed to create theme file. Make sure the name doesn't contain special characters!")
+            }
             return Theme(file)
         }
     }

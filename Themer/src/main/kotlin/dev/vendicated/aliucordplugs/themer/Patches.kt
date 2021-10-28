@@ -16,6 +16,8 @@ import android.content.res.*
 import android.graphics.*
 import android.graphics.drawable.*
 import android.os.Bundle
+import android.os.Handler
+import android.util.TypedValue
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
@@ -203,24 +205,28 @@ private fun PatcherAPI.setBackgrounds() {
                     setBackground(view)
             }
         })
+
     }
 }
 
-fun fontHook(idx: Int) =
-    PreHook { param ->
-        val font = ResourceManager.getFontForId(param.args[idx] as Int) ?: ResourceManager.getDefaultFont()
+private fun PatcherAPI.patchGetFont() {
+    patch(ResourcesCompat::class.java.getDeclaredMethod(
+        "loadFont",
+        Context::class.java,
+        Resources::class.java,
+        TypedValue::class.java,
+        Int::class.javaPrimitiveType, //id
+        Int::class.javaPrimitiveType, // style
+        ResourcesCompat.FontCallback::class.java,
+        Handler::class.java,
+        Boolean::class.javaPrimitiveType, // isRequestFromLayoutInflator
+        Boolean::class.javaPrimitiveType //isCachedOnly
+    ), PreHook { param ->
+        val font = ResourceManager.getFontForId(param.args[3] as Int) ?: ResourceManager.getDefaultFont()
         font?.let {
             param.result = it
         }
-    }
-
-private fun PatcherAPI.patchGetFont() {
-    ResourcesCompat::class.java.declaredMethods.forEach {
-        if (it.name == "loadFont") {
-            val idIndex = it.parameterTypes.indexOfFirst { p -> p == Int::class.java }
-            patch(it, fontHook(idIndex))
-        }
-    }
+    })
 }
 
 private fun PatcherAPI.patchGetColor() {

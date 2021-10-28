@@ -16,17 +16,30 @@ import com.aliucord.Utils
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.SettingsAPI
 import com.aliucord.entities.Plugin
+import com.aliucord.utils.RxUtils.subscribe
+import com.discord.stores.StoreStream
 import dev.vendicated.aliucordplugs.themer.settings.ThemerSettings
+import rx.Subscription
 
 val logger = Logger("Themer")
+var currentTheme = ""
 
 @AliucordPlugin
 class Themer : Plugin() {
+    private var subscription: Subscription? = null
     init {
         settingsTab = SettingsTab(ThemerSettings::class.java)
     }
 
     override fun start(ctx: Context) {
+        currentTheme = StoreStream.getUserSettingsSystem().theme
+        subscription = StoreStream.getUserSettingsSystem().observeSettings(false).subscribe {
+            if (currentTheme != theme) {
+                currentTheme = theme
+                initAttrMappings()
+            }
+        }
+        initAttrMappings()
         mSettings = settings
         addPatches(patcher)
         ResourceManager.init(ctx)
@@ -34,6 +47,7 @@ class Themer : Plugin() {
     }
 
     override fun stop(context: Context) {
+        subscription?.unsubscribe()
         patcher.unpatchAll()
         ResourceManager.clean()
         ThemeLoader.themes.clear()

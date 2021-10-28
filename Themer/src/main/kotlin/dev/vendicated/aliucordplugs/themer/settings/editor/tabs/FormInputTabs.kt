@@ -34,7 +34,7 @@ open class FormInputTab(
         super.onViewCreated(view, bundle)
 
         val ctx = view.context
-        val p = DimenUtils.getDefaultPadding()
+        val p = DimenUtils.defaultPadding
         val p2 = p / 2
 
         keys.forEach {

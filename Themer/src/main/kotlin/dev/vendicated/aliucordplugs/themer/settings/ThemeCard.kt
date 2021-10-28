@@ -35,11 +35,11 @@ class ThemeCard(ctx: Context) : MaterialCardView(ctx) {
     val uninstallButton: ToolbarButton
 
     init {
-        radius = DimenUtils.getDefaultCardRadius().toFloat()
+        radius = DimenUtils.defaultCardRadius.toFloat()
         setCardBackgroundColor(ColorCompat.getThemedColor(ctx, R.b.colorBackgroundSecondary))
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT)
 
-        val p = DimenUtils.getDefaultPadding()
+        val p = DimenUtils.defaultPadding
 
         val linearLayout = com.aliucord.widgets.LinearLayout(ctx).apply {
             switch = CheckedSetting(ctx, null).apply {

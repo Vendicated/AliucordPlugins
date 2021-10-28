@@ -1,9 +1,16 @@
-version = "3.4.6"
+version = "3.5.0"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
     
+    # 3.5.0
+    * Make more elements themeable (e.g. codeblocks: primary_630)
+    * Try to fix light mode (FAILED)
+    * Fix fonts being weird when font hook enabled but no font is set; fix font related crashes
+    * Fix crash when entering illegal characters when creating a theme
+    
+    * Fix 
     # 3.4.2
     * Discord 96.0 update
     * Font hook is now toggleable via a switch due to a bug that makes the font weird
