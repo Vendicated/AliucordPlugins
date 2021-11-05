@@ -79,11 +79,11 @@ class TapTapSettings(private val plugin: TapTap) : SettingsPage() {
 
     private fun addCheckedSetting(ctx: Context, text: String, subtext: String, key: String) =
         MaterialCardView(ctx).apply {
-            radius = DimenUtils.getDefaultCardRadius().toFloat()
+            radius = DimenUtils.defaultCardRadius.toFloat()
             setCardBackgroundColor(ColorCompat.getThemedColor(ctx, R.b.colorBackgroundSecondary))
 
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
-                setMargins(0, DimenUtils.getDefaultPadding(), 0, 0)
+                setMargins(0, DimenUtils.defaultPadding, 0, 0)
             }
 
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, text, subtext).let {

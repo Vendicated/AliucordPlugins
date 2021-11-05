@@ -12,12 +12,11 @@ package dev.vendicated.aliucordplugs.checklinks
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
+import android.text.style.URLSpan
 import android.view.View
 import android.widget.*
 import androidx.viewbinding.ViewBinding
@@ -40,7 +39,7 @@ class MoreInfoModal(private val data: Map<String, Entry>) : SettingsPage() {
         setActionBarTitle("URL info")
 
         val ctx = view.context
-        val p = DimenUtils.getDefaultPadding()
+        val p = DimenUtils.defaultPadding
         val p2 = p / 2
 
         TableLayout(ctx).let { table ->
@@ -169,13 +168,7 @@ class CheckLinks : Plugin() {
 
                     SpannableString(content).run {
                         val urlIdx = content.indexOf(url)
-                        setSpan(object : ClickableSpan() {
-                            override fun onClick(view: View) =
-                                Intent(Intent.ACTION_VIEW).let {
-                                    it.data = Uri.parse(url)
-                                    dialog.startActivity(it)
-                                }
-                        }, urlIdx, urlIdx + url.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        setSpan(URLSpan(url), urlIdx, urlIdx + url.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
                         data?.let {
                             setSpan(object : ClickableSpan() {

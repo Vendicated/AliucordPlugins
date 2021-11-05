@@ -1,3 +1,5 @@
+include(":EmojiReplacer")
+// include(":OwO")
 include(":ShowBlockedMessages")
 include(":BetterSpotify")
 include(":Brainfuck")

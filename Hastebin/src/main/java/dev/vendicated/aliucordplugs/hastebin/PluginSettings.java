@@ -49,7 +49,7 @@ public final class PluginSettings extends SettingsPage {
         assert editText != null;
 
         var button = new Button(ctx);
-        button.setText("Save");
+        button.setText("Totally wrong text oh no i better update this");
         button.setOnClickListener(v -> {
             settings.setString("mirror", editText.getText().toString().replaceFirst("/+$", ""));
             Utils.showToast("Saved!");
