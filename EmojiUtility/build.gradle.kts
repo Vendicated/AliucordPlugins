@@ -1,4 +1,4 @@
-version = "1.1.1"
+version = "1.1.2"
 description = "Adds lots of utility for emojis"
 
 aliucord.changelog.set(

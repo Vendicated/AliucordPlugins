@@ -1,4 +1,4 @@
-version = "1.1.1"
+version = "1.1.2"
 description = "Double tap someone else's message to quick reply, double tap your own to quick edit"
 
 aliucord.changelog.set(
