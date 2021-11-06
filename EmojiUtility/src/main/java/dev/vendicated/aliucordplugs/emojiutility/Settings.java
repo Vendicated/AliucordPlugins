@@ -98,7 +98,6 @@ public class Settings extends BottomSheet {
         input.setLayoutParams(params);
         input.setHint(title);
         var editText = input.getEditText();
-        assert editText != null;
         editText.setText(isInt ? Integer.toString(settings.getInt(setting, Integer.parseInt(def))) : settings.getString(setting, def));
         editText.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }

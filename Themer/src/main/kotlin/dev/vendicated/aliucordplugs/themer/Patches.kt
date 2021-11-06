@@ -420,7 +420,7 @@ private fun PatcherAPI.addDownloadButton() {
                         }
                     }
                 }.forEach { (name, url) ->
-                    TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).run {
+                    TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon).run {
                         this.id = id
                         val prettyName =
                             URLDecoder.decode(name, "UTF-8")
@@ -430,7 +430,7 @@ private fun PatcherAPI.addDownloadButton() {
 
                         text = "Install $prettyName"
 
-                        val drawable = ContextCompat.getDrawable(ctx, R.d.ic_theme_24dp)?.mutate()?.apply {
+                        val drawable = ContextCompat.getDrawable(ctx, R.e.ic_theme_24dp)?.mutate()?.apply {
                             setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
                         }
 

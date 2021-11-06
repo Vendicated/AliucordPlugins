@@ -14,8 +14,8 @@ import com.aliucord.Http
 import com.aliucord.Utils
 import com.aliucord.utils.ReflectUtils
 import com.aliucord.utils.RxUtils
+import com.aliucord.utils.RxUtils.await
 import com.aliucord.utils.RxUtils.createActionSubscriber
-import com.aliucord.utils.RxUtils.getResultBlocking
 import com.aliucord.utils.RxUtils.subscribe
 import com.discord.stores.StoreStream
 import com.discord.utilities.platform.Platform
@@ -43,11 +43,11 @@ object SpotifyApi {
             token = RestAPI.AppHeadersProvider.INSTANCE.spotifyToken
                 ?: try {
                     val accountId = ReflectUtils.getField(client, "spotifyAccountId")
-                    val res = RestAPI.api
+                    val (res, err) = RestAPI.api
                         .getConnectionAccessToken(Platform.SPOTIFY.name.lowercase(), accountId as String)
-                        .getResultBlocking()
-                    res.second?.let { throw it }
-                    res.first!!.accessToken
+                        .await()
+                    err?.let { throw it }
+                    res!!.accessToken
                 } catch (th: Throwable) {
                     null
                 }
@@ -59,10 +59,7 @@ object SpotifyApi {
     private fun request(endpoint: String, method: String = "PUT", data: Any? = null, cb: ((Http.Response) -> Unit)? = null) {
         Utils.threadPool.execute {
             val token = getToken() ?: run {
-                Utils.showToast(
-                    Utils.appContext,
-                    "Failed to get Spotify token from Discord. Make sure your spotify is running."
-                )
+                Utils.showToast("Failed to get Spotify token from Discord. Make sure your spotify is running.")
                 return@execute
             }
 

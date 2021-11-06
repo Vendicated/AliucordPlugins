@@ -56,10 +56,10 @@ public class PluginDownloader extends Plugin {
                     String author = matcher.group(1);
                     String repo = matcher.group(2);
                     String name = matcher.group(3);
-                    var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
+                    var view = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon);
                     view.setId(id);
                     view.setText("Download " + name);
-                    var icon = ContextCompat.getDrawable(ctx, R.d.ic_file_download_white_24dp);
+                    var icon = ContextCompat.getDrawable(ctx, R.e.ic_file_download_white_24dp);
                     if (icon != null) {
                         icon = icon.mutate();
                         icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
@@ -75,10 +75,10 @@ public class PluginDownloader extends Plugin {
                 String repo = repoMatcher.group(2);
 
                 var modal = new Modal(author, repo);
-                var view = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon);
+                var view = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon);
                 view.setId(id);
                 view.setText("Open Plugin Downloader");
-                var icon = ContextCompat.getDrawable(ctx, R.d.ic_file_download_white_24dp);
+                var icon = ContextCompat.getDrawable(ctx, R.e.ic_file_download_white_24dp);
                 if (icon != null) {
                     icon = icon.mutate();
                     icon.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));

@@ -27,7 +27,7 @@ import com.aliucord.entities.Plugin
 import com.aliucord.utils.ReflectUtils
 import com.discord.utilities.color.ColorCompat
 import com.lytefast.flexinput.R
-import com.lytefast.flexinput.R.d.*
+import com.lytefast.flexinput.R.e.*
 
 private operator fun Int.not() =
     ContextCompat.getDrawable(Utils.appContext, this) ?: ContextCompat.getDrawable(Utils.appContext, ic_slash_command_24dp)!!.also {
@@ -67,6 +67,7 @@ private val drawables = hashMapOf(
     "NoBurnIn" to !ic_x_red_24dp,
     "RotatedChat" to !com.yalantis.ucrop.R.c.ucrop_rotate, // This is from https://github.com/Yalantis/uCrop lmao
     "RoleColorEverywhere" to !ic_theme_24dp,
+    "AccountSwitcher" to !ic_account_circle_white_24dp,
 
     // Xinto
     "LayoutController" to !design_ic_visibility_off,
@@ -75,6 +76,9 @@ private val drawables = hashMapOf(
     // Wing
     "GuildProfiles" to !ic_members_24dp,
     "CustomBadges" to !ic_staff_badge_blurple_24dp,
+    "ShowPerms" to !ic_shieldstar_24dp,
+    "BetterChannelIcons" to !ic_text_channel_white_24dp,
+    "MoreHighlight" to !ic_edit_24dp,
 
     // Patchouli
     "CopyInsteadOfShareImages" to !ic_link_white_24dp,
@@ -86,7 +90,16 @@ private val drawables = hashMapOf(
     "UserBG" to !ic_image_upload,
 
     // js6pak
-    "WhoReacted" to !ic_reaction_24dp
+    "WhoReacted" to !ic_reaction_24dp,
+
+    // mantika
+    "InvisibleMessages" to !design_ic_visibility_off,
+
+    // Tyman
+    "Translate" to !ic_locale_24dp,
+
+    // Butterfly
+    "BetterStatus" to !ic_phone_24dp,
 )
 
 class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
@@ -101,7 +114,7 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         ViewHolder(
             this,
-            TextView(parent.context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+            TextView(parent.context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
                 typeface = ResourcesCompat.getFont(parent.context, Constants.Fonts.whitney_medium)
             }
         )

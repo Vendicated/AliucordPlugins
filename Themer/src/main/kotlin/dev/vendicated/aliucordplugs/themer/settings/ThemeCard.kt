@@ -63,7 +63,7 @@ class ThemeCard(ctx: Context) : MaterialCardView(ctx) {
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             }
 
-            author = TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).apply {
+            author = TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Addition).apply {
                 setPadding(p, p, p, p)
                 layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
                     weight = 1f
@@ -73,7 +73,7 @@ class ThemeCard(ctx: Context) : MaterialCardView(ctx) {
             editButton = ToolbarButton(ctx).apply {
                 setPadding(p, p, p / 2, p)
                 layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT)
-                ContextCompat.getDrawable(ctx, R.d.ic_edit_24dp)!!.mutate().let {
+                ContextCompat.getDrawable(ctx, R.e.ic_edit_24dp)!!.mutate().let {
                     Utils.tintToTheme(it)
                     setImageDrawable(it, false)
                 }
@@ -82,7 +82,7 @@ class ThemeCard(ctx: Context) : MaterialCardView(ctx) {
             uninstallButton = ToolbarButton(ctx).apply {
                 setPadding(p / 2, p, p, p)
                 layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT)
-                ContextCompat.getDrawable(ctx, R.d.ic_delete_24dp)!!.mutate().let {
+                ContextCompat.getDrawable(ctx, R.e.ic_delete_24dp)!!.mutate().let {
                     Utils.tintToTheme(it)
                     setImageDrawable(it, false)
                 }

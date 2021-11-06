@@ -50,35 +50,35 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
 
         val ctx = view.context
 
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).run {
+        TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Addition).run {
             text =
                 MDUtils.render("**Allowed hosts for images/fonts:**\n${ALLOWED_RESOURCE_DOMAINS.joinToString()}")
             addView(this)
         }
 
-        addView(buildEntry(ctx, "Manifest", R.d.ic_audit_logs_24dp) {
+        addView(buildEntry(ctx, "Manifest", R.e.ic_audit_logs_24dp) {
             ManifestTab(json.getJSONObject("manifest"))
                 .show(parentFragmentManager, "Edit Manifest")
         })
 
-        addView(buildEntry(ctx, "Background", R.d.ic_text_image_24dp) {
+        addView(buildEntry(ctx, "Background", R.e.ic_text_image_24dp) {
             BackgroundTab(json.getJSONObject("background"))
                 .show(parentFragmentManager, "Edit background")
         })
 
-        addView(buildEntry(ctx, "Fonts", R.d.ic_edit_24dp) {
+        addView(buildEntry(ctx, "Fonts", R.e.ic_edit_24dp) {
             FontTab(json.getJSONObject("fonts"))
                 .show(parentFragmentManager, "Edit fonts")
         })
 
-        addView(buildColorEntry(ctx, ColorDialogType.SIMPLE_COLORS, "Simple Colors", R.d.ic_accessibility_24dp, lazy {
+        addView(buildColorEntry(ctx, ColorDialogType.SIMPLE_COLORS, "Simple Colors", R.e.ic_accessibility_24dp, lazy {
             SIMPLE_KEYS.toList()
         }))
-        addView(buildColorEntry(ctx, ColorDialogType.COLORS, "Colors", R.d.ic_theme_24dp, lazy {
+        addView(buildColorEntry(ctx, ColorDialogType.COLORS, "Colors", R.e.ic_theme_24dp, lazy {
             R.c::class.java.declaredFields.map { it.name }
         }))
-        addView(buildColorEntry(ctx, ColorDialogType.DRAWABLES, "Drawable Tints", R.d.ic_emoji_24dp, lazy {
-            R.d::class.java.declaredFields.map { it.name }
+        addView(buildColorEntry(ctx, ColorDialogType.DRAWABLES, "Drawable Tints", R.e.ic_emoji_24dp, lazy {
+            R.e::class.java.declaredFields.map { it.name }
         }))
 
         SaveButton(ctx).run {
@@ -97,7 +97,7 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
         }
 
     private fun buildEntry(ctx: Context, title: String, drawableId: Int, onClick: View.OnClickListener) =
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+        TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
             text = title
             ContextCompat.getDrawable(ctx, drawableId)?.mutate()?.let {
                 it.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))

@@ -45,12 +45,12 @@ class MoreInfoModal(private val data: Map<String, Entry>) : SettingsPage() {
         TableLayout(ctx).let { table ->
             for ((key, value) in data.toList().sortedBy { (_, value) -> value.result }.reversed()) {
                 TableRow(ctx).let { row ->
-                    TextView(ctx, null, 0, R.h.UiKit_TextView).apply {
+                    TextView(ctx, null, 0, R.i.UiKit_TextView).apply {
                         text = key
                         setPadding(p, p2, p, p2)
                         row.addView(this)
                     }
-                    TextView(ctx, null, 0, R.h.UiKit_TextView).apply {
+                    TextView(ctx, null, 0, R.i.UiKit_TextView).apply {
                         text = value.result
                         setPadding(p, p2, p, p2)
                         row.addView(this)
@@ -89,7 +89,7 @@ private fun checkLink(url: String): Map<String, Entry> {
 
     // no cached data, make full request for url
 
-    // Register url to get an ID
+    // R.h.ster url to get an ID
     val idInfo =
         makeReq("https://www.virustotal.com/ui/urls", "POST", "application/x-www-form-urlencoded")
             .executeWithUrlEncodedForm(mapOf("url" to url))

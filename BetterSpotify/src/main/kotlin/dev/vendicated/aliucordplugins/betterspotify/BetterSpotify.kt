@@ -108,7 +108,7 @@ class BetterSpotify : Plugin() {
 
                 val userId = (param.args[3] as User).id
                 MaterialButton(
-                    ContextThemeWrapper(ctx, R.h.UserProfile_PresenceSection_MaterialButton), null, 0
+                    ContextThemeWrapper(ctx, R.i.UserProfile_PresenceSection_MaterialButton), null, 0
                 ).run {
                     this.id = btnId
                     layoutParams = LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {

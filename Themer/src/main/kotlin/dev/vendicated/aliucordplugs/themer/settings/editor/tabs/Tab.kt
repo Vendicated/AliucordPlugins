@@ -23,7 +23,7 @@ abstract class Tab(private val header: String) : BottomSheet() {
         super.onViewCreated(view, bundle)
 
         val ctx = view.context
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header).apply {
+        TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Header).apply {
             text = header
             typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold)
         }.also {

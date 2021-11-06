@@ -38,22 +38,21 @@ open class FormInputTab(
         val p2 = p / 2
 
         keys.forEach {
-            TextInput(ctx).run {
+            TextInput(ctx, it).run {
                 layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                     setMargins(p, p2, p, p2)
                 }
-                hint = it
-                val input = editText!!
+                val input = editText
                 input.setText(data.optString(it))
                 input.addTextChangedListener(object : TextWatcher {
                     override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                     override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
                     override fun afterTextChanged(_editable: Editable?) {
-                        hint = it
+                        root.hint = it
                         val s = input.text.toString()
                         when {
                             s.isEmpty() -> data.remove(it)
-                            !validator.invoke(it, s) -> hint = "$it [INVALID]"
+                            !validator.invoke(it, s) -> root.hint = "$it [INVALID]"
                             else -> data.put(it, converters[it]?.invoke(s) ?: s)
                         }
                     }

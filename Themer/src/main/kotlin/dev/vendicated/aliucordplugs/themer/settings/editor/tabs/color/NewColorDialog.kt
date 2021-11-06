@@ -59,12 +59,11 @@ class NewColorDialog(
             dismiss()
         }
 
-        TextInput(ctx).run {
-            hint = ctx.getString(R.g.search)
+        TextInput(ctx, ctx.getString(R.h.search)).run {
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply {
                 setMargins(p, p2, p, p2)
             }
-            editText?.addTextChangedListener(object : TextWatcher {
+            editText.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {}
                 override fun afterTextChanged(e: Editable) {
@@ -112,10 +111,10 @@ private class AutoCompleteAdapter(
     var data = ArrayList(originalData)
     var showOptions = false
 
-/*    val infoDrawable = ContextCompat.getDrawable(ctx, R.d.ic_info_24dp)?.apply {
+/*    val infoDrawable = ContextCompat.getDrawable(ctx, R.e.ic_info_24dp)?.apply {
         setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
     }
-    val previewDrawable = ContextCompat.getDrawable(ctx, R.d.ic_spectate)?.apply {
+    val previewDrawable = ContextCompat.getDrawable(ctx, R.e.ic_spectate)?.apply {
         setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal))
     }*/
 
@@ -230,7 +229,7 @@ private class AutoCompleteViewHolder(
     init {
         layout.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
 
-        textView = TextView(layout.context, null, 0, R.h.UiKit_Settings_Item_Icon).apply {
+        textView = TextView(layout.context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
             layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
                 weight = 1f
             }

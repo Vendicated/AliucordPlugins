@@ -37,10 +37,8 @@ class TapTapSettings(private val plugin: TapTap) : SettingsPage() {
 
         val ctx = view.context
 
-        TextInput(ctx).run {
-            hint = "Double Tap Window (in ms)"
-
-            editText?.run {
+        TextInput(ctx, "Double Tap Window (in ms)").run {
+            editText.run {
                 maxLines = 1
                 setText(plugin.settings.getInt("doubleTapWindow", TapTap.defaultDelay).toString())
                 inputType = InputType.TYPE_CLASS_NUMBER

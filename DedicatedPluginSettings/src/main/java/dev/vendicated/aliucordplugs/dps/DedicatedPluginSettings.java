@@ -52,7 +52,7 @@ public class DedicatedPluginSettings extends Plugin {
 
                     int idx = layout.indexOfChild(layout.findViewById(Utils.getResId("developer_options_divider", "id")));
 
-                    header = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header);
+                    header = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Header);
                     header.setText("Plugin Settings");
                     header.setTypeface(ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold));
 

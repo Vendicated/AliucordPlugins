@@ -49,7 +49,7 @@ class ThemerSettings : SettingsPage() {
 
         setActionBarTitle("Themer")
 
-        TextView(ctx, null, 0, R.h.UiKit_TextView).run {
+        TextView(ctx, null, 0, R.i.UiKit_TextView).run {
             val content = "Read the changelog!"
             SpannableStringBuilder(content).let {
                 it.setSpan(object : ClickableSpan() {
@@ -78,7 +78,7 @@ class ThemerSettings : SettingsPage() {
             linearLayout.addView(this)
         }
 
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header).apply {
+        TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Header).apply {
             text = "Transparency Mode"
             typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold)
 
@@ -116,13 +116,13 @@ class ThemerSettings : SettingsPage() {
         )
         addView(Divider(ctx))
 
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Header).run {
+        TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Header).run {
             text = "Themes"
             typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold)
             linearLayout.addView(this)
         }
 
-        TextView(ctx, null, 0, R.h.UiKit_Settings_Item_Addition).run {
+        TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Addition).run {
             text = "Enable multiple themes at your own risk! The result may destroy your eyes."
             linearLayout.addView(this)
         }

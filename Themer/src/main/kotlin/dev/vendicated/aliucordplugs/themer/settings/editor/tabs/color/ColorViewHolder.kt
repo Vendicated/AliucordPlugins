@@ -41,7 +41,7 @@ class ColorViewHolder(private val adapter: ColorAdapter, layout: LinearLayout) :
         layout.gravity = Gravity.CENTER_VERTICAL
 
         ToolbarButton(ctx).run {
-            setImageDrawable(ContextCompat.getDrawable(ctx, R.d.ic_x_red_24dp), false)
+            setImageDrawable(ContextCompat.getDrawable(ctx, R.e.ic_x_red_24dp), false)
             layoutParams = LinearLayout.LayoutParams(dp48, dp48).apply {
                 marginStart = p
             }
@@ -51,7 +51,7 @@ class ColorViewHolder(private val adapter: ColorAdapter, layout: LinearLayout) :
             layout.addView(this)
         }
 
-        textView = TextView(ctx, null, 0, R.h.UiKit_Settings_Item).apply {
+        textView = TextView(ctx, null, 0, R.i.UiKit_Settings_Item).apply {
             layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
                 weight = 1f
             }

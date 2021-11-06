@@ -52,7 +52,7 @@ public final class Modal extends SettingsPage {
         var ctx = requireContext();
 
         if (ex != null) {
-            var exView = new TextView(ctx, null, 0, R.h.UiKit_Settings_Item_SubText);
+            var exView = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_SubText);
             var sw = new StringWriter();
             var pw = new PrintWriter(sw);
             ex.printStackTrace(pw);
