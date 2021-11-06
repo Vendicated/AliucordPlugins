@@ -126,8 +126,8 @@ object Commands {
                             null
                         }
                             ?: run {
-                                if (!ctx.channel.isGuild()) return@registerCommand replyError("Please either specify a valid server id or run this from a server")
-                                ctx.channel.guildId
+                                if (!ctx.currentChannel.isGuild()) return@registerCommand replyError("Please either specify a valid server id or run this from a server")
+                                ctx.currentChannel.guildId
                             }
                     val guild = StoreStream.getGuilds().getGuild(guildId)
                         ?: return@registerCommand replyError("No such guild")
@@ -136,7 +136,7 @@ object Commands {
                         updateMsg,
                         "Downloading ${guild.emojis.size} emojis from ${guild.name}... This might take a while.",
                     )
-                    ret = EmojiDownloader.downloadFromGuild(guild)
+                    ret = EmojiDownloader.downloadFromGuild(guild, null)
                 }
                 ctx.containsArg("all") -> {
                     ret =

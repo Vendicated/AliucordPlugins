@@ -14,11 +14,14 @@ import android.content.Context;
 
 import com.aliucord.Logger;
 import com.aliucord.annotations.AliucordPlugin;
+import com.aliucord.api.SettingsAPI;
 import com.aliucord.entities.Plugin;
 
 @AliucordPlugin
 public class EmojiUtility extends Plugin {
+    public static boolean useHumanNames;
     public static final Logger logger = new Logger("EmojiUtility");
+    public static SettingsAPI mSettings;
 
     public EmojiUtility() {
         settingsTab = new SettingsTab(Settings.class, SettingsTab.Type.BOTTOM_SHEET).withArgs(settings, patcher, commands);
@@ -26,6 +29,8 @@ public class EmojiUtility extends Plugin {
 
     @Override
     public void start(Context ctx) throws Throwable {
+        mSettings = settings;
+        useHumanNames = settings.getBool("humanNames", true);
         Patches.init(settings, patcher);
         Commands.registerAll(commands);
     }

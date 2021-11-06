@@ -37,7 +37,6 @@ import com.discord.widgets.chat.list.actions.*;
 import com.discord.widgets.emoji.WidgetEmojiSheet;
 import com.discord.widgets.user.profile.UserProfileHeaderView;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -95,9 +94,8 @@ public class Patches {
 
                 long id = emoji.getId();
                 boolean animated = emoji.isAnimated();
-                var nameAndUrl = EmojiDownloader.getFilenameAndUrl(emoji.getId(), emoji.isAnimated());
-                var fileName = nameAndUrl.first;
-                var url = nameAndUrl.second;
+                var name = emoji.getName();
+                var url = EmojiDownloader.getUrl(id, animated);
 
                 var binding = (WidgetEmojiSheetBinding) getBinding.invoke(_this);
                 if (binding == null) return;
@@ -131,7 +129,7 @@ public class Patches {
                 });
 
                 var saveButton = new Button(ctx);
-                EmojiDownloader.configureSaveButton(ctx, saveButton, fileName, id, animated);
+                EmojiDownloader.configureSaveButton(ctx, saveButton, name, id, animated);
 
                 var cloneButton = new Button(ctx);
                 cloneButton.setText("Clone to other server");
@@ -245,19 +243,10 @@ public class Patches {
         };
     }
 
-    // Credit: https://github.com/Juby210/Aliucord-plugins/blob/d8f6da1ad387c0f94796b8efce6915163aeebb5b/HideDisabledEmojis/src/main/java/com/aliucord/plugins/HideDisabledEmojis.java
-    public static Runnable hideUnusableEmojis(PatcherAPI patcher) {
+    public static Runnable hideUnusableEmojis(PatcherAPI patcher) throws Throwable {
         return patcher.patch(
-                "com.discord.widgets.chat.input.emoji.EmojiPickerViewModel$Companion", "buildEmojiListItems",
-                new Class<?>[]{Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class},
-                new Hook(param -> {
-                    var emojis = (Collection<? extends Emoji>) param.args[0];
-                    if (!(emojis instanceof ArrayList)) {
-                        emojis = new ArrayList<>(emojis);
-                        param.args[0] = emojis;
-                    }
-                    emojis.removeIf(e -> !e.isUsable());
-                })
+            EmojiPickerViewModel.Companion.class.getDeclaredMethod("buildEmojiListItems", Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class),
+            new PreHook(param -> ((Collection<Emoji>) param.args[0]).removeIf(e -> !e.isUsable()))
         );
     }
 
