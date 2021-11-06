@@ -37,6 +37,7 @@ import com.discord.widgets.chat.list.actions.*;
 import com.discord.widgets.emoji.WidgetEmojiSheet;
 import com.discord.widgets.user.profile.UserProfileHeaderView;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -246,7 +247,16 @@ public class Patches {
     public static Runnable hideUnusableEmojis(PatcherAPI patcher) throws Throwable {
         return patcher.patch(
             EmojiPickerViewModel.Companion.class.getDeclaredMethod("buildEmojiListItems", Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class),
-            new PreHook(param -> ((Collection<Emoji>) param.args[0]).removeIf(e -> !e.isUsable()))
+            new PreHook(param -> {
+                var list = (Collection<Emoji>) param.args[0];
+                try {
+                    list.removeIf(e -> !e.isUsable());
+                } catch (UnsupportedOperationException ignored) {
+                    list = new ArrayList<>(list);
+                    param.args[0] = list;
+                    list.removeIf(e -> !e.isUsable());
+                }
+            })
         );
     }
 
