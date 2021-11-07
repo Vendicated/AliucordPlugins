@@ -92,7 +92,7 @@ private val drawables = hashMapOf(
     // js6pak
     "WhoReacted" to !ic_reaction_24dp,
 
-    // mantika
+    // mantikafasi
     "InvisibleMessages" to !design_ic_visibility_off,
 
     // Tyman
