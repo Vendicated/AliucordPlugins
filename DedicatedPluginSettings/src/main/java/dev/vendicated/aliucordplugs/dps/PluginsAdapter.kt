@@ -104,6 +104,13 @@ private val drawables = hashMapOf(
     "SplitMessages" to !ic_sort_white_24dp,
     "StreamerMode" to !avd_hide_password,
     "ConfigurableStickerSizes" to !com.yalantis.ucrop.R.c.ucrop_crop,
+
+    // animal will tell you they made a new plugin then show you the most retarded plugin you have ever seen
+    "NoKyzas" to !ic_x_red_24dp,
+    "PinIcon" to !ic_sidebar_pins_off_light_24dp,
+    "MoarConfirm" to !ic_check_white_24dp,
+    "GhostMessage" to !ic_chat_message_white_24dp,
+    "AutoServerNotifs" to !ic_notifications_white_24dp,
 )
 
 val hiddenPlugins = HashSet(PluginManager.plugins["DedicatedPluginSettings"]!!.settings
