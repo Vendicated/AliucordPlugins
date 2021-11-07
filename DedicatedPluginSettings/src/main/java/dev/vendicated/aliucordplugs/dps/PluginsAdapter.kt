@@ -99,6 +99,11 @@ private val drawables = hashMapOf(
 
     // Butterfly
     "BetterStatus" to !ic_phone_24dp,
+
+    // Diamond
+    "SplitMessages" to !ic_sort_white_24dp,
+    "StreamerMode" to !avd_hide_password,
+    "ConfigurableStickerSizes" to !com.yalantis.ucrop.R.c.ucrop_crop,
 )
 
 val hiddenPlugins = HashSet(PluginManager.plugins["DedicatedPluginSettings"]!!.settings
