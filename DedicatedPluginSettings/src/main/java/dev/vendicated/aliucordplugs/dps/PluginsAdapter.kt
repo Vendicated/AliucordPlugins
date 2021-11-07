@@ -118,7 +118,7 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         it.getName()
     }.toMutableList()
 
-    var data = originalData.filter { !hiddenPlugins.contains(it.getName()) }
+    private var data = originalData.filter { !hiddenPlugins.contains(it.getName()) } as MutableList<Plugin>
 
     override fun getItemCount() = data.size.coerceAtLeast(1)
 
@@ -204,11 +204,32 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
         isEditing = !isEditing
         data = if (!isEditing) {
             PluginManager.plugins["DedicatedPluginSettings"]!!.settings.setString("hiddenPlugins", hiddenPlugins.joinToString(","))
-            originalData.filter { !hiddenPlugins.contains(it.getName()) }
+            originalData.filter { !hiddenPlugins.contains(it.getName()) } as ArrayList<Plugin>
         } else {
             originalData
         }
         notifyDataSetChanged()
+    }
+
+    fun addPlugin(plugin: Plugin) {
+        originalData.add(plugin)
+        originalData.sortBy { it.getName() }
+        if (!hiddenPlugins.contains(plugin.getName())) {
+            if (data != originalData) {
+                data.add(plugin)
+                data.sortBy { it.getName() }
+            }
+            notifyItemInserted(data.indexOf(plugin))
+        }
+    }
+
+    fun removePlugin(plugin: Plugin) {
+        if (originalData != data) originalData.remove(plugin)
+        val idx = data.indexOf(plugin)
+        if (idx != -1) {
+            data.removeAt(idx)
+            notifyItemRemoved(idx)
+        }
     }
 }
 

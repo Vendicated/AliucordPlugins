@@ -16,7 +16,8 @@ import android.graphics.Canvas;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.transition.TransitionManager;
-import android.view.*;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
@@ -33,8 +34,6 @@ import com.aliucord.views.Divider;
 import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.settings.WidgetSettings;
 import com.lytefast.flexinput.R;
-
-import java.util.Comparator;
 
 @AliucordPlugin
 public class DedicatedPluginSettings extends Plugin {
@@ -131,11 +130,7 @@ public class DedicatedPluginSettings extends Plugin {
             var name = (String) param.args[0];
             Plugin p;
             if (adapter != null && (p = PluginManager.plugins.get(name)) != null && p.settingsTab != null) {
-                var data = adapter.getData();
-                if (data.contains(p)) return;
-                data.add(p);
-                data.sort(Comparator.comparing(Plugin::getName));
-                adapter.notifyItemInserted(data.indexOf(p));
+                adapter.addPlugin(p);
             }
         }));
 
@@ -143,12 +138,7 @@ public class DedicatedPluginSettings extends Plugin {
             var name = (String) param.args[0];
             Plugin p;
             if (adapter != null && (p = PluginManager.plugins.get(name)) != null) {
-                var data = adapter.getData();
-                var idx = data.indexOf(p);
-                if (idx != -1) {
-                    data.remove(idx);
-                    adapter.notifyItemRemoved(idx);
-                }
+                adapter.removePlugin(p);
             }
         }));
     }
