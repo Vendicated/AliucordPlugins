@@ -100,9 +100,14 @@ private val drawables = hashMapOf(
 
     // Butterfly
     "BetterStatus" to !ic_phone_24dp,
+
+    // Diamond
+    "SplitMessages" to !ic_sort_white_24dp,
+    "StreamerMode" to !avd_hide_password,
+    "ConfigurableStickerSizes" to !com.yalantis.ucrop.R.c.ucrop_crop
 )
 
-class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
+class PluginsAdapter : RecyclerView.Adapter<ViewHolder>() {
     val data = PluginManager.plugins.values.filter {
         PluginManager.isPluginEnabled(it.getName()) && it.settingsTab != null
     }.sortedBy {
