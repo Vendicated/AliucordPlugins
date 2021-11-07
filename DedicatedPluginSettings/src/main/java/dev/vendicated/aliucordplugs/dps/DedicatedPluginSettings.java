@@ -12,10 +12,14 @@ package dev.vendicated.aliucordplugs.dps;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.view.View;
-import android.view.ViewGroup;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
+import android.transition.TransitionManager;
+import android.view.*;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,7 +28,9 @@ import com.aliucord.*;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
 import com.aliucord.patcher.Hook;
+import com.aliucord.utils.DimenUtils;
 import com.aliucord.views.Divider;
+import com.discord.utilities.color.ColorCompat;
 import com.discord.widgets.settings.WidgetSettings;
 import com.lytefast.flexinput.R;
 
@@ -35,6 +41,7 @@ public class DedicatedPluginSettings extends Plugin {
     private PluginsAdapter adapter;
     private TextView header;
     private View divider;
+    private TextView customize;
     private RecyclerView recycler;
 
     @SuppressLint("SetTextI18n")
@@ -50,14 +57,62 @@ public class DedicatedPluginSettings extends Plugin {
                     var layout = (ViewGroup) ((ViewGroup) ((ViewGroup) param.args[0]).getChildAt(1)).getChildAt(0);
                     var ctx = layout.getContext();
 
-                    int idx = layout.indexOfChild(layout.findViewById(Utils.getResId("developer_options_divider", "id")));
+                    var devDivider = layout.findViewById(Utils.getResId("developer_options_divider", "id"));
+                    int idx = layout.indexOfChild(devDivider);
+
+                    var openDrawable = ContextCompat.getDrawable(ctx, R.e.ic_arrow_down_14dp).mutate();
+                    openDrawable.setTint(ColorCompat.getThemedColor(ctx, R.b.colorInteractiveNormal));
+                    var closedDrawable = new LayerDrawable(new Drawable[] { openDrawable }) {
+                        @Override public void draw(Canvas canvas) {
+                            var bounds = openDrawable.getBounds();
+                            canvas.save();
+                            canvas.rotate(270, bounds.width() / 2f, bounds.height() / 2f);
+                            super.draw(canvas);
+                            canvas.restore();
+                        }
+                    };
 
                     header = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Header);
                     header.setText("Plugin Settings");
                     header.setTypeface(ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold));
+                    header.setCompoundDrawablePadding(DimenUtils.dpToPx(4));
+                    header.setCompoundDrawablesRelativeWithIntrinsicBounds(openDrawable, null, null, null);
+                    header.setOnClickListener(view -> {
+                        TransitionManager.beginDelayedTransition(layout);
+                        if (recycler.getVisibility() == View.VISIBLE) {
+                            recycler.setVisibility(View.GONE);
+                            customize.setVisibility(View.GONE);
+                            header.setCompoundDrawablesRelativeWithIntrinsicBounds(closedDrawable, null, null, null);
+                        } else {
+                            recycler.setVisibility(View.VISIBLE);
+                            customize.setVisibility(View.VISIBLE);
+                            header.setCompoundDrawablesRelativeWithIntrinsicBounds(openDrawable, null, null, null);
+                        }
+                    });
+
+                    customize = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon);
+                    customize.setText("Customize");
+                    customize.setTypeface(ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_medium));
+                    var editDrawable = ContextCompat.getDrawable(ctx, R.e.ic_edit_24dp).mutate();
+                    editDrawable.setTint(ctx.getColor(R.c.brand));
+                    customize.setCompoundDrawablesRelativeWithIntrinsicBounds(editDrawable, null, null, null);
+                    customize.setTextColor(ctx.getColor(R.c.brand));
+                    customize.setOnClickListener(v -> {
+                        if (customize.getText() == "Customize") {
+                            customize.setText("Save");
+                            customize.setTextColor(ctx.getColor(R.c.uikit_btn_bg_color_selector_green));
+                            editDrawable.setTint(ctx.getColor(R.c.uikit_btn_bg_color_selector_green));
+                        } else {
+                            customize.setText("Customize");
+                            customize.setTextColor(ctx.getColor(R.c.brand));
+                            editDrawable.setTint(ctx.getColor(R.c.brand));
+                        }
+                        adapter.toggleCustomize();
+                    });
 
                     layout.addView((divider = new Divider(ctx)), idx);
                     layout.addView(header, ++idx);
+                    layout.addView(customize, ++idx);
 
                     recycler = new RecyclerView(ctx);
                     recycler.setAdapter((adapter = new PluginsAdapter()));
@@ -69,6 +124,7 @@ public class DedicatedPluginSettings extends Plugin {
             header.setVisibility(View.VISIBLE);
             divider.setVisibility(View.VISIBLE);
             recycler.setVisibility(View.VISIBLE);
+            customize.setVisibility(View.VISIBLE);
         }
 
         patcher.patch(PluginManager.class.getDeclaredMethod("startPlugin", String.class), new Hook(param -> {
@@ -107,6 +163,7 @@ public class DedicatedPluginSettings extends Plugin {
             header.setVisibility(View.GONE);
             divider.setVisibility(View.GONE);
             recycler.setVisibility(View.GONE);
+            customize.setVisibility(View.GONE);
         }
     }
 }

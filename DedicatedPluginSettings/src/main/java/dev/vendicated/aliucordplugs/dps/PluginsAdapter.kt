@@ -13,17 +13,16 @@ package dev.vendicated.aliucordplugs.dps
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.aliucord.*
 import com.aliucord.entities.Plugin
+import com.aliucord.utils.DimenUtils
 import com.aliucord.utils.ReflectUtils
 import com.discord.utilities.color.ColorCompat
 import com.lytefast.flexinput.R
@@ -102,33 +101,37 @@ private val drawables = hashMapOf(
     "BetterStatus" to !ic_phone_24dp,
 )
 
+val hiddenPlugins = HashSet(PluginManager.plugins["DedicatedPluginSettings"]!!.settings
+    .getString("hiddenPlugins", "ShowPerms")
+    .split(','))
+
 class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
-    val data = PluginManager.plugins.values.filter {
+    private var isEditing = false
+    private val originalData = PluginManager.plugins.values.filter {
         PluginManager.isPluginEnabled(it.getName()) && it.settingsTab != null
     }.sortedBy {
         it.getName()
     }.toMutableList()
+
+    var data = originalData.filter { !hiddenPlugins.contains(it.getName()) }
 
     override fun getItemCount() = data.size.coerceAtLeast(1)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) =
         ViewHolder(
             this,
-            TextView(parent.context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
-                typeface = ResourcesCompat.getFont(parent.context, Constants.Fonts.whitney_medium)
-            }
+            com.aliucord.widgets.LinearLayout(parent.context)
         )
 
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.itemView as TextView
-
         if (data.isEmpty()) {
-            holder.itemView.text = "Hmm... No Settings"
+            holder.textView.text = "Hmm... No Settings"
         } else {
             val p = data[position]
             val name = p.getName()
-            holder.itemView.text = name
+
+            holder.textView.text = name
 
             val drawable = drawables[name] ?: try {
                 ReflectUtils.getField(p, "pluginIcon") as Drawable
@@ -136,10 +139,24 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
                 null
             } ?: drawables["fallback"]
 
-            holder.itemView.setCompoundDrawablesRelativeWithIntrinsicBounds(drawable?.apply {
+            holder.textView.setCompoundDrawablesRelativeWithIntrinsicBounds(drawable?.apply {
                 mutate()
                 setTint(ColorCompat.getThemedColor(holder.itemView.context, R.b.colorInteractiveNormal))
             }, null, null, null)
+
+            val isHidden = hiddenPlugins.contains(name)
+            if (isEditing) {
+                holder.itemView.isClickable = false
+                holder.visibilitySwitch.visibility = View.VISIBLE
+                val visibilityDrawable = if (isHidden) ic_visibility_off_white_a60_24dp else ic_visibility_white_24dp
+                holder.visibilitySwitch.setImageDrawable(ContextCompat.getDrawable(holder.visibilitySwitch.context, visibilityDrawable))
+            } else {
+                holder.itemView.isClickable = true
+                holder.visibilitySwitch.visibility = View.GONE
+            }
+            // RecyclerView Animator uses alpha on the itemView for transitions, so setting alpha on root view doesn't work
+            holder.textView.alpha = if (isHidden) 0.5f else 1f
+            holder.visibilitySwitch.alpha = if (isHidden) 0.5f else 1f
         }
     }
 
@@ -166,15 +183,62 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
             }
         }
     }
-}
 
-class ViewHolder(private val adapter: PluginsAdapter, itemView: TextView) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
-    init {
-        itemView.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        itemView.setOnClickListener(this)
+    fun toggleVisibility(position: Int) {
+        val name = data[position].getName()
+        if (hiddenPlugins.contains(name))
+            hiddenPlugins.remove(name)
+        else
+            hiddenPlugins.add(name)
+
+        notifyItemChanged(position)
     }
 
-    override fun onClick(v: View) {
+    @SuppressLint("NotifyDataSetChanged")
+    fun toggleCustomize() {
+        isEditing = !isEditing
+        data = if (!isEditing) {
+            PluginManager.plugins["DedicatedPluginSettings"]!!.settings.setString("hiddenPlugins", hiddenPlugins.joinToString(","))
+            originalData.filter { !hiddenPlugins.contains(it.getName()) }
+        } else {
+            originalData
+        }
+        notifyDataSetChanged()
+    }
+}
+
+class ViewHolder(private val adapter: PluginsAdapter, itemView: LinearLayout) : RecyclerView.ViewHolder(itemView) {
+    val textView: TextView
+    val visibilitySwitch: ImageView
+    init {
+        val ctx = itemView.context
+        itemView.orientation = LinearLayout.HORIZONTAL
+        itemView.layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+        itemView.setOnClickListener(this::onEntryClicked)
+
+        textView = TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
+            layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
+                weight = 1f
+            }
+            typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_medium)
+            itemView.addView(this)
+        }
+
+        visibilitySwitch = ImageView(ctx).apply {
+            layoutParams = LinearLayout.LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
+                gravity = Gravity.END
+                marginEnd = DimenUtils.defaultPadding
+            }
+            setOnClickListener(this@ViewHolder::onVisibilityToggleClicked)
+            itemView.addView(this)
+        }
+    }
+
+    private fun onEntryClicked(v: View) {
         adapter.onEntryClicked(v.context, adapterPosition)
+    }
+
+    private fun onVisibilityToggleClicked(v: View) {
+        adapter.toggleVisibility(adapterPosition)
     }
 }

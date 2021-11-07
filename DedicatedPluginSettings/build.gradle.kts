@@ -1,8 +1,12 @@
-version = "1.1.1"
+version = "1.1.2"
 description = "Adds a dedicated plugin settings category to the settings page"
 
 aliucord.changelog.set(
     """
+        # 1.1.2
+        * Plugin section is now a dropdown that you can open/close
+        * New Customize Option: You can now hide plugins from the list
+        
         # 1.1.0
         * Add more icons
         
