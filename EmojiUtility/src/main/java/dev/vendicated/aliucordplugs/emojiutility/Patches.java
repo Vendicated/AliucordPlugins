@@ -103,6 +103,11 @@ public class Patches {
                 var root = (ViewGroup) binding.getRoot();
                 var rootLayout = (LinearLayout) root.getChildAt(0);
 
+                // Make Emoji Image open emoji in media viewer on click
+                binding.d.setOnClickListener(v -> {
+                    Utils.openMediaViewer(url, name + (animated ? ".gif" : ".png"));
+                });
+
                 if (rootLayout.findViewById(layoutId) != null) return;
 
                 var ctx = rootLayout.getContext();
