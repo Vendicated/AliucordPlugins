@@ -22,12 +22,12 @@ import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.*;
 
 import com.aliucord.*;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
+import com.aliucord.fragments.ConfirmDialog;
 import com.aliucord.patcher.Hook;
 import com.aliucord.utils.DimenUtils;
 import com.aliucord.views.Divider;
@@ -41,6 +41,7 @@ public class DedicatedPluginSettings extends Plugin {
     private TextView header;
     private View divider;
     private TextView customize;
+    private TextView reset;
     private RecyclerView recycler;
 
     @SuppressLint("SetTextI18n")
@@ -81,10 +82,12 @@ public class DedicatedPluginSettings extends Plugin {
                         if (recycler.getVisibility() == View.VISIBLE) {
                             recycler.setVisibility(View.GONE);
                             customize.setVisibility(View.GONE);
+                            reset.setVisibility(View.GONE);
                             header.setCompoundDrawablesRelativeWithIntrinsicBounds(closedDrawable, null, null, null);
                         } else {
                             recycler.setVisibility(View.VISIBLE);
                             customize.setVisibility(View.VISIBLE);
+                            if (adapter.isEditing()) reset.setVisibility(View.VISIBLE);
                             header.setCompoundDrawablesRelativeWithIntrinsicBounds(openDrawable, null, null, null);
                         }
                     });
@@ -101,21 +104,50 @@ public class DedicatedPluginSettings extends Plugin {
                             customize.setText("Save");
                             customize.setTextColor(ctx.getColor(R.c.uikit_btn_bg_color_selector_green));
                             editDrawable.setTint(ctx.getColor(R.c.uikit_btn_bg_color_selector_green));
+                            reset.setVisibility(View.VISIBLE);
                         } else {
                             customize.setText("Customize");
                             customize.setTextColor(ctx.getColor(R.c.brand));
                             editDrawable.setTint(ctx.getColor(R.c.brand));
+                            reset.setVisibility(View.GONE);
                         }
                         adapter.toggleCustomize();
+                    });
+
+                    reset = new TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Icon);
+                    reset.setVisibility(View.GONE);
+                    reset.setText("Reset Settings");
+                    reset.setTypeface(ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_medium));
+                    reset.setTextColor(ctx.getColor(R.c.uikit_btn_bg_color_selector_red));
+                    var resetDrawable = ContextCompat.getDrawable(ctx, R.e.ic_delete_24dp).mutate();
+                    resetDrawable.setTint(ctx.getColor(R.c.uikit_btn_bg_color_selector_red));
+                    reset.setCompoundDrawablesRelativeWithIntrinsicBounds(resetDrawable, null, null, null);
+                    reset.setOnClickListener(v -> {
+                        var dialog = new ConfirmDialog();
+                        dialog
+                            .setTitle("Reset Settings")
+                            .setDescription("This will reset your sort order and hidden plugins. Are you sure?")
+                            .setOnOkListener(_v -> {
+                                adapter.reset();
+                                dialog.dismiss();
+                            })
+                            .show(widgetSettings.getParentFragmentManager(), "Reset Settings");
                     });
 
                     layout.addView((divider = new Divider(ctx)), idx);
                     layout.addView(header, ++idx);
                     layout.addView(customize, ++idx);
+                    layout.addView(reset, ++idx);
 
                     recycler = new RecyclerView(ctx);
-                    recycler.setAdapter((adapter = new PluginsAdapter()));
+
+                    var touchCallback = new DragAndDropHelper();
+                    new ItemTouchHelper(touchCallback).attachToRecyclerView(recycler);
+
+                    recycler.setAdapter((adapter = new PluginsAdapter(touchCallback)));
+
                     recycler.setLayoutManager(new LinearLayoutManager(ctx));
+
                     layout.addView(recycler, ++idx);
                 }, 2000);
             }));
@@ -124,6 +156,7 @@ public class DedicatedPluginSettings extends Plugin {
             divider.setVisibility(View.VISIBLE);
             recycler.setVisibility(View.VISIBLE);
             customize.setVisibility(View.VISIBLE);
+            reset.setVisibility(View.GONE);
         }
 
         patcher.patch(PluginManager.class.getDeclaredMethod("startPlugin", String.class), new Hook(param -> {
@@ -154,6 +187,7 @@ public class DedicatedPluginSettings extends Plugin {
             divider.setVisibility(View.GONE);
             recycler.setVisibility(View.GONE);
             customize.setVisibility(View.GONE);
+            reset.setVisibility(View.GONE);
         }
     }
 }

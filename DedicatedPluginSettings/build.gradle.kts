@@ -1,8 +1,12 @@
-version = "1.1.3"
+version = "1.1.4"
 description = "Adds a dedicated plugin settings category to the settings page"
 
 aliucord.changelog.set(
     """
+        # 1.1.4
+        * Make entries reorderable via drag & drop
+        * Add reset button
+        
         # 1.1.3
         * Fix a small bug I missed
         

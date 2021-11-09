@@ -113,19 +113,21 @@ private val drawables = hashMapOf(
     "AutoServerNotifs" to !ic_notifications_white_24dp,
 )
 
-val hiddenPlugins = HashSet(PluginManager.plugins["DedicatedPluginSettings"]!!.settings
-    .getString("hiddenPlugins", "ShowPerms")
-    .split(','))
+val settings = PluginManager.plugins["DedicatedPluginSettings"]!!.settings!!
 
-class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
-    private var isEditing = false
-    private val originalData = PluginManager.plugins.values.filter {
+val hiddenPlugins = HashSet(settings.getString("hiddenPlugins", null)?.split(',') ?: emptyList())
+
+var pluginSort
+    get() = settings.getString("pluginOrder", null)?.split(',') ?: emptyList()
+    set(plugins) = settings.setString("pluginOrder", plugins.joinToString(","))
+
+class PluginsAdapter(private val touchCallback: DragAndDropHelper) : RecyclerView.Adapter<ViewHolder>() {
+    var isEditing = false
+    private var originalData = sort(PluginManager.plugins.values.filter {
         PluginManager.isPluginEnabled(it.getName()) && it.settingsTab != null
-    }.sortedBy {
-        it.getName()
-    }.toMutableList()
+    }.toMutableList())
 
-    private var data = originalData.filter { !hiddenPlugins.contains(it.getName()) } as MutableList<Plugin>
+    var data = originalData.filter { !hiddenPlugins.contains(it.getName()) } as MutableList<Plugin>
 
     override fun getItemCount() = data.size.coerceAtLeast(1)
 
@@ -209,8 +211,10 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
     @SuppressLint("NotifyDataSetChanged")
     fun toggleCustomize() {
         isEditing = !isEditing
+        touchCallback.isEnabled = isEditing
         data = if (!isEditing) {
-            PluginManager.plugins["DedicatedPluginSettings"]!!.settings.setString("hiddenPlugins", hiddenPlugins.joinToString(","))
+            settings.setString("hiddenPlugins", hiddenPlugins.joinToString(","))
+            pluginSort = originalData.map { it.getName() }
             originalData.filter { !hiddenPlugins.contains(it.getName()) } as ArrayList<Plugin>
         } else {
             originalData
@@ -220,11 +224,11 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
 
     fun addPlugin(plugin: Plugin) {
         originalData.add(plugin)
-        originalData.sortBy { it.getName() }
+        originalData = sort(originalData)
         if (!hiddenPlugins.contains(plugin.getName())) {
             if (data != originalData) {
                 data.add(plugin)
-                data.sortBy { it.getName() }
+                data = sort(data)
             }
             notifyItemInserted(data.indexOf(plugin))
         }
@@ -237,6 +241,30 @@ class PluginsAdapter() : RecyclerView.Adapter<ViewHolder>() {
             data.removeAt(idx)
             notifyItemRemoved(idx)
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun reset() {
+        hiddenPlugins.clear()
+        settings.setString("hiddenPlugins", "")
+        pluginSort = emptyList()
+        originalData = sort(originalData)
+        data = originalData
+        notifyDataSetChanged()
+    }
+
+    private fun sort(plugins: MutableList<Plugin>): ArrayList<Plugin> {
+        val sortedPlugins = ArrayList<Plugin>(plugins.size)
+        pluginSort.forEach {
+            val idx = plugins.indexOfFirst { p -> p.getName() == it }
+            if (idx != -1) {
+                sortedPlugins.add(plugins[idx])
+                plugins.removeAt(idx)
+            }
+        }
+        plugins.sortBy { it.getName() }
+        plugins.forEach { sortedPlugins.add(it) }
+        return sortedPlugins
     }
 }
 
