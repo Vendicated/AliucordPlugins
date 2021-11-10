@@ -80,6 +80,8 @@ private fun addEmbed(
     messageId: Long,
     channelId: Long
 ) {
+    if (originalMsg.embeds.any { it.url == url }) return
+
     val eb = MessageEmbedBuilder()
         .setUrl(url)
         .setTimestamp(UtcDateTime(SnowflakeUtils.toTimestamp(messageId)))

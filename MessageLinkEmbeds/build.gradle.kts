@@ -1,8 +1,10 @@
-version = "1.4.1"
+version = "1.4.2"
 description = "Embeds message links"
 
 aliucord.changelog.set(
     """
+    # 1.4.2
+    * Hopefully fix duplicate embeds
 
     # 1.4.0
     * Add support for files & embed fields
