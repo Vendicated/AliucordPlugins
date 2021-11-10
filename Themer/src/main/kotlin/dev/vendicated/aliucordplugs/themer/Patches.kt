@@ -17,6 +17,7 @@ import android.graphics.*
 import android.graphics.drawable.*
 import android.os.Bundle
 import android.os.Handler
+import android.os.ParcelFileDescriptor
 import android.util.TypedValue
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -236,7 +237,7 @@ private fun PatcherAPI.patchOpenRawResource() {
     patch(Resources::class.java.getDeclaredMethod("openRawResourceFd", Int::class.javaPrimitiveType),
         PreHook { param ->
             ResourceManager.getRawForId(param.args[0] as Int)?.let {
-                param.result = it
+                param.result = AssetFileDescriptor(ParcelFileDescriptor.open(it, ParcelFileDescriptor.MODE_READ_ONLY), 0, -1)
             }
         }
     )

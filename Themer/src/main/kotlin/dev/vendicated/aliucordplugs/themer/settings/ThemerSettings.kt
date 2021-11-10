@@ -116,7 +116,6 @@ class ThemerSettings : SettingsPage() {
         )
         addView(Divider(ctx))
 
-        addView(Divider(ctx))
         addView(
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Sounds", "YOU MUST ENABLE THIS TO USE CUSTOM SOUNDS").apply {
                 isChecked = Themer.mSettings.customSounds

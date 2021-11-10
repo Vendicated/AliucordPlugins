@@ -11,13 +11,13 @@
 package dev.vendicated.aliucordplugs.themer
 
 import android.content.Context
-import android.content.res.AssetFileDescriptor
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import androidx.core.graphics.ColorUtils
 import com.aliucord.Utils
 import com.lytefast.flexinput.R
+import java.io.File
 
 private var colorToName = HashMap<Int, String>()
 
@@ -26,7 +26,7 @@ private val colorsByName = HashMap<String, Int>()
 private val colorsById = HashMap<Int, Int>()
 private val drawableTints = HashMap<Int, Int>()
 private val attrs = HashMap<Int, Int>()
-private val raws = HashMap<Int, AssetFileDescriptor>()
+private val raws = HashMap<Int, File>()
 
 object ResourceManager {
     var customBg = null as BitmapDrawable?
@@ -68,10 +68,10 @@ object ResourceManager {
         fonts[id] = font
     }
 
-    internal fun putRaw(name: String, descriptor: AssetFileDescriptor) {
+    internal fun putRaw(name: String, file: File) {
         val id = Utils.getResId(name, "raw")
         if (id != 0)
-            raws[id] = descriptor
+            raws[id] = file
         else
             logger.warn("Unrecognised raw $name")
     }

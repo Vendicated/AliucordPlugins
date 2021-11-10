@@ -10,12 +10,10 @@
 
 package dev.vendicated.aliucordplugs.themer
 
-import android.content.res.AssetFileDescriptor
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
-import android.os.ParcelFileDescriptor
 import android.renderscript.*
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
@@ -82,7 +80,7 @@ object ThemeLoader {
     private fun loadRaw(theme: Theme, name: String, url: String) {
         try {
             val raw = getResourceWithCache(theme, "raw_$name", url)
-            ResourceManager.putRaw(name, AssetFileDescriptor(ParcelFileDescriptor.open(raw, ParcelFileDescriptor.MODE_READ_ONLY), 0, -1))
+            ResourceManager.putRaw(name, raw)
         } catch (th: Throwable) {
             theme.error("Failed to load raw resource $url with name $name", th)
         }

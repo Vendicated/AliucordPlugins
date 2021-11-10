@@ -135,17 +135,18 @@ val SIMPLE_BG_SECONDARY_ATTRS = arrayOf(
     "theme_chat_spoiler_bg"
 )
 
-val SIMPLE_SOUND_NAMES = arrayOf("call_calling",
+val SIMPLE_SOUND_NAMES = arrayOf(
+    "call_calling",
     "call_ringing",
     "deafen",
     "mute",
+    "undeafen",
+    "unmute",
     "reconnect",
     "stream_ended",
     "stream_started",
     "stream_user_joined",
     "stream_user_left",
-    "undeafen",
-    "unmute",
     "user_join",
     "user_leave",
     "user_moved"
