@@ -52,7 +52,7 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
 
         TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Addition).run {
             text =
-                MDUtils.render("**Allowed hosts for images/fonts:**\n${ALLOWED_RESOURCE_DOMAINS.joinToString()}")
+                MDUtils.render("**Allowed hosts for images/fonts/sounds:**\n${ALLOWED_RESOURCE_DOMAINS.joinToString()}")
             addView(this)
         }
 
@@ -69,6 +69,11 @@ class ThemeEditor(private val theme: Theme) : SettingsPage() {
         addView(buildEntry(ctx, "Fonts", R.e.ic_edit_24dp) {
             FontTab(json.getJSONObject("fonts"))
                 .show(parentFragmentManager, "Edit fonts")
+        })
+
+        addView(buildEntry(ctx, "Sounds", R.e.ic_sound_24dp) {
+            RawsTab(json.getJSONObject("raws"))
+                .show(parentFragmentManager, "Edit sounds")
         })
 
         addView(buildColorEntry(ctx, ColorDialogType.SIMPLE_COLORS, "Simple Colors", R.e.ic_accessibility_24dp, lazy {

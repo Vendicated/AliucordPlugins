@@ -11,6 +11,7 @@
 package dev.vendicated.aliucordplugs.themer
 
 import android.content.Context
+import android.content.res.AssetFileDescriptor
 import android.graphics.Typeface
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
@@ -25,7 +26,7 @@ private val colorsByName = HashMap<String, Int>()
 private val colorsById = HashMap<Int, Int>()
 private val drawableTints = HashMap<Int, Int>()
 private val attrs = HashMap<Int, Int>()
-
+private val raws = HashMap<Int, AssetFileDescriptor>()
 
 object ResourceManager {
     var customBg = null as BitmapDrawable?
@@ -42,6 +43,7 @@ object ResourceManager {
     fun getDrawableTintForId(id: Int) = drawableTints[id]
     fun getAttrForId(id: Int) = attrs[id]
     fun getFontForId(id: Int) = fonts[id]
+    fun getRawForId(id: Int) = raws[id]
     fun getDefaultFont() = getFontForId(-1)
 
     fun init(ctx: Context) {
@@ -57,12 +59,21 @@ object ResourceManager {
         colorsById.clear()
         drawableTints.clear()
         attrs.clear()
+        raws.clear()
         customBg = null
         animatedBgUri = null
     }
 
     internal fun putFont(id: Int, font: Typeface) {
         fonts[id] = font
+    }
+
+    internal fun putRaw(name: String, descriptor: AssetFileDescriptor) {
+        val id = Utils.getResId(name, "raw")
+        if (id != 0)
+            raws[id] = descriptor
+        else
+            logger.warn("Unrecognised raw $name")
     }
 
     internal fun putColor(name: String, color: Int) {

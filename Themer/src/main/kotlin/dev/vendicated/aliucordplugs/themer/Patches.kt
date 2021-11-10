@@ -53,6 +53,9 @@ fun addPatches(patcher: PatcherAPI) {
         if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
 
         if (Themer.mSettings.enableFontHook) patchGetFont()
+
+        if (Themer.mSettings.customSounds) patchOpenRawResource()
+
         patchGetColor()
         patchSetColor()
         patchColorStateLists()
@@ -227,6 +230,16 @@ private fun PatcherAPI.patchGetFont() {
             param.result = it
         }
     })
+}
+
+private fun PatcherAPI.patchOpenRawResource() {
+    patch(Resources::class.java.getDeclaredMethod("openRawResourceFd", Int::class.javaPrimitiveType),
+        PreHook { param ->
+            ResourceManager.getRawForId(param.args[0] as Int)?.let {
+                param.result = it
+            }
+        }
+    )
 }
 
 private fun PatcherAPI.patchGetColor() {

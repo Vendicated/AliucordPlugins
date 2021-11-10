@@ -19,6 +19,7 @@ import com.aliucord.Constants
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.TextInput
 import dev.vendicated.aliucordplugs.themer.ALLOWED_RESOURCE_DOMAINS_PATTERN
+import dev.vendicated.aliucordplugs.themer.SIMPLE_SOUND_NAMES
 import org.json.JSONObject
 import java.io.File
 import java.lang.reflect.Modifier
@@ -98,6 +99,11 @@ class FontTab(data: JSONObject) : FormInputTab(
     }, Validators::fonts, data
 )
 
+class RawsTab(data: JSONObject) : FormInputTab(
+    "Sounds", SIMPLE_SOUND_NAMES,
+    Validators::raws, data
+)
+
 object Validators {
     private fun tryOrFalse(fn: () -> Boolean) = try {
         fn.invoke()
@@ -128,6 +134,8 @@ object Validators {
     }
 
     fun fonts(_key: String, s: String) = urlValidator(s)
+
+    fun raws(_key: String, s: String) = urlValidator(s)
 }
 
 val converters = mapOf<String, (s: String) -> Any>(

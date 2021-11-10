@@ -10,10 +10,12 @@
 
 package dev.vendicated.aliucordplugs.themer
 
+import android.content.res.AssetFileDescriptor
 import android.graphics.*
 import android.graphics.drawable.BitmapDrawable
 import android.net.Uri
 import android.os.Build
+import android.os.ParcelFileDescriptor
 import android.renderscript.*
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
@@ -74,6 +76,15 @@ object ThemeLoader {
             ResourceManager.putFont(id, Typeface.createFromFile(font))
         } catch (th: Throwable) {
             theme.error("Failed to load font $url with id $id", th)
+        }
+    }
+
+    private fun loadRaw(theme: Theme, name: String, url: String) {
+        try {
+            val raw = getResourceWithCache(theme, "raw_$name", url)
+            ResourceManager.putRaw(name, AssetFileDescriptor(ParcelFileDescriptor.open(raw, ParcelFileDescriptor.MODE_READ_ONLY), 0, -1))
+        } catch (th: Throwable) {
+            theme.error("Failed to load raw resource $url with name $name", th)
         }
     }
 
@@ -191,6 +202,12 @@ object ThemeLoader {
                     } catch (ex: ReflectiveOperationException) {
                         theme.error("No such font: $it", ex)
                     }
+                }
+            }
+
+            json.optJSONObject("raws")?.run {
+                keys().forEach {
+                    loadRaw(theme, it, getString(it))
                 }
             }
 
