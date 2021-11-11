@@ -1,9 +1,11 @@
-version = "3.5.1"
+version = "3.5.2"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
-    
+    # 3.5.2
+    * Added custom sounds, thanks to HalalKing. Open theme editor, go to sounds and change call_ringing to https://cdn.discordapp.com/attachments/811261478875299840/908469399390924800/3hpUwCz.opus
+
     # 3.5.0
     * Make more elements themeable (e.g. codeblocks: primary_630)
     * Try to fix light mode (FAILED)
