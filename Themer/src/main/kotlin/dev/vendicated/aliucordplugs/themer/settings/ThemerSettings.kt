@@ -116,6 +116,17 @@ class ThemerSettings : SettingsPage() {
         )
         addView(Divider(ctx))
 
+        addView(
+            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Sounds", "YOU MUST ENABLE THIS TO USE CUSTOM SOUNDS").apply {
+                isChecked = Themer.mSettings.customSounds
+                setOnCheckedListener {
+                    Themer.mSettings.customSounds = it
+                    promptRestart(view, this@ThemerSettings)
+                }
+            }
+        )
+        addView(Divider(ctx))
+
         TextView(ctx, null, 0, R.i.UiKit_Settings_Item_Header).run {
             text = "Themes"
             typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold)

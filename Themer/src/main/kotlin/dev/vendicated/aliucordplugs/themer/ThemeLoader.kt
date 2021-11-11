@@ -77,6 +77,15 @@ object ThemeLoader {
         }
     }
 
+    private fun loadRaw(theme: Theme, name: String, url: String) {
+        try {
+            val raw = getResourceWithCache(theme, "raw_$name", url)
+            ResourceManager.putRaw(name, raw)
+        } catch (th: Throwable) {
+            theme.error("Failed to load raw resource $url with name $name", th)
+        }
+    }
+
     fun darkenBitmap(bm: Bitmap, alpha: Int) = Canvas(bm).run {
         drawARGB(alpha, 0, 0, 0)
         drawBitmap(bm, Matrix(), Paint())
@@ -191,6 +200,12 @@ object ThemeLoader {
                     } catch (ex: ReflectiveOperationException) {
                         theme.error("No such font: $it", ex)
                     }
+                }
+            }
+
+            json.optJSONObject("raws")?.run {
+                keys().forEach {
+                    loadRaw(theme, it, getString(it))
                 }
             }
 

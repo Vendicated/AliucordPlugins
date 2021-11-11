@@ -22,6 +22,10 @@ var SettingsAPI.enableFontHook
     get() = getBool("enableFontHook", false)
     set(v) = setBool("enableFontHook", v)
 
+var SettingsAPI.customSounds
+    get() = getBool("customSounds", false)
+    set(v) = setBool("customSounds", v)
+
 fun JSONObject.toColorArray() = ArrayList<ColorTuple>().apply {
     keys().forEach {
         add(ColorTuple(it, getInt(it)))

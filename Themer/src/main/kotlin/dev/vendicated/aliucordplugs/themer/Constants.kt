@@ -53,6 +53,7 @@ val THEME_KEYS = arrayOf(
     "manifest",
     "background",
     "fonts",
+    "raws",
     "simple_colors",
     "colors",
     "drawable_tints"
@@ -132,6 +133,23 @@ val SIMPLE_BG_SECONDARY_ATTRS = arrayOf(
     "colorBackgroundSecondary",
     "primary_700",
     "theme_chat_spoiler_bg"
+)
+
+val SIMPLE_SOUND_NAMES = arrayOf(
+    "call_calling",
+    "call_ringing",
+    "deafen",
+    "mute",
+    "undeafen",
+    "unmute",
+    "reconnect",
+    "stream_ended",
+    "stream_started",
+    "stream_user_joined",
+    "stream_user_left",
+    "user_join",
+    "user_leave",
+    "user_moved"
 )
 
 inline fun <reified T> pairOf(v: T) = v to v

@@ -17,6 +17,7 @@ import android.net.Uri
 import androidx.core.graphics.ColorUtils
 import com.aliucord.Utils
 import com.lytefast.flexinput.R
+import java.io.File
 
 private var colorToName = HashMap<Int, String>()
 
@@ -25,7 +26,7 @@ private val colorsByName = HashMap<String, Int>()
 private val colorsById = HashMap<Int, Int>()
 private val drawableTints = HashMap<Int, Int>()
 private val attrs = HashMap<Int, Int>()
-
+private val raws = HashMap<Int, File>()
 
 object ResourceManager {
     var customBg = null as BitmapDrawable?
@@ -42,6 +43,7 @@ object ResourceManager {
     fun getDrawableTintForId(id: Int) = drawableTints[id]
     fun getAttrForId(id: Int) = attrs[id]
     fun getFontForId(id: Int) = fonts[id]
+    fun getRawForId(id: Int) = raws[id]
     fun getDefaultFont() = getFontForId(-1)
 
     fun init(ctx: Context) {
@@ -57,12 +59,21 @@ object ResourceManager {
         colorsById.clear()
         drawableTints.clear()
         attrs.clear()
+        raws.clear()
         customBg = null
         animatedBgUri = null
     }
 
     internal fun putFont(id: Int, font: Typeface) {
         fonts[id] = font
+    }
+
+    internal fun putRaw(name: String, file: File) {
+        val id = Utils.getResId(name, "raw")
+        if (id != 0)
+            raws[id] = file
+        else
+            logger.warn("Unrecognised raw $name")
     }
 
     internal fun putColor(name: String, color: Int) {

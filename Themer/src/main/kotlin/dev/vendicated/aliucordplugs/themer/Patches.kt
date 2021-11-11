@@ -17,6 +17,7 @@ import android.graphics.*
 import android.graphics.drawable.*
 import android.os.Bundle
 import android.os.Handler
+import android.os.ParcelFileDescriptor
 import android.util.TypedValue
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -53,6 +54,9 @@ fun addPatches(patcher: PatcherAPI) {
         if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
 
         if (Themer.mSettings.enableFontHook) patchGetFont()
+
+        if (Themer.mSettings.customSounds) patchOpenRawResource()
+
         patchGetColor()
         patchSetColor()
         patchColorStateLists()
@@ -227,6 +231,16 @@ private fun PatcherAPI.patchGetFont() {
             param.result = it
         }
     })
+}
+
+private fun PatcherAPI.patchOpenRawResource() {
+    patch(Resources::class.java.getDeclaredMethod("openRawResourceFd", Int::class.javaPrimitiveType),
+        PreHook { param ->
+            ResourceManager.getRawForId(param.args[0] as Int)?.let {
+                param.result = AssetFileDescriptor(ParcelFileDescriptor.open(it, ParcelFileDescriptor.MODE_READ_ONLY), 0, -1)
+            }
+        }
+    )
 }
 
 private fun PatcherAPI.patchGetColor() {
