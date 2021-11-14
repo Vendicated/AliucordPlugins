@@ -63,14 +63,18 @@ class MoreInfoModal(private val data: Map<String, Entry>) : SettingsPage() {
     }
 }
 
-private fun makeReq(url: String, method: String, contentType: String) =
-    Http.Request(url, method).apply {
+private fun makeReq(url: String, method: String, contentType: String): Http.Request {
+    val chars = ('A'..'Z') + ('a'..'z') + ('0'..'9')
+    val s = CharArray(10) { chars.random() }.joinToString("")
+
+    return Http.Request(url, method).apply {
         setHeader("Content-Type", contentType)
         setHeader("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:83.0) Firefox")
         setHeader("X-Tool", "vt-ui-main")
-        setHeader("X-VT-Anti-Abuse-Header", "uwu") // Can be anything for some reason
+        setHeader("X-VT-Anti-Abuse-Header", s) // Can be anything for some reason
         setHeader("Accept-Ianguage", "en-US,en;q=0.9,es;q=0.8") // yes upper case i lol
     }
+}
 
 private fun checkLink(url: String): Map<String, Entry> {
     // Look up url in cache first
