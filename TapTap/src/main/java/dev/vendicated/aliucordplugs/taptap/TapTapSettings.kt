@@ -73,6 +73,13 @@ class TapTapSettings(private val plugin: TapTap) : SettingsPage() {
             "Automatically opens the keyboard when replying to a message",
             "openKeyboard"
         )
+
+        addCheckedSetting(
+            ctx,
+            "Reply to own messages",
+            "Reply to your own messages instead of editing them.",
+            "replyToOwn"
+        )
     }
 
     private fun addCheckedSetting(ctx: Context, text: String, subtext: String, key: String) =

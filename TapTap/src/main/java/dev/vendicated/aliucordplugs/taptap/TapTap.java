@@ -62,7 +62,7 @@ public class TapTap extends Plugin {
             clicks++;
             handler.postDelayed(() -> {
                 if (clicks >= 2) {
-                    if (isMe(msg)) {
+                    if (isMe(msg) && !settings.getBool("replyToOwn", false)) {
                         WidgetChatListActions.access$editMessage(widgetChatListActions, msg);
                     } else {
                         WidgetChatListActions.access$replyMessage(widgetChatListActions, msg, StoreStream.getChannels().getChannel(msg.getChannelId()));
