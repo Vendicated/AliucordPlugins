@@ -69,7 +69,7 @@ public class TapTap extends Plugin {
                         if (settings.getBool("openKeyboard", false)) {
                             var imm = (InputMethodManager) Utils.getAppContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-                            flexInput.requestFocus();
+                            if (flexInput != null) flexInput.requestFocus();
                         }
                     }
                 } else {
@@ -113,5 +113,6 @@ public class TapTap extends Plugin {
     @Override
     public void stop(Context ctx) {
         patcher.unpatchAll();
+        flexInput = null;
     }
 }
