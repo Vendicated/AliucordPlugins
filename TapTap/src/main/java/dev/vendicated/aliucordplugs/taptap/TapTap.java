@@ -12,6 +12,7 @@ package dev.vendicated.aliucordplugs.taptap;
 
 import android.content.Context;
 import android.os.Handler;
+import android.util.AttributeSet;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.LinearLayout;
@@ -27,6 +28,7 @@ import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler;
+import com.lytefast.flexinput.widget.FlexEditText;
 
 @AliucordPlugin
 public class TapTap extends Plugin {
@@ -39,6 +41,7 @@ public class TapTap extends Plugin {
     }
 
     private WidgetChatListActions widgetChatListActions;
+    private FlexEditText flexInput;
     private static final Handler handler = new Handler();
     private boolean busy = false;
     private int clicks = 0;
@@ -49,6 +52,8 @@ public class TapTap extends Plugin {
         final int replyId = Utils.getResId("dialog_chat_actions_reply", "id");
 
         Utils.mainThread.post(() -> widgetChatListActions = new WidgetChatListActions());
+
+        patcher.patch(FlexEditText.class.getDeclaredConstructor(Context.class, AttributeSet.class), new Hook(param -> flexInput = (FlexEditText) param.thisObject));
 
         patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
             if (busy) return null;
@@ -64,6 +69,7 @@ public class TapTap extends Plugin {
                         if (settings.getBool("openKeyboard", false)) {
                             var imm = (InputMethodManager) Utils.getAppContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+                            flexInput.requestFocus();
                         }
                     }
                 } else {
