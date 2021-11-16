@@ -65,7 +65,7 @@ import java.util.concurrent.Executors
 import java.util.regex.Pattern
 
 private val messageLinkPattern =
-    Pattern.compile("https?://(?:\\w+\\.)?discord(?:app)?\\.com/channels/(\\d{17,19}|@me)/(\\d{17,19})/(\\d{17,19})")
+    Pattern.compile("https?://(?:\\\\w+\\\\.)?discord(?:app)?\\.com/channels/(\\d{17,19}|@me)/(\\d{17,19})/(\\d{17,19})(?!>)")
 private val videoLinkPattern =
     Pattern.compile("\\.(mp4|webm|mov)$", Pattern.CASE_INSENSITIVE)
 

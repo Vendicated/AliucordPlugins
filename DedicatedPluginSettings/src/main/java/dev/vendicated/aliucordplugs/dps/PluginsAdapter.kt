@@ -111,6 +111,7 @@ private val drawables = hashMapOf(
     "MoarConfirm" to !ic_check_white_24dp,
     "GhostMessage" to !ic_chat_message_white_24dp,
     "AutoServerNotifs" to !ic_notifications_white_24dp,
+    "ChannelLocker" to !ic_role_lock
 )
 
 val settings = PluginManager.plugins["DedicatedPluginSettings"]!!.settings!!
