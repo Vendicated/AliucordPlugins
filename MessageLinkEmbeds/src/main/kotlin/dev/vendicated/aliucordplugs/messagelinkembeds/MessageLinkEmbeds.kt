@@ -234,11 +234,6 @@ class MessageLinkEmbeds : Plugin() {
                     val channelId = channelIdStr.toLong()
                     val messageId = messageIdStr.toLong()
 
-                    val noEmbedMatcher = Pattern.compile("(^<(.*)>\$)").toRegex()
-                    if (noEmbedMatcher.containsMatchIn(msg.content)) {
-                        return@Hook
-                    }
-
 
                     val m = cache[messageId] ?: StoreStream.getMessages()
                         .getMessage(channelId, messageId)
