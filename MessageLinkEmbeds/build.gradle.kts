@@ -1,8 +1,11 @@
-version = "1.4.2"
+version = "1.4.3"
 description = "Embeds message links"
 
 aliucord.changelog.set(
     """
+    # 1.4.3
+    * Ignore <escaped> message links
+    
     # 1.4.2
     * Hopefully fix duplicate embeds
 
