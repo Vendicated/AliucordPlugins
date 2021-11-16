@@ -193,6 +193,7 @@ private fun addEmbed(
     StoreStream.getMessages().handleMessageUpdate(originalMsg.synthesizeApiMessage())
 }
 
+
 @AliucordPlugin
 class MessageLinkEmbeds : Plugin() {
     override fun start(context: Context) {
@@ -232,6 +233,12 @@ class MessageLinkEmbeds : Plugin() {
                     val messageIdStr = matcher.group(3)!!
                     val channelId = channelIdStr.toLong()
                     val messageId = messageIdStr.toLong()
+
+                    val noEmbedMatcher = Pattern.compile("(^<(.*)>\$)").toRegex()
+                    if (noEmbedMatcher.containsMatchIn(msg.content)) {
+                        return@Hook
+                    }
+
 
                     val m = cache[messageId] ?: StoreStream.getMessages()
                         .getMessage(channelId, messageId)
