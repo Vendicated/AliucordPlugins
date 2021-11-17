@@ -48,6 +48,7 @@ import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.width
 import com.discord.api.message.embed.EmbedType
 import com.discord.api.utcdatetime.UtcDateTime
 import com.discord.models.message.Message
+import com.discord.api.message.MessageFlags;
 import com.discord.models.user.CoreUser
 import com.discord.stores.StoreStream
 import com.discord.utilities.SnowflakeUtils
@@ -224,8 +225,7 @@ class MessageLinkEmbeds : Plugin() {
                 MessageEntry::class.java
             ), Hook { param ->
                 val msg = (param.args[1] as MessageEntry).message
-                // https://discord.com/developers/docs/resources/channel#message-object-message-flags
-                if (msg.isLoading || msg.hasFlag(4)) return@Hook
+                if (msg.isLoading || msg.hasFlag(MessageFlags.SUPPRESS_EMBEDS)) return@Hook
                 val matcher = messageLinkPattern.matcher(msg.content ?: return@Hook)
                 while (matcher.find()) {
                     val url = matcher.group()
