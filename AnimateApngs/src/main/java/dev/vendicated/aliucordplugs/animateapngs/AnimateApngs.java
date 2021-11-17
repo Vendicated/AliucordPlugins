@@ -30,14 +30,14 @@ import java.util.regex.Pattern;
 public class AnimateApngs extends Plugin {
     private void initApng(ImageView view, String mediaUrl, Integer w, Integer h) {
         final var url = mediaUrl
-                // Strip proxy but only if they're discord domains
-                .replaceFirst("https://images-ext-.*?\\.discordapp.net/external/.*?/https/(media|cdn)\\.discordapp\\.(net|com)", "https://cdn.discordapp.com")
-                // media server serves them as regular pngs, only cdn serves actual apngs
+                // Strip proxy but only if they're Discord domains.
+                .replaceFirst("https://images-ext-.*?\\.discordapp\\.net/external/.*?/https/(?:media|cdn)\\.discordapp\\.(?:net|com)", "https://cdn.discordapp.com")
+                // Media server serves them as regular PNGs, only CDN serves actual APNGs.
                 .replace("media.discordapp.net", "cdn.discordapp.com");
 
         Utils.threadPool.execute(() -> {
-            try (var is = new Http.Request(url).execute().stream()){
-                // You cannot consume the stream twice so just yolo it and don't use Apng.Companion.isApng first, eh whatever
+            try (var is = new Http.Request(url).execute().stream()) {
+                // You cannot consume the stream twice so just yolo it and don't use Apng.Companion.isApng first, eh whatever.
                 var drawable = c.l.a.a.a(is, w, h);
                 if (view != null)
                     Utils.mainThread.post(() -> {
@@ -58,7 +58,7 @@ public class AnimateApngs extends Plugin {
             var media = (RenderableEmbedMedia) param.args[0];
             if (media == null || !media.a.endsWith(".png")) return;
 
-            // media server serves them as regular pngs, only cdn serves actual apngs
+            // Media server serves them as regular PNGs, only CDN serves actual APNGs.
             var url = media.a.replace("media.discordapp.net", "cdn.discordapp.com");
             var binding = InlineMediaView.access$getBinding$p((InlineMediaView) param.thisObject);
             var view = (ImageView) binding.getRoot().findViewById(previewResId);
@@ -66,7 +66,7 @@ public class AnimateApngs extends Plugin {
         }));
 
 
-        var pattern = Pattern.compile("\\.png(\\?width=(\\d+)&height=(\\d+))?");
+        var pattern = Pattern.compile("\\.png(?:\\?width=(\\d+)&height=(\\d+))?");
 
         var uriField = WidgetMedia.class.getDeclaredField("imageUri");
         uriField.setAccessible(true);
