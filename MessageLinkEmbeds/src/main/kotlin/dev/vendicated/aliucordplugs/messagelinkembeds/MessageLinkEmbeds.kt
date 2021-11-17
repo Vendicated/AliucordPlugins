@@ -225,7 +225,7 @@ class MessageLinkEmbeds : Plugin() {
             ), Hook { param ->
                 val msg = (param.args[1] as MessageEntry).message
                 // https://discord.com/developers/docs/resources/channel#message-object-message-flags
-                if (msg.isLoading || (msg.flags and 4) > 0) return@Hook
+                if (msg.isLoading || msg.hasFlag(4)) return@Hook
                 val matcher = messageLinkPattern.matcher(msg.content ?: return@Hook)
                 while (matcher.find()) {
                     val url = matcher.group()
