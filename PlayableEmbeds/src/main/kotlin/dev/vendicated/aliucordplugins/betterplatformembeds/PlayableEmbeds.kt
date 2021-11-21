@@ -43,7 +43,8 @@ class ScrollableWebView(ctx: Context) : WebView(ctx) {
 class PlayableEmbeds : Plugin() {
     private val widgetId = View.generateViewId()
     private val spotifyUrlRe = Regex("https://open\\.spotify\\.com/(\\w+)/(\\w+)")
-    private val youtubeUrlRe = Regex("(?:https?:\\/\\/)?(?:(?:www|m)\\.)?(?:youtu\\.be\\/|youtube(?:-nocookie)?\\.com\\/(?:embed\\/|v\\/|watch\\?v=|watch\\?.+&v=))((\\w|-){11})(?:\\S+)?")
+    private val youtubeUrlRe =
+        Regex("(?:https?:\\/\\/)?(?:(?:www|m)\\.)?(?:youtu\\.be\\/|youtube(?:-nocookie)?\\.com\\/(?:embed\\/|v\\/|watch\\?v=|watch\\?.+&v=))((\\w|-){11})(?:\\S+)?")
 
     override fun start(_context: Context) {
         patcher.after<WidgetChatListAdapterItemEmbed>("configureUI", WidgetChatListAdapterItemEmbed.Model::class.java) {
@@ -87,41 +88,41 @@ class PlayableEmbeds : Plugin() {
         webView.run {
             loadData(
                 """
-                        <html>
-                            <head>
-                                <style>
-                                    body {
-                                        margin: 0;
-                                        padding: 0;
-                                    }
-                                    .wrapper {
-                                        position: relative;
-                                        padding-bottom: 56.25%; /* (100% / 16 * 9), makes the div 16x9 */
-                                        height: 0;
-                                        overflow: hidden;
-                                    }
-                                    .wrapper iframe {
-                                        position: absolute;
-                                        top: 0; 
-                                        left: 0;
-                                        width: 100%;
-                                        height: 100%;
-                                    }
-                                </style>
-                            </head>
-                            <body>
-                                <div class="wrapper">
-                                    <iframe
-                                        src="https://www.youtube-nocookie.com/embed/$videoId"
-                                        title="YouTube video player"
-                                        frameborder="0"
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
-                                        allowfullscreen
-                                    />
-                                </div>
-                            </body>
-                        </html>
-                        """,
+                <html>
+                    <head>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .wrapper {
+                                position: relative;
+                                padding-bottom: 56.25%; /* (100% / 16 * 9), makes the div 16x9 */
+                                height: 0;
+                                overflow: hidden;
+                            }
+                            .wrapper iframe {
+                                position: absolute;
+                                top: 0; 
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="wrapper">
+                            <iframe
+                                src="https://www.youtube-nocookie.com/embed/$videoId"
+                                title="YouTube video player"
+                                frameborder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; picture-in-picture"
+                                allowfullscreen
+                            />
+                        </div>
+                    </body>
+                </html>
+                """,
                 "text/html",
                 "UTF-8"
             )
@@ -148,20 +149,20 @@ class PlayableEmbeds : Plugin() {
         webView.run {
             loadData(
                 """
-                    <html>
-                        <body style="margin: 0; padding: 0;">
-                            <iframe
-                                src="$embedUrl"
-                                width="100%"
-                                height="${if (type == "track") 80 else 380}"
-                                frameborder="0"
-                                allow="encrypted-media"
-                                allowtransparency
-                                allowfullscreen
-                            />
-                        </body>
-                    </html>
-                    """,
+                <html>
+                    <body style="margin: 0; padding: 0;">
+                        <iframe
+                            src="$embedUrl"
+                            width="100%"
+                            height="${if (type == "track") 80 else 380}"
+                            frameborder="0"
+                            allow="encrypted-media"
+                            allowtransparency
+                            allowfullscreen
+                        />
+                    </body>
+                </html>
+                """,
                 "text/html",
                 "UTF-8"
             )
