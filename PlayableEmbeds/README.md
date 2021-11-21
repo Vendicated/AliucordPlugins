@@ -2,4 +2,5 @@
 
 Makes Youtube and Spotify embeds playable directly inside Discord.
 
-![](https://cdn.discordapp.com/attachments/811263527239024640/912125098004205628/21-11-22-00-38-43.mp4)
+
+https://user-images.githubusercontent.com/45497981/142783818-deaea9b6-3a66-4627-a7b7-dc0a30c0ef49.mp4
