@@ -4,7 +4,6 @@ Better Spotify integration.
 
 Features:
 - Listen Along - You MUST have spotify running for listen along to work! so play a song first then use it
-- Rich spotify embeds with play button like on desktop
 - Commands to send current song or album in chat (sendSpotifySong/sendSpotifyAlbum)
 
 ![Screenshot](https://cdn.discordapp.com/attachments/852332951542956052/886711483227058216/Screenshot_20210912-223432.jpg)
