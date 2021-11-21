@@ -1,8 +1,13 @@
-version = "3.5.2"
+version = "3.5.3"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    
+    # 3.5.3
+    * Temporarily disable custom fonts forcibly as they cause issues for many people. They will be back soon.
+    * If you know what you're doing and really really want fonts, create a file/folder called "enable_fonts" in your Aliucord folder to enable them anyway
+    
     # 3.5.2
     * Added custom sounds, thanks to HalalKing. Open theme editor, go to sounds and change call_ringing to https://cdn.discordapp.com/attachments/811261478875299840/908469399390924800/3hpUwCz.opus
 

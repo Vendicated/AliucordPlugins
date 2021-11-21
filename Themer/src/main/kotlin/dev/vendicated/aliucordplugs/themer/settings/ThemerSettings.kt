@@ -106,11 +106,13 @@ class ThemerSettings : SettingsPage() {
 
         addView(Divider(ctx))
         addView(
-            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Fonts", "YOU MUST ENABLE THIS TO USE CUSTOM FONTS").apply {
+            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Fonts", "Temporarily disabled. Refer to the changelog for more info").apply {
+                alpha = 0.5f
                 isChecked = Themer.mSettings.enableFontHook
                 setOnCheckedListener {
-                    Themer.mSettings.enableFontHook = it
-                    promptRestart(view, this@ThemerSettings)
+                    isChecked = !it
+                    // Themer.mSettings.enableFontHook = it
+                    // promptRestart(view, this@ThemerSettings)
                 }
             }
         )

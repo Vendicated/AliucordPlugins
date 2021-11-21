@@ -15,9 +15,7 @@ import android.content.Context
 import android.content.res.*
 import android.graphics.*
 import android.graphics.drawable.*
-import android.os.Bundle
-import android.os.Handler
-import android.os.ParcelFileDescriptor
+import android.os.*
 import android.util.TypedValue
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -53,7 +51,8 @@ fun addPatches(patcher: PatcherAPI) {
     patcher.run {
         if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
 
-        if (Themer.mSettings.enableFontHook) patchGetFont()
+        // if (Themer.mSettings.enableFontHook) patchGetFont()
+        if (File(Constants.BASE_PATH + "/enable_fonts").exists()) patchGetFont()
 
         if (Themer.mSettings.customSounds) patchOpenRawResource()
 
@@ -213,22 +212,29 @@ private fun PatcherAPI.setBackgrounds() {
     }
 }
 
+// This patch somehow causes crashes for some people, I don't get it
+@SuppressLint("RestrictedApi")
 private fun PatcherAPI.patchGetFont() {
     patch(ResourcesCompat::class.java.getDeclaredMethod(
         "loadFont",
         Context::class.java,
         Resources::class.java,
         TypedValue::class.java,
-        Int::class.javaPrimitiveType, //id
+        Int::class.javaPrimitiveType, // id
         Int::class.javaPrimitiveType, // style
         ResourcesCompat.FontCallback::class.java,
         Handler::class.java,
         Boolean::class.javaPrimitiveType, // isRequestFromLayoutInflator
-        Boolean::class.javaPrimitiveType //isCachedOnly
+        Boolean::class.javaPrimitiveType // isCachedOnly
     ), PreHook { param ->
         val font = ResourceManager.getFontForId(param.args[3] as Int) ?: ResourceManager.getDefaultFont()
-        font?.let {
-            param.result = it
+        if (font != null) {
+            param.result = when (val cb = param.args[5] as ResourcesCompat.FontCallback?) {
+                null -> font
+                else -> null.also {
+                    cb.callbackSuccessAsync(font, param.args[6] as Handler?)
+                }
+            }
         }
     })
 }
