@@ -13,7 +13,6 @@ include(":BetterSpotify")
 // include(":TapTap")
 // include(":MessageLinkEmbeds")
 // include(":EmojiUtility")
-// include(":PluginDownloader")
 // include(":Hastebin")
 // include(":UrbanDictionary")
 

@@ -1,3 +1,9 @@
+# DEPRECATED
+
+PluginDownload is now part of Aliucord. There is no need to install this plugin anymore.
+
+___
+
 # PluginDownloader - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/PluginDownloader.zip?raw=true)
 
 Adds plugin downloader to all messages in #plugin-links and #plugin-links-updates on the Aliucord server
