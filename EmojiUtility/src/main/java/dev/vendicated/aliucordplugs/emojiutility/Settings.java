@@ -80,7 +80,7 @@ public class Settings extends BottomSheet {
         try {
             Patches.init(settings, patcher);
         } catch (Throwable th) {
-            EmojiUtility.logger.error(requireContext(), "Something went wrong while initialising the patches :(", th);
+            EmojiUtility.logger.error("Something went wrong while initialising the patches :(", th);
         }
     }
 

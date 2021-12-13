@@ -51,6 +51,7 @@ private val drawables = hashMapOf(
     "Hastebin" to !ic_link_white_24dp,
     "ImageUploader" to !ic_uploads_image_dark,
     "EmojiUtility" to !ic_emoji_24dp,
+    "EmojiReplacer" to !ic_emoji_24dp,
 
     // Juby
     "Experiments" to !ic_security_24dp,
@@ -67,6 +68,7 @@ private val drawables = hashMapOf(
     "RotatedChat" to !com.yalantis.ucrop.R.c.ucrop_rotate, // This is from https://github.com/Yalantis/uCrop lmao
     "RoleColorEverywhere" to !ic_theme_24dp,
     "AccountSwitcher" to !ic_account_circle_white_24dp,
+    "CompactMode" to !com.yalantis.ucrop.R.c.ucrop_ic_scale,
 
     // Xinto
     "LayoutController" to !design_ic_visibility_off,
@@ -78,6 +80,7 @@ private val drawables = hashMapOf(
     "ShowPerms" to !ic_shieldstar_24dp,
     "BetterChannelIcons" to !ic_text_channel_white_24dp,
     "MoreHighlight" to !ic_edit_24dp,
+    "BetterChatbox" to !ic_send_24dp,
 
     // Patchouli
     "CopyInsteadOfShareImages" to !ic_link_white_24dp,
@@ -93,6 +96,7 @@ private val drawables = hashMapOf(
 
     // mantika
     "InvisibleMessages" to !design_ic_visibility_off,
+    "StupidityDB" to !ic_account_reddit_white_24dp,
 
     // Tyman
     "Translate" to !ic_locale_24dp,
@@ -111,7 +115,12 @@ private val drawables = hashMapOf(
     "MoarConfirm" to !ic_check_white_24dp,
     "GhostMessage" to !ic_chat_message_white_24dp,
     "AutoServerNotifs" to !ic_notifications_white_24dp,
-    "ChannelLocker" to !ic_role_lock
+    "ChannelLocker" to !ic_role_lock,
+    "UserTimezones" to !ic_clock_24dp,
+    "Quoter" to !ic_quote_white_a60_24dp,
+
+    // PatchouliSama
+    "ShowAllTwitterImages" to !ic_account_twitter_white_24dp,
 )
 
 val settings = PluginManager.plugins["DedicatedPluginSettings"]!!.settings!!
@@ -194,7 +203,7 @@ class PluginsAdapter(private val touchCallback: DragAndDropHelper) : RecyclerVie
                     }
                 }
             } catch (th: Throwable) {
-                PluginManager.logger.error(ctx, "Failed to launch plugin settings", th)
+                PluginManager.logger.errorToast("Failed to launch plugin settings", th)
             }
         }
     }

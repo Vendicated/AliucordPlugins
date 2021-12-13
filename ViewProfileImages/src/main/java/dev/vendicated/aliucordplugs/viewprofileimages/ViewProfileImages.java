@@ -54,7 +54,7 @@ public class ViewProfileImages extends Plugin {
             urlField.set(attachment, url);
             proxyUrlField.set(attachment, url);
         } catch (Throwable th) {
-            logger.error(ctx, "Failed to build fake attachment D:", th);
+            logger.errorToast("Failed to build fake attachment D:", th);
             return;
         }
 
@@ -157,7 +157,7 @@ public class ViewProfileImages extends Plugin {
                 var bannerView = root.findViewById(guildBannerResId);
                 if (bannerView != null && bannerHash != null) {
                     bannerView.setOnClickListener(e -> {
-                        var banner = IconUtils.INSTANCE.getBannerForGuild(guildId, bannerHash, 2048);
+                        var banner = IconUtils.INSTANCE.getBannerForGuild(guildId, bannerHash, 2048, true);
                         openAttachment(e.getContext(), banner, guildName);
                     });
                 }

@@ -47,13 +47,13 @@ class ThemeCard(ctx: Context) : MaterialCardView(ctx) {
                 f(CheckedSetting.ViewType.SWITCH)
                 setSubtext(null)
 
-                k.a().run {
+                l.a().run {
                     textSize = 16.0f
                     typeface = ResourcesCompat.getFont(ctx, Constants.Fonts.whitney_semibold)
                     movementMethod = LinkMovementMethod.getInstance()
                 }
 
-                k.b().run {
+                l.b().run {
                     setPadding(0, paddingTop, paddingRight, paddingBottom)
                     setBackgroundColor(ColorCompat.getThemedColor(ctx, R.b.colorBackgroundSecondaryAlt))
                 }

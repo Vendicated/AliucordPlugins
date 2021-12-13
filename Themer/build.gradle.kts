@@ -1,4 +1,4 @@
-version = "3.5.3"
+version = "3.5.4"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(

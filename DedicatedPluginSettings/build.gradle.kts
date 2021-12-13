@@ -1,4 +1,4 @@
-version = "1.1.4"
+version = "1.1.5"
 description = "Adds a dedicated plugin settings category to the settings page"
 
 aliucord.changelog.set(

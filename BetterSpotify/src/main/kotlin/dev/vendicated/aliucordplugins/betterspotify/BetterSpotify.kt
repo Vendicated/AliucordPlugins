@@ -48,6 +48,7 @@ val logger = Logger("BetterSpotify")
 @SuppressLint("SetTextI18n")
 class BetterSpotify : Plugin() {
     override fun start(_ctx: Context) {
+
         commands.registerCommand("sendSpotifySong", "Send the currently playing song in chat") {
             val (res, th) = getCurrentTrack()
 

@@ -464,7 +464,7 @@ private fun PatcherAPI.addDownloadButton() {
                                         Utils.showToast("Successfully installed theme $prettyName")
                                     }
                                 } catch (ex: Throwable) {
-                                    logger.error(ctx, "Failed to install theme $prettyName", ex)
+                                    logger.errorToast("Failed to install theme $prettyName", ex)
                                 }
                             }
                         }

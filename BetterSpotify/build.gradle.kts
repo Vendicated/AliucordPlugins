@@ -1,4 +1,4 @@
-version = "1.1.4"
+version = "1.1.5"
 description = "Better Spotify Integration - Listen along with your friends!"
 
 aliucord.changelog.set("""

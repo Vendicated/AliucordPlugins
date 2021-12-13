@@ -10,7 +10,6 @@
 
 package dev.vendicated.aliucordplugs.emojiutility.clonemodal;
 
-import android.content.Context;
 import android.util.Base64;
 import android.view.View;
 
@@ -19,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.aliucord.*;
 import com.aliucord.fragments.SettingsPage;
-import dev.vendicated.aliucordplugs.emojiutility.EmojiUtility;
 import com.aliucord.utils.RxUtils;
 import com.aliucord.wrappers.GuildEmojiWrapper;
 import com.discord.api.permission.Permission;
@@ -34,6 +32,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import dev.vendicated.aliucordplugs.emojiutility.EmojiUtility;
 
 public class Modal extends SettingsPage {
     private static final Map<Integer, Integer> emojiLimits = new HashMap<>();
@@ -101,20 +101,20 @@ public class Modal extends SettingsPage {
         } catch (IOException ex) { EmojiUtility.logger.error(ex); return null; }
     }
 
-    public void clone(Context ctx, Guild guild) {
+    public void clone(Guild guild) {
         Utils.threadPool.execute(() -> {
             var api = RestAPI.getApi();
             var uri = imageToDataUri();
             if (uri == null) {
-                EmojiUtility.logger.error(ctx, "Something went wrong while preparing the image");
+                EmojiUtility.logger.errorToast("Something went wrong while preparing the image");
                 return;
             }
             var obs = api.postGuildEmoji(guild.getId(), new RestAPIParams.PostGuildEmoji(name, uri));
-            var res = RxUtils.getResultBlocking(obs);
-            if (res.second == null)
-                EmojiUtility.logger.info(ctx, String.format("Successfully cloned %s to %s", name, guild.getName()));
+            var res = RxUtils.await(obs);
+            if (res.getSecond() == null)
+                EmojiUtility.logger.infoToast(String.format("Successfully cloned %s to %s", name, guild.getName()));
             else
-                EmojiUtility.logger.error(ctx, "Something went wrong while cloning this emoji", res.second);
+                EmojiUtility.logger.errorToast("Something went wrong while cloning this emoji", res.getSecond());
         });
     }
 }

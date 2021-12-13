@@ -34,13 +34,21 @@ import kotlin.jvm.functions.Function4;
 public class EmojiDownloader {
     private static final Pattern emotePattern = Pattern.compile("<?(a)?:?(\\w{2,32}):(\\d{17,19})>?");
 
+    private static String sanitizeFilename(String name) {
+        // thanks sindre lmao https://github.com/sindresorhus/filename-reserved-regex/blob/main/index.js
+        name = name.replaceAll("[<>:\"/\\\\|?*\\u0000-\\u001F]", "");
+        int len = name.length();
+        if (len > 100) name = name.substring(0, 100);
+        return name;
+    }
+
     public static File getEmojiFolder() {
         var downloadFolder = EmojiUtility.mSettings.getString("downloadDir", "");
         File dir;
-        if (downloadFolder.equals("") || !(dir = new File(downloadFolder)).exists()) {
+        if (downloadFolder.equals("") || !((dir = new File(downloadFolder)).exists() || dir.mkdirs())) {
             dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Emojis");
+            if (!dir.exists() && !dir.mkdirs()) throw new RuntimeException("Failed to create emoji folder " + dir.getAbsolutePath());
         }
-        if (!dir.exists() && !dir.mkdirs()) throw new RuntimeException("Failed to create emoji folder " + dir.getAbsolutePath());
         return dir;
     }
 
@@ -89,7 +97,7 @@ public class EmojiDownloader {
         var emojis = guild.getEmojis();
         if (emojis.size() == 0) return null;
         if (executor == null) executor = makeExecutor(emojis.size());
-        return download(new File(getEmojiFolder(), guild.getName()), emojis, executor);
+        return download(new File(getEmojiFolder(), sanitizeFilename(guild.getName())), emojis, executor);
     }
 
     public static int[] downloadFromAllGuilds(Function4<String, String, Integer, int[], Object> onNext) {

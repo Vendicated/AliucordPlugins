@@ -51,6 +51,6 @@ public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickL
     }
 
     @Override public void onClick(View view) {
-        adapter.onClick(view.getContext(), getAdapterPosition());
+        adapter.onClick(getAdapterPosition());
     }
 }

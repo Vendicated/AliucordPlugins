@@ -1,7 +1,7 @@
 include(":PlayableEmbeds")
 // include(":AliuEval")
 // include(":OwO")
-include(":EmojiReplacer")
+// include(":EmojiReplacer")
 include(":ShowBlockedMessages")
 include(":BetterSpotify")
 include(":Brainfuck")

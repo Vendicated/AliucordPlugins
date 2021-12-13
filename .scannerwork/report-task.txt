@@ -1,0 +1,6 @@
+projectKey=AliucordPlugins
+serverUrl=http://localhost:9000
+serverVersion=9.1.0.47736
+dashboardUrl=http://localhost:9000/dashboard?id=AliucordPlugins
+ceTaskId=AX2Io6lgKu2Z6sTfyIcy
+ceTaskUrl=http://localhost:9000/api/ce/task?id=AX2Io6lgKu2Z6sTfyIcy

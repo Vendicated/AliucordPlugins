@@ -177,7 +177,7 @@ class ThemerSettings : SettingsPage() {
                             if (ex is ThemeException) {
                                 Utils.showToast(ex.message, true)
                             } else {
-                                logger.error(Utils.appContext, "Something went wrong, sorry. Check the debug log for more info", ex)
+                                logger.errorToast("Something went wrong, sorry. Check the debug log for more info", ex)
                             }
                         }
                     }

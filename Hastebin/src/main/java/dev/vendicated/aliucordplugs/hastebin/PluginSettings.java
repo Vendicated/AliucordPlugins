@@ -46,7 +46,6 @@ public final class PluginSettings extends SettingsPage {
         input.setHint("Hastebin Mirror");
 
         var editText = input.getEditText();
-        assert editText != null;
 
         var button = new Button(ctx);
         button.setText("Totally wrong text oh no i better update this");

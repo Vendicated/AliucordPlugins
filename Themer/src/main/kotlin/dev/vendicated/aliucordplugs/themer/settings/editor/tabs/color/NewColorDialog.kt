@@ -180,7 +180,7 @@ private class AutoCompleteAdapter(
             }
 
         } catch (th: Throwable) {
-            logger.error(ctx, "Failed to open preview", th)
+            logger.errorToast("Failed to open preview", th)
         }
     }
 

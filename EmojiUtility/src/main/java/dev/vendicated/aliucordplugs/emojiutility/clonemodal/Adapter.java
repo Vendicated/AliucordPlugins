@@ -10,7 +10,6 @@
 
 package dev.vendicated.aliucordplugs.emojiutility.clonemodal;
 
-import android.content.Context;
 import android.view.*;
 
 import androidx.annotation.NonNull;
@@ -62,8 +61,8 @@ public class Adapter extends RecyclerView.Adapter<ViewHolder> {
         holder.name.setText(guild.getName());
     }
 
-    public void onClick(Context ctx, int position) {
+    public void onClick(int position) {
         var guild = guilds.get(position);
-        modal.clone(ctx, guild);
+        modal.clone(guild);
     }
 }

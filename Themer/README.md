@@ -54,10 +54,10 @@ Simply open the plugin settings, click new theme and go crazy! Check the pins in
     "ginto_bold": "ginto-replacement-url"
   },
   "colors": {
-    "brand_new": -13978120,
+    "brand_new": -13978120
   },
   "drawableTints": {
-    "drawable_overlay_channels_selected_dark": -131020192,
+    "drawable_overlay_channels_selected_dark": -131020192
   }
 }
 ```

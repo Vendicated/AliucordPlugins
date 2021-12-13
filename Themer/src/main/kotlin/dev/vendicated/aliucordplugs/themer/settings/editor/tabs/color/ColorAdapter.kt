@@ -111,5 +111,5 @@ class ColorAdapter(
 }
 
 private fun ColorPickerDialog.setListener(listener: c.k.a.a.f) = apply {
-    j = listener
+    k = listener
 }

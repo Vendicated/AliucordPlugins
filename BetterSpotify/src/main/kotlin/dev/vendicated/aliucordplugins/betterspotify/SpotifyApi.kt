@@ -93,17 +93,17 @@ object SpotifyApi {
                                 )
                             } else {
                                 BetterSpotify.stopListening(skipToast = true)
-                                logger.error(Utils.appContext, "Got \"Unauthorized\" Error. Try relinking Spotify")
+                                logger.errorToast("Got \"Unauthorized\" Error. Try relinking Spotify")
                             }
                             return@execute
                         }
                         404 -> {
                             BetterSpotify.stopListening(skipToast = true)
-                            logger.error(Utils.appContext, "Failed to play. Make sure your Spotify is running", th)
+                            logger.errorToast("Failed to play. Make sure your Spotify is running", th)
                             return@execute
                         }
                     }
-                    logger.error(Utils.appContext, "Failed to play that song :( Check the debug log", th)
+                    logger.errorToast("Failed to play that song :( Check the debug log", th)
                 }
             }
         }
