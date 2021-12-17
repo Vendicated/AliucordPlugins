@@ -15,20 +15,23 @@ import com.aliucord.Logger
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 import com.aliucord.patcher.Hook
+import com.aliucord.settings.delegate
 import com.discord.models.domain.emoji.ModelEmojiUnicode
+import com.discord.stores.StoreStream
 
 val logger = Logger("EmojiReplacer")
 @AliucordPlugin
 class EmojiReplacer : Plugin() {
+    private val activePack : String by settings.delegate("none")
+
     init {
         settingsTab = SettingsTab(Settings::class.java)
     }
 
     override fun start(ctx: Context) {
         patcher.patch(ModelEmojiUnicode::class.java.getDeclaredMethod("getImageUri", String::class.java, Context::class.java), Hook { param ->
-            emojis[param.args[0]]?.let {
-                param.result = it
-            }
+            val emoji = StoreStream.getEmojis().unicodeEmojiSurrogateMap[param.args[0]] ?: return@Hook
+            logger.debug(emoji.toString())
         })
     }
 
