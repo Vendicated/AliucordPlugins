@@ -1,3 +1,3 @@
-# Template - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/DeezNuts.zip?raw=true)
+# FixEmotes - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/FixEmotes.zip?raw=true)
 
-This is the Template I generate all my plugins from. Not much to see here :)
+Fixes some emotes being rendered unusable if you have two emotes with the same name but different casing
