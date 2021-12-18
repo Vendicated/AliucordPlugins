@@ -116,7 +116,7 @@ private val drawables = hashMapOf(
     "GhostMessage" to !ic_chat_message_white_24dp,
     "AutoServerNotifs" to !ic_notifications_white_24dp,
     "ChannelLocker" to !ic_role_lock,
-    "UserTimezones" to !ic_clock_24dp,
+    "Timezones" to !ic_clock_24dp,
     "Quoter" to !ic_quote_white_a60_24dp,
 
     // PatchouliSama
