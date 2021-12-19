@@ -1,8 +1,10 @@
-version = "3.5.4"
+version = "3.5.5"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    # 3.5.5
+    * Close context menu after installing theme
     
     # 3.5.3
     * Temporarily disable custom fonts forcibly as they cause issues for many people. They will be back soon.
