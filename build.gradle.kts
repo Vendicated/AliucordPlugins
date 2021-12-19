@@ -18,7 +18,7 @@ allprojects {
         google()
         mavenCentral()
         mavenLocal()
-        maven("https://jitpack.io")
+        maven("https://maven.aliucord.com/snapshots")
     }
 }
 
@@ -67,7 +67,7 @@ subprojects {
         val implementation by configurations
 
         discord("com.discord:discord:aliucord-SNAPSHOT")
-        implementation("com.github.Aliucord:Aliucord:main-SNAPSHOT")
+        implementation("com.aliucord:Aliucord:main-SNAPSHOT")
         // implementation("com.github.Aliucord:Aliucord:unspecified")
 
         implementation("androidx.appcompat:appcompat:1.4.0")
