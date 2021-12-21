@@ -415,9 +415,9 @@ private fun PatcherAPI.addDownloadButton() {
         "configureUI",
         arrayOf<Class<*>>(WidgetChatListActions.Model::class.java),
         Hook { param ->
-            val layout =
-                ((param.thisObject as WidgetChatListActions).requireView() as ViewGroup).getChildAt(0) as ViewGroup?
-                    ?: return@Hook
+            val thisObj = param.thisObject as WidgetChatListActions
+            val layout = (thisObj.requireView() as ViewGroup).getChildAt(0) as ViewGroup?
+                ?: return@Hook
 
             if (layout.findViewById<View>(id) != null) return@Hook
 
@@ -456,6 +456,7 @@ private fun PatcherAPI.addDownloadButton() {
 
                         setCompoundDrawablesRelativeWithIntrinsicBounds(drawable, null, null, null)
                         setOnClickListener {
+                            thisObj.dismiss()
                             Utils.threadPool.execute {
                                 try {
                                     Http.Request(url).use {
