@@ -49,7 +49,7 @@ class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttac
     private var mExpanded = false
     private var mHidden = false
 
-    private val canExpand = attachment.size > 1000
+    private val canExpand = attachment.size > previewSize
 
     private val mTextView: TextView
     private val mFooterLayout: LinearLayout
