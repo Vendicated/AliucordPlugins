@@ -11,8 +11,10 @@
 package dev.vendicated.aliucordplugins.template
 
 import android.content.Context
+import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
 
+@AliucordPlugin
 class Template : Plugin() {
     override fun start(ctx: Context) {
 

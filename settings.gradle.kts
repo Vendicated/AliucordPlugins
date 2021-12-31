@@ -1,3 +1,6 @@
+include(":TextFilePreview")
+include(":TextFilePreview")
+include(":SnowflakeLookup")
 include(":FixEmotes")
 include(":PlayableEmbeds")
 // include(":AliuEval")
