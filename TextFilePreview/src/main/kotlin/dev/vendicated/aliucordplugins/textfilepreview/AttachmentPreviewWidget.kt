@@ -25,6 +25,8 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.aliucord.Http
 import com.aliucord.Utils
+import com.aliucord.api.SettingsAPI
+import com.aliucord.settings.delegate
 import com.aliucord.utils.DimenUtils.dp
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.filename
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.size
@@ -38,10 +40,14 @@ import com.lytefast.flexinput.R
 val previewWidgetId = View.generateViewId()
 
 @SuppressLint("SetTextI18n")
-class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttachment) : LinearLayout(ctx), View.OnClickListener {
+class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttachment, private val settings: SettingsAPI) : LinearLayout(ctx),
+    View.OnClickListener {
+    private val previewSize: Int by settings.delegate(300)
+
     private var mContentPreview = null as String?
     private var mFullContent = null as String?
     private var mExpanded = false
+    private var mHidden = false
 
     private val canExpand = attachment.size > 1000
 
@@ -61,6 +67,7 @@ class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttac
         mTextView = TextView(ctx, null, 0, R.i.UiKit_TextView).apply {
             text = "Loading..."
             setPadding(dp16, dp16, dp16, dp16)
+            setTextIsSelectable(true)
         }
 
         mFooterLayout = LinearLayout(ctx).apply {
@@ -80,31 +87,40 @@ class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttac
                 addView(this)
             }
 
-            ImageView(ctx).run {
-                layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT).apply {
-                    gravity = Gravity.END
+            addView(makeImageView(R.e.ic_copy_24dp, "Download", 4.dp) {
+                if (mExpanded && mFullContent != null ) {
+                    Utils.setClipboard("content", mFullContent!!)
+                    Utils.showToast("Copied to clipboard!")
+                } else if (mContentPreview != null) {
+                    Utils.setClipboard("content", mContentPreview!!)
+                    Utils.showToast("Partial content copied. Expand the preview to copy the full content.")
                 }
-                ContextCompat.getDrawable(ctx, R.e.ic_file_download_white_24dp)!!.mutate().run {
-                    setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
-                    setImageDrawable(this)
-                }
-                contentDescription = "Download" // I LOVE Accessibility
+            })
 
-                setOnClickListener {
-                    alpha = 0.5f
-                    isEnabled = false
-                    val commonCallback = { _: String? ->
-                        alpha = 1f
-                        isEnabled = true
-                    }
-                    NetworkUtils.downloadFile(ctx, Uri.parse(attachment.url), attachment.filename, null, commonCallback) {
-                        logger.errorToast("Failed to download ${attachment.filename}", it)
-                        commonCallback(null)
-                    }
+            addView(makeImageView(R.e.ic_file_download_white_24dp, "Download", 4.dp) {
+                alpha = 0.5f
+                isEnabled = false
+                val commonCallback = { _: String? ->
+                    alpha = 1f
+                    isEnabled = true
                 }
+                NetworkUtils.downloadFile(context, Uri.parse(attachment.url), attachment.filename, null, commonCallback) {
+                    logger.errorToast("Failed to download ${attachment.filename}", it)
+                    commonCallback(null)
+                }
+            })
 
-                addView(this)
-            }
+            addView(makeImageView(R.e.ic_visibility_white_24dp, "Close preview") {
+                it as ImageView
+                if (mHidden) {
+                    mTextView.visibility = View.VISIBLE
+                    it.setImageDrawable(getThemedDrawable(R.e.ic_visibility_white_24dp))
+                } else {
+                    mTextView.visibility = View.GONE
+                    it.setImageDrawable(getThemedDrawable(R.e.ic_visibility_off_white_a60_24dp))
+                }
+                mHidden = !mHidden
+            })
         }
         addView(mTextView)
         addView(mFooterLayout)
@@ -112,7 +128,7 @@ class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttac
         Utils.threadPool.execute {
             try {
                 mContentPreview = Http.Request(attachment.url).use {
-                    it.setHeader("Range", "bytes=0-1000") // Only download first 1Kb to limit data usage
+                    it.setHeader("Range", "bytes=0-$previewSize") // Only download first 1Kb to limit data usage
                     it.execute().text()
                 }
             } catch (th: Throwable) {
@@ -167,11 +183,26 @@ class AttachmentPreviewWidget(ctx: Context, private val attachment: MessageAttac
     override fun onClick(view: View) {
         if (attachment.size > 1000 * 500) {
             Utils.showToast("That file is too large. Please download it to view it fully.")
-        } else if (canExpand) {
+        } else if (canExpand && !mHidden) {
             Utils.mainThread.post {
                 mExpanded = !mExpanded
                 configure()
             }
         }
+    }
+
+    private fun makeImageView(drawableId: Int, accessibilityText: String, marginRight: Int = 0, onClick: OnClickListener) = ImageView(context).apply {
+        layoutParams = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.MATCH_PARENT).apply {
+            gravity = Gravity.END
+            marginEnd = marginRight
+        }
+        setImageDrawable(getThemedDrawable(drawableId))
+        contentDescription = accessibilityText // I LOVE Accessibility
+
+        setOnClickListener(onClick)
+    }
+
+    private fun getThemedDrawable(drawableId: Int) = ContextCompat.getDrawable(context, drawableId)!!.mutate().apply {
+        setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
     }
 }

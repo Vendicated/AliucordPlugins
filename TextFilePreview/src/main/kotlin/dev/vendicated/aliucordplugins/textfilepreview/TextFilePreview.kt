@@ -25,7 +25,11 @@ import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
 val logger = Logger("TextFilePreview")
 
 @AliucordPlugin
-class TextfilePreview : Plugin() {
+class TextFilePreview : Plugin() {
+    init {
+        settingsTab = SettingsTab(LeSettings::class.java)
+    }
+    
     override fun start(ctx: Context) {
         patcher.after<WidgetChatListAdapterItemAttachment>("configureUI", WidgetChatListAdapterItemAttachment.Model::class.java) { param ->
             val model = param.args[0] as WidgetChatListAdapterItemAttachment.Model
@@ -40,7 +44,7 @@ class TextfilePreview : Plugin() {
 
             if (plainTextExtensions.contains(entry.attachment.url.substringAfterLast('.'))) {
                 cardView.getChildAt(0).visibility = View.GONE
-                cardView.addView(AttachmentPreviewWidget(cardView.context, entry.attachment))
+                cardView.addView(AttachmentPreviewWidget(cardView.context, entry.attachment, settings))
                 cardView.setOnClickListener(null)
             }
         }
