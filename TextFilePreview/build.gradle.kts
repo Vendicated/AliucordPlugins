@@ -1,4 +1,4 @@
-version = "1.0.1"
+version = "1.0.2"
 description = "Preview the content of Text files in Discord"
 
 aliucord.changelog.set(
