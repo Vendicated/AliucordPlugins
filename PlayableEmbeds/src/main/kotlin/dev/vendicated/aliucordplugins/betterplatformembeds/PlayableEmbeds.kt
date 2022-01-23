@@ -59,6 +59,7 @@ class PlayableEmbeds : Plugin() {
             when (embed.rawProvider?.name) {
                 "YouTube" -> addYoutubeEmbed(layout, url)
                 "Spotify" -> addSpotifyEmbed(layout, url)
+                "RedGIFs" -> addRedGIFsEmbed(layout, url)
             }
         }
     }
