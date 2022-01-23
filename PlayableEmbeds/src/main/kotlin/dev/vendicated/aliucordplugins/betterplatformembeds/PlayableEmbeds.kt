@@ -45,6 +45,7 @@ class PlayableEmbeds : Plugin() {
     private val spotifyUrlRe = Regex("https://open\\.spotify\\.com/(\\w+)/(\\w+)")
     private val youtubeUrlRe =
         Regex("(?:https?:\\/\\/)?(?:(?:www|m)\\.)?(?:youtu\\.be\\/|youtube(?:-nocookie)?\\.com\\/(?:embed\\/|v\\/|watch\\?v=|watch\\?.+&v=))((\\w|-){11})(?:\\S+)?")
+    private val redgifsUrlRe = Regex("https://(www\\.)?redgifs\\.com/watch/(\\w+)")
 
     override fun start(_context: Context) {
         patcher.after<WidgetChatListAdapterItemEmbed>("configureUI", WidgetChatListAdapterItemEmbed.Model::class.java) {
@@ -165,6 +166,71 @@ class PlayableEmbeds : Plugin() {
                 """,
                 "text/html",
                 "UTF-8"
+            )
+        }
+    }
+
+        private fun addRedGIFsEmbed(layout: ViewGroup, url: String) {
+        val ctx = layout.context
+
+        val (_, _, videoId) = redgifsUrlRe.find(url, 0).groupValues
+
+        val cardView = layout.findViewById<CardView>(Utils.getResId("embed_image_container", "id"))
+        val chatListItemEmbedImage  = cardView.findViewById<SimpleDraweeView>(Utils.getResId("chat_list_item_embed_image", "id"))
+        val playButton = cardView.findViewById<View>(Utils.getResId("chat_list_item_embed_image_icons", "id"))
+        playButton.visibility = View.GONE
+        chatListItemEmbedImage.visibility = View.GONE
+
+        val webView = ScrollableWebView(ctx).apply {
+            id = widgetId
+            setBackgroundColor(Color.TRANSPARENT)
+            layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT)
+            @SuppressLint("SetJavaScriptEnabled")
+            settings.javaScriptEnabled = true
+
+            cardView.addView(this)
+        }
+
+        webView.run {
+            loadData(
+                    """
+                <html>
+                    <head>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 0;
+                            }
+                            .wrapper {
+                                position: relative;
+                                padding-bottom: 56.25%; /* (100% / 16 * 9), makes the div 16x9 */
+                                height: 0;
+                                overflow: hidden;
+                            }
+                            .wrapper iframe {
+                                position: absolute;
+                                top: 0; 
+                                left: 0;
+                                width: 100%;
+                                height: 100%;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="wrapper">
+                            <iframe
+                                src="https://www.redgifs.com/ifr/$videoId?autoplay=0"
+                                title="RedGIFs video player"
+                                frameborder="0"
+                                allow="clipboard-write; encrypted-media; picture-in-picture"
+                                autoplay="false"
+                            />
+                        </div>
+                    </body>
+                </html>
+                """,
+                    "text/html",
+                    "UTF-8"
             )
         }
     }
