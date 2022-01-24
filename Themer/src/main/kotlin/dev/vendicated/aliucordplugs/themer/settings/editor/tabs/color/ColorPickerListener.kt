@@ -13,7 +13,7 @@ package dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color
 class ColorPickerListener(
     private val adapter: ColorAdapter,
     private val position: Int
-) : c.k.a.a.f {
+) : b.k.a.a.f {
     override fun onColorReset(color: Int) {}
 
     override fun onColorSelected(_id: Int, color: Int) {

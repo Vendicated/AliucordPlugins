@@ -110,6 +110,6 @@ class ColorAdapter(
     }
 }
 
-private fun ColorPickerDialog.setListener(listener: c.k.a.a.f) = apply {
+private fun ColorPickerDialog.setListener(listener: b.k.a.a.f) = apply {
     k = listener
 }

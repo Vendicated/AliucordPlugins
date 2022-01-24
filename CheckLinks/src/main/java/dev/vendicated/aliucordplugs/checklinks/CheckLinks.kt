@@ -120,14 +120,14 @@ class CheckLinks : Plugin() {
         val dialogTextId = Utils.getResId("masked_links_body_text", "id")
 
         patcher.patch(
-            c.a.a.g.a::class.java.getMethod("onViewBound", View::class.java),
+            b.a.a.g.a::class.java.getMethod("onViewBound", View::class.java),
             Hook { param ->
                 val dialog = param.thisObject as AppDialog
                 val url = dialog.arguments?.getString("WIDGET_SPOOPY_LINKS_DIALOG_URL")
                     ?: return@Hook
 
                 if (getBinding == null) {
-                    c.a.a.g.a::class.java.declaredMethods.find {
+                    b.a.a.g.a::class.java.declaredMethods.find {
                         ViewBinding::class.java.isAssignableFrom(it.returnType)
                     }?.let {
                         Logger("CheckLinks").info("Found obfuscated getBinding(): ${it.name}()")

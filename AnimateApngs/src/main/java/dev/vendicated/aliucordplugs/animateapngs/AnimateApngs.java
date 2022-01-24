@@ -38,7 +38,7 @@ public class AnimateApngs extends Plugin {
         Utils.threadPool.execute(() -> {
             try (var is = new Http.Request(url).execute().stream()) {
                 // You cannot consume the stream twice so just yolo it and don't use Apng.Companion.isApng first, eh whatever.
-                var drawable = c.l.a.a.a(is, w, h);
+                var drawable = b.l.a.a.a(is, w, h);
                 if (view != null)
                     Utils.mainThread.post(() -> {
                         view.setImageDrawable(drawable);

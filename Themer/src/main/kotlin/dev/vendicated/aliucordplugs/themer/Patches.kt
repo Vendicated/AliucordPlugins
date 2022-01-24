@@ -78,7 +78,7 @@ private fun setBackground(view: View, parent: ViewGroup = view as ViewGroup) {
         SimpleDraweeView(parent.context).run {
             this.id = backgroundId
             layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            controller = c.f.g.a.a.b.a().run /*  Fresco.newDraweeControllerBuilder() */ {
+            controller = b.f.g.a.a.b.a().run /*  Fresco.newDraweeControllerBuilder() */ {
                 f(ResourceManager.animatedBgUri) // setUri(Uri)
                 m = true // mAutoPlayAnimations
                 a() // build()
