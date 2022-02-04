@@ -4,9 +4,9 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at 
+ * You may obtain a copy of the License at
  * http://www.apache.org/licenses/LICENSE-2.0
-*/
+ */
 
 package dev.vendicated.aliucordplugs.emojiutility;
 
@@ -78,19 +78,18 @@ public class EmojiDownloader {
         }
     }
 
-    private static final String[] messages = { "Done!", "Already downloaded", "Something went wrong, sorry :(" };
+    private static final String[] messages = {null, "Already downloaded", "Something went wrong, sorry :("};
 
     public static void downloadSingle(long id, String name, boolean animated, Runnable cb) {
         Utils.threadPool.execute(() -> {
-            int res = downloadSingle(id, name, animated);
-            if (res != 0) Utils.showToast(messages[res]);
+            var file = getFileForEmoji(getEmojiFolder(), id, name, animated);
+            int res = download(file, getUrl(id, animated));
+            Utils.showToast(res == 0
+                    ? "Downloaded to " + file.getAbsolutePath()
+                    : messages[res]
+            );
             cb.run();
         });
-    }
-
-    public static int downloadSingle(long id, String name, boolean animated) {
-        var file = getFileForEmoji(getEmojiFolder(), id, name, animated);
-        return download(file, getUrl(id, animated));
     }
 
     public static int[] downloadFromGuild(Guild guild, ExecutorService executor) {
@@ -130,7 +129,9 @@ public class EmojiDownloader {
         return download(getEmojiFolder(), emojis, makeExecutor(emojis.size()));
     }
 
-    /** @return int[success, skipped, failed] */
+    /**
+     * @return int[success, skipped, failed]
+     */
     private static int[] download(File outputFolder, List<GuildEmoji> emojis, ExecutorService executor) {
         if (!outputFolder.exists() && !outputFolder.mkdirs())
             throw new RuntimeException("Could not create directory " + outputFolder.getAbsolutePath());
@@ -161,11 +162,12 @@ public class EmojiDownloader {
         return result;
     }
 
-    /** @return <ul>
-     *  <li>0: Success</li>
-     *  <li>1: Skipped</li>
-     *  <li>2: Failed</li>
-     *  </ul>
+    /**
+     * @return <ul>
+     * <li>0: Success</li>
+     * <li>1: Skipped</li>
+     * <li>2: Failed</li>
+     * </ul>
      */
     private static int download(File outFile, String url) {
         if (!EmojiUtility.useHumanNames && outFile.exists()) return 1;
@@ -182,8 +184,8 @@ public class EmojiDownloader {
     private static File getFileForEmoji(File dir, long id, String name, boolean animated) {
         var ext = animated ? ".gif" : ".png";
         return EmojiUtility.useHumanNames
-            ? createFileForEmoji(dir, name, ext)
-            : new File(dir, id + ext);
+                ? createFileForEmoji(dir, name, ext)
+                : new File(dir, id + ext);
     }
 
     private static File createFileForEmoji(File dir, String name, String ext) {

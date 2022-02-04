@@ -1,8 +1,11 @@
-version = "1.1.4"
+version = "1.1.5"
 description = "Adds lots of utility for emojis"
 
 aliucord.changelog.set(
     """
+    # 1.1.5
+    * Add Download tooltip
+    
     # 1.1.3
     * Make image in emoji modal open in media viewer on click
     
