@@ -1,8 +1,12 @@
-version = "3.5.6"
+version = "3.6.0"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    # 3.6.0
+    * Make it possible to theme blocked messages. Discord is very silly so I had to hack this in, but it works now! :) (Simple Colors -> blocked_bg)
+    * It is now possible to theme revealed spoilers (black_alpha_10 or white_alpha_10 in light theme)
+    
     # 3.5.5
     * Close context menu after installing theme
     

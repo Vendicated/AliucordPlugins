@@ -83,7 +83,7 @@ object ResourceManager {
             colorsByName[name] = color
         } else {
             when (name) {
-                "statusbar", "input_background", "active_channel" -> colorsByName[name] = color
+                "statusbar", "input_background", "active_channel", "blocked_bg" -> colorsByName[name] = color
                 else -> logger.warn("Unrecognised colour $name")
             }
         }

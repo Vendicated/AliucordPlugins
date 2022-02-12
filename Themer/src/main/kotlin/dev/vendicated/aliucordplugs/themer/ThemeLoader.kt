@@ -245,7 +245,7 @@ object ThemeLoader {
                             ResourceManager.putDrawableTint("drawable_overlay_channels_active_light", v)
                             ResourceManager.putColor(it, v)
                         }
-                        "statusbar", "input_background" -> ResourceManager.putColor(it, v)
+                        "statusbar", "input_background", "blocked_bg" -> ResourceManager.putColor(it, v)
                     }
                 }
             }

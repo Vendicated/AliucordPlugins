@@ -28,6 +28,11 @@ enum class TransparencyMode(val value: Int) {
 const val DEFAULT_OVERLAY_ALPHA = 150
 val THEME_DIR = File(Constants.BASE_PATH, "themes")
 
+// Discord has these HARDCODED instead of using colour resource :husk:
+// Thus, compare colour in ColorDrawable.setColor to these values to replace them
+const val BLOCKED_COLOR_DARK = 0xff34373c.toInt()
+const val BLOCKED_COLOR_LIGHT = 0xfffcfcfc.toInt()
+
 // Credit for these colours to both https://github.com/Aliucord/DiscordThemer
 // and https://github.com/GangsterFox/AliuFox-themes/blob/main/ThemerDocu.md
 
@@ -66,7 +71,8 @@ val SIMPLE_KEYS = arrayOf(
     "mention_highlight",
     "active_channel",
     "statusbar",
-    "input_background"
+    "input_background",
+    "blocked_bg"
 )
 
 val SIMPLE_ACCENT_NAMES = arrayOf(
@@ -132,7 +138,7 @@ val SIMPLE_BG_SECONDARY_ATTRS = arrayOf(
     "colorBackgroundTertiary",
     "colorBackgroundSecondary",
     "primary_700",
-    "theme_chat_spoiler_bg"
+    "theme_chat_spoiler_bg",
 )
 
 val SIMPLE_SOUND_NAMES = arrayOf(
@@ -182,10 +188,11 @@ fun initAttrMappings() {
             "primary_700",
             "colorBackgroundTertiary",
             "colorBackgroundSecondary",
-            "theme_chat_spoiler_bg"
         ),
         pairOf("primary_800", "primary_200") to arrayOf("primary_800"),
         pairOf("primary_900", "primary_100") to arrayOf("primary_900"),
+        pairOf("primary_300", "primary_700") to arrayOf("theme_chat_spoiler_bg"),
+        pairOf("black_alpha_10", "white_alpha_10") to arrayOf("theme_chat_spoiler_bg_visible")
     )
 
     with(ATTR_MAPPINGS) {

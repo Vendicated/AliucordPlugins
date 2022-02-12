@@ -46,7 +46,6 @@ import java.io.*
 import java.net.URLDecoder
 import java.util.regex.Pattern
 
-
 fun addPatches(patcher: PatcherAPI) {
     patcher.run {
         if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
@@ -263,7 +262,15 @@ private fun PatcherAPI.patchSetColor() {
     patch(
         ColorDrawable::class.java.getDeclaredMethod("setColor", Int::class.javaPrimitiveType),
         PreHook { param ->
-            ResourceManager.getColorReplacement(param.args[0] as Int)?.let {
+            val color = param.args[0] as Int
+            ResourceManager.getColorReplacement(color)?.let {
+                param.args[0] = it
+                return@PreHook
+            }
+            // Discord has blocked message colours HARDCODED, so this is the only way to theme it :husk:
+            // I HATE DISCORD
+            val isBlockedColor = (color == BLOCKED_COLOR_DARK && currentTheme != "light") || (color == BLOCKED_COLOR_LIGHT && currentTheme == "light")
+            if (isBlockedColor) ResourceManager.getColorForName("blocked_bg")?.let {
                 param.args[0] = it
             }
         }
@@ -298,7 +305,6 @@ private fun PatcherAPI.tintDrawables() {
 }
 
 private fun PatcherAPI.themeAttributes() {
-    // Okay just dont work then, dickhead
     patch(ColorCompat::class.java.getDeclaredMethod("getThemedColor", Context::class.java, Int::class.javaPrimitiveType),
         PreHook { cf ->
             ResourceManager.getAttrForId(cf.args[1] as Int)?.let {
@@ -306,77 +312,6 @@ private fun PatcherAPI.themeAttributes() {
             }
         }
     )
-/*
-    fun setData(idxIdx: Int, outIdx: Int) =
-        Hook { cf ->
-            ResourceManager.getAttrForId(cf.args[idxIdx] as Int)?.let {
-                (cf.args[outIdx] as TypedValue).data = it
-            }
-        }
-
-    val bool = Boolean::class.javaPrimitiveType
-    val int = Int::class.javaPrimitiveType
-    val tv = TypedValue::class.java
-    val am = AssetManager::class.java
-    val res = Resources::class.java
-    val theme = Resources.Theme::class.java
-
-    patch(theme.getDeclaredMethod("resolveAttribute", int, tv, bool), setData(0, 1))
-    patch(res.getDeclaredMethod("getValue", int, tv, bool), setData(0, 1))
-    patch(res.getDeclaredMethod("getValueForDensity", int, int, tv, bool), setData(0, 2))
-    // patch(themeImpl.getDeclaredMethod("resolveAttribute", int, tv, bool), setData(0, 1))
-    patch(am.getDeclaredMethod("getResourceValue", int, int, tv, bool), setData(1, 2))
-
-
-    patch(
-        Resources.Theme::class.java.getDeclaredMethod(
-            "obtainStyledAttributes",
-            IntArray::class.java
-        ), Hook { cf ->
-            val typedArray = cf.result as TypedArray
-            val data = ReflectUtils.getField(typedArray, "mData") as IntArray
-            (cf.args[0] as IntArray).forEachIndexed { idx, id ->
-                ResourceManager.getAttrForId(id)?.let {
-                    data[idx + 1] = it
-                }
-            }
-        }
-    )
-
-    patch(
-        Resources.Theme::class.java.getDeclaredMethod(
-            "obtainStyledAttributes",
-            Int::class.javaPrimitiveType,
-            IntArray::class.java
-        ), Hook { cf ->
-            val typedArray = cf.result as TypedArray
-            val data = ReflectUtils.getField(typedArray, "mData") as IntArray
-            (cf.args[1] as IntArray).forEachIndexed { idx, id ->
-                ResourceManager.getAttrForId(id)?.let {
-                    data[idx + 1] = it
-                }
-            }
-        }
-    )
-
-    patch(
-        Resources.Theme::class.java.getDeclaredMethod(
-            "obtainStyledAttributes",
-            AttributeSet::class.java,
-            IntArray::class.java,
-            Int::class.javaPrimitiveType,
-            Int::class.javaPrimitiveType
-        ), Hook { cf ->
-            val typedArray = cf.result as TypedArray
-            val data = ReflectUtils.getField(typedArray, "mData") as IntArray
-            (cf.args[1] as IntArray).forEachIndexed { idx, id ->
-                ResourceManager.getAttrForId(id)?.let {
-                    data[idx + 1] = it
-                }
-            }
-        }
-    )
-    */
 }
 
 private fun PatcherAPI.themeStatusBar() {
