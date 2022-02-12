@@ -22,7 +22,8 @@ import androidx.core.widget.NestedScrollView;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.*;
+import com.aliucord.patcher.Hook;
+import com.aliucord.patcher.InsteadHook;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
@@ -56,10 +57,13 @@ public class TapTap extends Plugin {
         patcher.patch(FlexEditText.class.getDeclaredConstructor(Context.class, AttributeSet.class), new Hook(param -> flexInput = (FlexEditText) param.thisObject));
 
         patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
-            if (busy) return null;
-            busy = true;
             var msg = (Message) param.args[0];
+            if (busy || msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading())
+                return null;
+
+            busy = true;
             clicks++;
+
             handler.postDelayed(() -> {
                 if (clicks >= 2) {
                     if (isMe(msg) && !settings.getBool("replyToOwn", false)) {
@@ -78,6 +82,7 @@ public class TapTap extends Plugin {
                 }
                 clicks = 0;
             }, settings.getInt("doubleTapWindow", defaultDelay));
+
             busy = false;
             return null;
         }));
