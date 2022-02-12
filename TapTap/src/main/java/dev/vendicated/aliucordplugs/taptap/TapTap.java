@@ -31,6 +31,8 @@ import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler;
 import com.lytefast.flexinput.widget.FlexEditText;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 @AliucordPlugin
 public class TapTap extends Plugin {
     public static final int defaultDelay = 200;
@@ -44,7 +46,7 @@ public class TapTap extends Plugin {
     private WidgetChatListActions widgetChatListActions;
     private FlexEditText flexInput;
     private static final Handler handler = new Handler();
-    private boolean busy = false;
+    private final AtomicBoolean busy = new AtomicBoolean(false);
     private int clicks = 0;
 
     @Override
@@ -58,10 +60,10 @@ public class TapTap extends Plugin {
 
         patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
             var msg = (Message) param.args[0];
-            if (busy || msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading())
+            if (busy.get() || msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading())
                 return null;
 
-            busy = true;
+            busy.set(true);
             clicks++;
 
             handler.postDelayed(() -> {
@@ -83,7 +85,7 @@ public class TapTap extends Plugin {
                 clicks = 0;
             }, settings.getInt("doubleTapWindow", defaultDelay));
 
-            busy = false;
+            busy.set(false);
             return null;
         }));
 
