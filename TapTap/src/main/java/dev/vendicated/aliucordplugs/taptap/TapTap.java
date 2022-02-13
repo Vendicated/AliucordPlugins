@@ -60,10 +60,11 @@ public class TapTap extends Plugin {
 
         patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
             var msg = (Message) param.args[0];
-            if (busy.get() || msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading())
+            if (busy.getAndSet(true) || msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading()) {
+                busy.set(false);
                 return null;
+            }
 
-            busy.set(true);
             clicks++;
 
             handler.postDelayed(() -> {
