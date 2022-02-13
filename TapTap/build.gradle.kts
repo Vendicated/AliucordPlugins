@@ -16,3 +16,5 @@ aliucord.changelog.set(
         * Automatically open keyboard when replying to a message. Disabled by default, toggleable via settings
     """.trimIndent()
 )
+
+aliucord.author("Diamond", 295190422244950017L)
