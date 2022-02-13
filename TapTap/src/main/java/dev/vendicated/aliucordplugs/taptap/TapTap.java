@@ -22,13 +22,16 @@ import androidx.core.widget.NestedScrollView;
 import com.aliucord.Utils;
 import com.aliucord.annotations.AliucordPlugin;
 import com.aliucord.entities.Plugin;
-import com.aliucord.patcher.*;
+import com.aliucord.patcher.Hook;
+import com.aliucord.patcher.InsteadHook;
 import com.discord.models.message.Message;
 import com.discord.models.user.CoreUser;
 import com.discord.stores.StoreStream;
 import com.discord.widgets.chat.list.actions.WidgetChatListActions;
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterEventsHandler;
 import com.lytefast.flexinput.widget.FlexEditText;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @AliucordPlugin
 public class TapTap extends Plugin {
@@ -43,7 +46,7 @@ public class TapTap extends Plugin {
     private WidgetChatListActions widgetChatListActions;
     private FlexEditText flexInput;
     private static final Handler handler = new Handler();
-    private boolean busy = false;
+    private final AtomicBoolean busy = new AtomicBoolean(false);
     private int clicks = 0;
 
     @Override
@@ -56,10 +59,16 @@ public class TapTap extends Plugin {
         patcher.patch(FlexEditText.class.getDeclaredConstructor(Context.class, AttributeSet.class), new Hook(param -> flexInput = (FlexEditText) param.thisObject));
 
         patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
-            if (busy) return null;
-            busy = true;
             var msg = (Message) param.args[0];
+            if (msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading())
+                return null;
+
+            if (busy.getAndSet(true)) {
+                return null;
+            }
+
             clicks++;
+
             handler.postDelayed(() -> {
                 if (clicks >= 2) {
                     if (isMe(msg) && !settings.getBool("replyToOwn", false)) {
@@ -78,7 +87,8 @@ public class TapTap extends Plugin {
                 }
                 clicks = 0;
             }, settings.getInt("doubleTapWindow", defaultDelay));
-            busy = false;
+
+            busy.set(false);
             return null;
         }));
 
