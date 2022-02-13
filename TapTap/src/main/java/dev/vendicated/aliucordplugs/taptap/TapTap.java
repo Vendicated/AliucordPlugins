@@ -60,7 +60,10 @@ public class TapTap extends Plugin {
 
         patcher.patch(WidgetChatListAdapterEventsHandler.class.getDeclaredMethod("onMessageClicked", Message.class, boolean.class), new InsteadHook(param -> {
             var msg = (Message) param.args[0];
-            if (busy.getAndSet(true) || msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading()) {
+            if (msg.isEphemeralMessage() || msg.isLocal() || msg.isFailed() || msg.isLoading())
+                return null;
+
+            if (busy.getAndSet(true)) {
                 return null;
             }
 
