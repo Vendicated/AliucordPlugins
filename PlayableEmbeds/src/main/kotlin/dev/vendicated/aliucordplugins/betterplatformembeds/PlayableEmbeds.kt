@@ -30,6 +30,7 @@ import com.aliucord.wrappers.embeds.ProviderWrapper.Companion.name
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed
 import com.facebook.drawee.view.SimpleDraweeView
 import com.google.android.material.card.MaterialCardView
+import java.util.*
 
 class ScrollableWebView(ctx: Context) : WebView(ctx) {
     @SuppressLint("ClickableViewAccessibility")
@@ -41,10 +42,11 @@ class ScrollableWebView(ctx: Context) : WebView(ctx) {
 
 @AliucordPlugin
 class PlayableEmbeds : Plugin() {
+    private val webviewMap = WeakHashMap<WebView, String>()
     private val widgetId = View.generateViewId()
     private val spotifyUrlRe = Regex("https://open\\.spotify\\.com/(\\w+)/(\\w+)")
     private val youtubeUrlRe =
-        Regex("(?:https?:\\/\\/)?(?:(?:www|m)\\.)?(?:youtu\\.be\\/|youtube(?:-nocookie)?\\.com\\/(?:embed\\/|v\\/|watch\\?v=|watch\\?.+&v=))((\\w|-){11})(?:\\S+)?")
+        Regex("(?:https?://)?(?:(?:www|m)\\.)?(?:youtu\\.be/|youtube(?:-nocookie)?\\.com/(?:embed/|v/|watch\\?v=|watch\\?.+&v=|shorts/))((\\w|-){11})(?:\\S+)?")
 
     override fun start(_context: Context) {
         patcher.after<WidgetChatListAdapterItemEmbed>("configureUI", WidgetChatListAdapterItemEmbed.Model::class.java) {
@@ -53,7 +55,10 @@ class PlayableEmbeds : Plugin() {
             val holder = it.thisObject as WidgetChatListAdapterItemEmbed
             val layout = holder.itemView as ConstraintLayout
 
-            layout.findViewById<WebView?>(widgetId)?.let { v -> (v.parent as ViewGroup).removeView(v) }
+            layout.findViewById<WebView?>(widgetId)?.let { v ->
+                if (webviewMap[v] == embed.url) return@after
+                (v.parent as ViewGroup).removeView(v)
+            }
             val url = embed.url ?: return@after;
             when (embed.rawProvider?.name) {
                 "YouTube" -> addYoutubeEmbed(layout, url)
@@ -84,6 +89,7 @@ class PlayableEmbeds : Plugin() {
 
             cardView.addView(this)
         }
+        webviewMap[webView] = url
 
         webView.run {
             loadData(
@@ -146,6 +152,7 @@ class PlayableEmbeds : Plugin() {
             cardView.addView(this)
         }
 
+        webviewMap[webView] = url
         webView.run {
             loadData(
                 """
