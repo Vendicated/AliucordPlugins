@@ -15,20 +15,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RectShape
-import android.text.SpannableString
-import android.text.SpannableStringBuilder
-import android.text.method.LinkMovementMethod
-import android.text.style.ClickableSpan
 import android.view.View
-import android.view.View.TEXT_ALIGNMENT_CENTER
 import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.*
 import com.aliucord.*
-import com.aliucord.fragments.InputDialog
-import com.aliucord.fragments.SettingsPage
-import com.aliucord.utils.ChangelogUtils
+import com.aliucord.fragments.*
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.Button
 import com.aliucord.views.Divider
@@ -45,11 +38,19 @@ class ThemerSettings : SettingsPage() {
     override fun onViewBound(view: View) {
         super.onViewBound(view)
 
+        if (Themer.mSettings.fontHookCausedCrash) {
+            Themer.mSettings.fontHookCausedCrash = false
+            ConfirmDialog()
+                .setTitle("Oops!")
+                .setDescription("Enabling fonts seems to have crashed your Aliucord! Thus, they have automatically been disabled again.")
+                .show(parentFragmentManager, "fontHookCausedCrashDialog")
+        }
+
         val ctx = view.context
 
         setActionBarTitle("Themer")
 
-        TextView(ctx, null, 0, R.i.UiKit_TextView).run {
+/*        TextView(ctx, null, 0, R.i.UiKit_TextView).run {
             val content = "Read the changelog!"
             SpannableStringBuilder(content).let {
                 it.setSpan(object : ClickableSpan() {
@@ -66,7 +67,7 @@ class ThemerSettings : SettingsPage() {
             }
             movementMethod = LinkMovementMethod.getInstance()
             linearLayout.addView(this)
-        }
+        }*/
 
         Button(ctx).apply {
             text = "Load missing themes"
@@ -89,7 +90,12 @@ class ThemerSettings : SettingsPage() {
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "None", "No transparency"),
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Chat", "Chat is transparent"),
             Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Chat & Settings", "Chat and Settings page are transparent"),
-            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.RADIO, "Full", "Everything is transparent. Will only work with themes specifically made for it."),
+            Utils.createCheckedSetting(
+                ctx,
+                CheckedSetting.ViewType.RADIO,
+                "Full",
+                "Everything is transparent. Will only work with themes specifically made for it."
+            ),
         ).let { radios ->
             val manager = RadioManager(radios)
             manager.a(radios[Themer.mSettings.transparencyMode.value])
@@ -106,26 +112,44 @@ class ThemerSettings : SettingsPage() {
 
         addView(Divider(ctx))
         addView(
-            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Fonts", "Temporarily disabled. Refer to the changelog for more info").apply {
-                alpha = 0.5f
+            Utils.createCheckedSetting(
+                ctx,
+                CheckedSetting.ViewType.SWITCH,
+                "Enable Custom Fonts",
+                "Enabled support for custom fonts. May be unstable"
+            ).apply {
                 isChecked = Themer.mSettings.enableFontHook
-                setOnCheckedListener {
-                    isChecked = !it
-                    // Themer.mSettings.enableFontHook = it
-                    // promptRestart(view, this@ThemerSettings)
+                setOnCheckedListener { checked ->
+                    if (!checked) {
+                        Themer.mSettings.enableFontHook = false
+                        return@setOnCheckedListener
+                    }
+                    isChecked = false
+                    ConfirmDialog().apply {
+                        setTitle("Hold on")
+                        setDescription("This is unstable on some roms and may lead to crashes or the Aliucord settings section to disappear.\nIf such a crash occurs, fonts will automatically be disabled again.\n\nIf this for some reason fails or only the settings sections disappears, you must manually open the settings folder in your Aliucord directory and delete 'Themer.json' to fix it.\nPROCEED AT YOUR OWN RISK!")
+                        setIsDangerous(true)
+                        setOnOkListener {
+                            isChecked = true
+                            Themer.mSettings.enableFontHook = true
+                            promptRestart(view, this@ThemerSettings)
+                            dismiss()
+                        }
+                    }.show(parentFragmentManager, "themerEnableFonts")
                 }
             }
         )
         addView(Divider(ctx))
 
         addView(
-            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Sounds", "YOU MUST ENABLE THIS TO USE CUSTOM SOUNDS").apply {
-                isChecked = Themer.mSettings.customSounds
-                setOnCheckedListener {
-                    Themer.mSettings.customSounds = it
-                    promptRestart(view, this@ThemerSettings)
+            Utils.createCheckedSetting(ctx, CheckedSetting.ViewType.SWITCH, "Enable Custom Sounds", "Enable support for custom sounds")
+                .apply {
+                    isChecked = Themer.mSettings.customSounds
+                    setOnCheckedListener {
+                        Themer.mSettings.customSounds = it
+                        promptRestart(view, this@ThemerSettings)
+                    }
                 }
-            }
         )
         addView(Divider(ctx))
 

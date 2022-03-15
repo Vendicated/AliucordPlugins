@@ -50,8 +50,7 @@ fun addPatches(patcher: PatcherAPI) {
     patcher.run {
         if (Themer.mSettings.transparencyMode != TransparencyMode.NONE) setBackgrounds()
 
-        // if (Themer.mSettings.enableFontHook) patchGetFont()
-        if (File(Constants.BASE_PATH + "/enable_fonts").exists()) patchGetFont()
+        if (Themer.mSettings.enableFontHook) patchGetFont()
 
         if (Themer.mSettings.customSounds) patchOpenRawResource()
 
@@ -228,11 +227,10 @@ private fun PatcherAPI.patchGetFont() {
     ), PreHook { param ->
         val font = ResourceManager.getFontForId(param.args[3] as Int) ?: ResourceManager.getDefaultFont()
         if (font != null) {
-            param.result = when (val cb = param.args[5] as ResourcesCompat.FontCallback?) {
-                null -> font
-                else -> null.also {
-                    cb.callbackSuccessAsync(font, param.args[6] as Handler?)
-                }
+            param.result = font
+            param.args[5]?.let {
+                it as ResourcesCompat.FontCallback
+                it.callbackSuccessAsync(font, param.args[6] as Handler?)
             }
         }
     })

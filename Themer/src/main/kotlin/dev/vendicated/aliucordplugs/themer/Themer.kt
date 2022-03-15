@@ -11,11 +11,13 @@
 package dev.vendicated.aliucordplugs.themer
 
 import android.content.Context
-import com.aliucord.Logger
-import com.aliucord.Utils
+import android.content.res.Resources
+import android.os.Looper
+import com.aliucord.*
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.api.SettingsAPI
 import com.aliucord.entities.Plugin
+import com.aliucord.patcher.PreHook
 import com.aliucord.utils.RxUtils.subscribe
 import com.discord.stores.StoreStream
 import dev.vendicated.aliucordplugs.themer.settings.ThemerSettings
@@ -27,6 +29,7 @@ var currentTheme = ""
 @AliucordPlugin
 class Themer : Plugin() {
     private var subscription: Subscription? = null
+
     init {
         settingsTab = SettingsTab(ThemerSettings::class.java)
     }
@@ -44,6 +47,20 @@ class Themer : Plugin() {
         addPatches(patcher)
         ResourceManager.init(ctx)
         ThemeLoader.loadThemes(true)
+
+        // fixme
+        patcher.patch(com.aliucord.Main::class.java.getDeclaredMethod("crashHandler", Thread::class.java, Throwable::class.java), PreHook {
+            // Ignore thread exceptions
+            if (Looper.getMainLooper().thread != it.args[0]) return@PreHook
+            val ex = it.args[1] as? Resources.NotFoundException ?: return@PreHook
+            when (ex.stackTrace.firstOrNull()?.methodName) {
+                // Crash caused by font hook
+                "loadFont", "getFont" -> {
+                    settings.enableFontHook = false
+                    settings.fontHookCausedCrash = true
+                }
+            }
+        })
     }
 
     override fun stop(context: Context) {

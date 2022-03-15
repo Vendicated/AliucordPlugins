@@ -26,6 +26,10 @@ var SettingsAPI.customSounds
     get() = getBool("customSounds", false)
     set(v) = setBool("customSounds", v)
 
+var SettingsAPI.fontHookCausedCrash
+    get() = getBool("fontHookCausedCrash", false)
+    set(v) = setBool("fontHookCausedCrash", v)
+
 fun JSONObject.toColorArray() = ArrayList<ColorTuple>().apply {
     keys().forEach {
         add(ColorTuple(it, getInt(it)))
