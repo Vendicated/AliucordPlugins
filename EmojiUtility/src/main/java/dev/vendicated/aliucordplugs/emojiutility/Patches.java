@@ -34,6 +34,7 @@ import com.discord.models.guild.Guild;
 import com.discord.utilities.textprocessing.node.EmojiNode;
 import com.discord.widgets.chat.input.emoji.*;
 import com.discord.widgets.chat.list.actions.*;
+import com.discord.widgets.chat.managereactions.ManageReactionsEmojisAdapter;
 import com.discord.widgets.emoji.WidgetEmojiSheet;
 import com.discord.widgets.user.profile.UserProfileHeaderView;
 
@@ -53,6 +54,7 @@ public class Patches {
 
     public static void init(SettingsAPI settings, PatcherAPI patcher) throws Throwable {
         clickableStatusEmote(patcher);
+        betterReactionSheet(patcher);
 
         if (settings.getBool("extraButtons", true)) {
             if (extraButtonsUnhook == null) extraButtonsUnhook = emojiModalExtraButtons(patcher);
@@ -239,7 +241,8 @@ public class Patches {
                 var listener = (EmojiPickerListener) onEmojiPickedField.get(callFrame.thisObject);
                 if (listener != null) listener.onEmojiPicked((Emoji) callFrame.args[0]);
                 callFrame.setResult(null);
-            } catch (Throwable ignored) { }
+            } catch (Throwable ignored) {
+            }
         }));
 
         return () -> {
@@ -251,17 +254,17 @@ public class Patches {
 
     public static Runnable hideUnusableEmojis(PatcherAPI patcher) throws Throwable {
         return patcher.patch(
-            EmojiPickerViewModel.Companion.class.getDeclaredMethod("buildEmojiListItems", Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class),
-            new PreHook(param -> {
-                var list = (Collection<Emoji>) param.args[0];
-                try {
-                    list.removeIf(e -> !e.isUsable());
-                } catch (UnsupportedOperationException ignored) {
-                    list = new ArrayList<>(list);
-                    param.args[0] = list;
-                    list.removeIf(e -> !e.isUsable());
-                }
-            })
+                EmojiPickerViewModel.Companion.class.getDeclaredMethod("buildEmojiListItems", Collection.class, Function1.class, String.class, boolean.class, boolean.class, boolean.class),
+                new PreHook(param -> {
+                    var list = (Collection<Emoji>) param.args[0];
+                    try {
+                        list.removeIf(e -> !e.isUsable());
+                    } catch (UnsupportedOperationException ignored) {
+                        list = new ArrayList<>(list);
+                        param.args[0] = list;
+                        list.removeIf(e -> !e.isUsable());
+                    }
+                })
         );
     }
 
@@ -283,5 +286,22 @@ public class Patches {
                     } catch (Throwable ignored) {
                     }
                 }));
+    }
+
+    public static void betterReactionSheet(PatcherAPI patcher) throws Throwable {
+        patcher.patch(ManageReactionsEmojisAdapter.ReactionEmojiViewHolder.class.getDeclaredMethod("onConfigure", int.class, ManageReactionsEmojisAdapter.ReactionEmojiItem.class), new Hook(param -> {
+            try {
+                var binding = (ViewBinding) ReflectUtils.getField(param.thisObject, "binding");
+                assert binding != null;
+                var reactionItem = (ManageReactionsEmojisAdapter.ReactionEmojiItem) param.args[1];
+                binding.getRoot().setOnLongClickListener(v -> {
+                    var emoji = reactionItem.getReaction().b();
+                    var idAndType = EmojiNode.Companion.generateEmojiIdAndType(emoji);
+                    WidgetEmojiSheet.Companion.show(Utils.appActivity.getSupportFragmentManager(), idAndType);
+                    return true;
+                });
+            } catch (Throwable ignored) {
+            }
+        }));
     }
 }

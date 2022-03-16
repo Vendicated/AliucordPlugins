@@ -94,7 +94,7 @@ object ThemeLoader {
     // https://stackoverflow.com/a/23119957/11590009
     private fun blurBitmap(bm: Bitmap, blurRadius: Double) {
         if (blurRadius !in 0.0..25.0)
-            throw IllegalArgumentException("Blur R.e.us must be 0-25, was $blurRadius")
+            throw IllegalArgumentException("Blur Radius must be 0-25, was $blurRadius")
         val rs = RenderScript.create(Utils.appContext)
         val input = Allocation.createFromBitmap(rs, bm)
         val output = Allocation.createTyped(rs, input.type)
