@@ -289,9 +289,11 @@ public class Patches {
     }
 
     public static void betterReactionSheet(PatcherAPI patcher) throws Throwable {
+        var bindingField = ManageReactionsEmojisAdapter.ReactionEmojiViewHolder.class.getDeclaredField("binding");
+        bindingField.setAccessible(true);
         patcher.patch(ManageReactionsEmojisAdapter.ReactionEmojiViewHolder.class.getDeclaredMethod("onConfigure", int.class, ManageReactionsEmojisAdapter.ReactionEmojiItem.class), new Hook(param -> {
             try {
-                var binding = (ViewBinding) ReflectUtils.getField(param.thisObject, "binding");
+                var binding = (ViewBinding) bindingField.get(param.thisObject);
                 assert binding != null;
                 var reactionItem = (ManageReactionsEmojisAdapter.ReactionEmojiItem) param.args[1];
                 binding.getRoot().setOnLongClickListener(v -> {
