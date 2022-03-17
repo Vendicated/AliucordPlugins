@@ -25,6 +25,7 @@ import com.aliucord.fragments.*
 import com.aliucord.utils.DimenUtils
 import com.aliucord.views.Button
 import com.aliucord.views.Divider
+import com.discord.stores.StoreStream
 import com.discord.views.CheckedSetting
 import com.discord.views.RadioManager
 import com.google.android.material.snackbar.Snackbar
@@ -44,6 +45,20 @@ class ThemerSettings : SettingsPage() {
                 .setTitle("Oops!")
                 .setDescription("Enabling fonts seems to have crashed your Aliucord! Thus, they have automatically been disabled again.")
                 .show(parentFragmentManager, "fontHookCausedCrashDialog")
+        }
+
+        if (StoreStream.getUserSettingsSystem().theme != "dark") {
+            ConfirmDialog().apply {
+                setTitle("Hold on!")
+                setDescription("Most themes only work correctly on regular Dark Mode. Switch to it now?")
+                setOnOkListener {
+                    // If current theme is "pureEvil" and you pass "dark", it changes it to "pureEvil"
+                    // So change to "light" first
+                    StoreStream.getUserSettingsSystem().setTheme("light", false, null);
+                    StoreStream.getUserSettingsSystem().setTheme("dark", false, null);
+                    dismiss()
+                }
+            }.show(parentFragmentManager, "themerSwitchToDarkWhen")
         }
 
         val ctx = view.context
