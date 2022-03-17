@@ -1,3 +1,5 @@
-# Template - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/DeezNuts.zip?raw=true)
+# GatewayLog - [Download](https://github.com/Vendicated/AliucordPlugins/blob/builds/GatewayLog.zip?raw=true)
 
-This is the Template I generate all my plugins from. Not much to see here :)
+Logs all gateway messages to log files in Aliucord folder. 
+
+Only useful for developers, also stores your token in plain text world readable file, so don't install unless you know what you're doing.
