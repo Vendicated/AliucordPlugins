@@ -1,3 +1,4 @@
+include(":GatewayLog")
 include(":TextFilePreview")
 // include(":SnowflakeLookup")
 include(":FixEmotes")
