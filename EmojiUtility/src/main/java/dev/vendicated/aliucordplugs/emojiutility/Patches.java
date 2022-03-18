@@ -258,11 +258,11 @@ public class Patches {
                 new PreHook(param -> {
                     var list = (Collection<Emoji>) param.args[0];
                     try {
-                        list.removeIf(e -> !e.isUsable());
+                        list.removeIf(e -> !e.isUsable() || !e.isAvailable());
                     } catch (UnsupportedOperationException ignored) {
                         list = new ArrayList<>(list);
                         param.args[0] = list;
-                        list.removeIf(e -> !e.isUsable());
+                        list.removeIf(e -> !e.isUsable() || !e.isAvailable());
                     }
                 })
         );
