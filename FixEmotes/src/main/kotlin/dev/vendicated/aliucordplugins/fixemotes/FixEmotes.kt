@@ -13,37 +13,42 @@ package dev.vendicated.aliucordplugins.fixemotes
 import android.content.Context
 import com.aliucord.annotations.AliucordPlugin
 import com.aliucord.entities.Plugin
-import com.aliucord.patcher.before
+import com.aliucord.patcher.PreHook
+import com.aliucord.patcher.after
 import com.discord.restapi.RestAPIParams
-import com.discord.stores.StoreAnalytics
-import com.discord.stores.StoreStream
+import com.discord.widgets.chat.input.emoji.EmojiPickerViewModel
 
 @AliucordPlugin
 class FixEmotes : Plugin() {
-    val brokenEmoteRegex = "(?<!<a?):[A-Za-z0-9-_]+:".toRegex()
+    private val brokenEmoteRegex = "(?<!<a?):[A-Za-z0-9-_]+:".toRegex()
     override fun start(ctx: Context) {
-        patcher.before<RestAPIParams.Message>(
-            String::class.java,
-            String::class.java,
-            Long::class.javaObjectType,
-            RestAPIParams.Message.Activity::class.java,
-            List::class.java,
-            RestAPIParams.Message.MessageReference::class.java,
-            RestAPIParams.Message.AllowedMentions::class.java,
-            String::class.java
-        )
-        { param ->
-            param.args[0] = param.args[0].toString().replace(brokenEmoteRegex) {
-                val key = it.value.substring(1, it.value.length - 1)
-                val storeEmojis = StoreStream.`access$getCustomEmojis$p`(StoreAnalytics.`access$getStores$p`(StoreStream.getAnalytics()))
-                storeEmojis.allGuildEmoji.forEach { (_, g) ->
-                    g.values.forEach { e ->
-                        if (e.name == key && e.getRegex("").matcher(it.value).matches()) return@replace e.messageContentReplacement
-                    }
-                }
-                it.value
+        var storeState: EmojiPickerViewModel.StoreState.Emoji? = null
+
+        patcher.after<EmojiPickerViewModel>("handleStoreState", EmojiPickerViewModel.StoreState::class.java) { param ->
+            (param.args[0] as? EmojiPickerViewModel.StoreState.Emoji)?.let {
+                storeState = it
             }
         }
+
+        val ctor = RestAPIParams.Message::class.java.declaredConstructors.firstOrNull {
+            !it.isSynthetic
+        } ?: throw IllegalStateException("Didn't find RestAPIParams.Message ctor")
+
+        patcher.patch(
+            ctor,
+            PreHook
+            { param ->
+                param.args[0] = param.args[0].toString().replace(brokenEmoteRegex) {
+                    storeState?.emojiSet?.customEmojis?.forEach { (_, g) ->
+                        g.forEach { e ->
+                            if (e.getCommand("" /* not used, only there to implement method lmao */) == it.value) {
+                                return@replace e.messageContentReplacement
+                            }
+                        }
+                    }
+                    it.value
+                }
+            })
     }
 
     override fun stop(context: Context) {
