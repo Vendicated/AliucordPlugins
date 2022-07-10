@@ -1,8 +1,11 @@
-version = "1.4.4"
+version = "1.4.5"
 description = "Embeds message links"
 
 aliucord.changelog.set(
     """
+    # 1.4.4 & 1.4.5
+    * Fix for new Discord versions
+    
     # 1.4.3
     * Ignore <escaped> message links
     

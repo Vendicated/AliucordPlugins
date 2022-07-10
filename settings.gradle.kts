@@ -19,5 +19,6 @@ include(":MessageLinkEmbeds")
 include(":EmojiUtility")
 include(":Hastebin")
 include(":UrbanDictionary")
+include(":JsEval")
 
 rootProject.name = "AliucordPlugins"

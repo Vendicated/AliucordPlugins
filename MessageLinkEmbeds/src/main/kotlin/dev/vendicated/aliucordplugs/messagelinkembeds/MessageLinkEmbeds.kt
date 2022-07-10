@@ -205,6 +205,8 @@ class MessageLinkEmbeds : Plugin() {
                 "handle",
                 Context::class.java,
                 String::class.java,
+                Boolean::class.java,
+                Boolean::class.java,
                 Function0::class.java
             ), PreHook { param ->
                 val url = param.args[1] as String
