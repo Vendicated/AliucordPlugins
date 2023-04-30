@@ -31,6 +31,7 @@ import com.discord.app.AppBottomSheet;
 import com.discord.databinding.WidgetEmojiSheetBinding;
 import com.discord.models.domain.emoji.Emoji;
 import com.discord.models.guild.Guild;
+import com.discord.stores.StoreStream;
 import com.discord.utilities.textprocessing.node.EmojiNode;
 import com.discord.widgets.chat.input.emoji.*;
 import com.discord.widgets.chat.list.actions.*;
@@ -291,6 +292,7 @@ public class Patches {
     public static void betterReactionSheet(PatcherAPI patcher) throws Throwable {
         var bindingField = ManageReactionsEmojisAdapter.ReactionEmojiViewHolder.class.getDeclaredField("binding");
         bindingField.setAccessible(true);
+        var unicodeEmojis = StoreStream.getEmojis().getUnicodeEmojiSurrogateMap();
         patcher.patch(ManageReactionsEmojisAdapter.ReactionEmojiViewHolder.class.getDeclaredMethod("onConfigure", int.class, ManageReactionsEmojisAdapter.ReactionEmojiItem.class), new Hook(param -> {
             try {
                 var binding = (ViewBinding) bindingField.get(param.thisObject);
@@ -298,7 +300,17 @@ public class Patches {
                 var reactionItem = (ManageReactionsEmojisAdapter.ReactionEmojiItem) param.args[1];
                 binding.getRoot().setOnLongClickListener(v -> {
                     var emoji = reactionItem.getReaction().b();
-                    var idAndType = EmojiNode.Companion.generateEmojiIdAndType(emoji);
+                    EmojiNode.EmojiIdAndType idAndType;
+                    if (emoji.e()) {
+                        idAndType = EmojiNode.Companion.generateEmojiIdAndType(emoji);
+                    } else {
+                        var name = emoji.d();
+                        if (name != null) {
+                            var unicodeEmoji = unicodeEmojis.get(name);
+                            if (unicodeEmoji != null) name = unicodeEmoji.getFirstName();
+                        } else name = "";
+                        idAndType = new EmojiNode.EmojiIdAndType.Unicode(name);
+                    }
                     WidgetEmojiSheet.Companion.show(Utils.appActivity.getSupportFragmentManager(), idAndType);
                     return true;
                 });

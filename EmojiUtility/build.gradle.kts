@@ -1,8 +1,11 @@
-version = "1.2.1"
+version = "1.2.2"
 description = "Adds lots of utility for emojis"
 
 aliucord.changelog.set(
     """
+    # 1.2.2
+    * Fix opening emoji sheet from reaction sheet for built-in emojis
+
     # 1.2.1
     * "Hide unusable emotes" now also hides unavailable emotes (due to Boost running out or similar)
     
