@@ -48,7 +48,7 @@ class PlayableEmbeds : Plugin() {
     private val youtubeUrlRe =
         Regex("(?:https?://)?(?:(?:www|m)\\.)?(?:youtu\\.be/|youtube(?:-nocookie)?\\.com/"+
                 "(?:embed/|v/|watch\\?v=|watch\\?.+&v=|shorts/))((\\w|-){11})"+
-                "(?:(?:\\?|&)t=(\\d+))?(?:\\S+)?")
+                "(?:(?:\\?|&)(?:star)?t=(\\d+))?(?:\\S+)?")
 
     override fun start(_context: Context) {
         patcher.after<WidgetChatListAdapterItemEmbed>("configureUI", WidgetChatListAdapterItemEmbed.Model::class.java) {
