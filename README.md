@@ -1,4 +1,7 @@
-# Ven's Aliucord Plugins
+# Vee's Aliucord Plugins
+
+> **warning**
+> i no longer work on my aliucord plugins. my plugins are considered finished. i will only merge prs that fix issues
 
 Click a Plugin's name to open a more detailed explanation
 
