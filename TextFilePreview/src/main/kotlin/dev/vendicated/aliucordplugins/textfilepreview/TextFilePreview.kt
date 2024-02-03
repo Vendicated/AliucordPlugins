@@ -21,6 +21,7 @@ import com.aliucord.entities.Plugin
 import com.aliucord.patcher.after
 import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.url
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
+import java.net.URL;
 
 val logger = Logger("TextFilePreview")
 
@@ -42,7 +43,7 @@ class TextFilePreview : Plugin() {
                 cardView.removeView(it)
             }
 
-            if (plainTextExtensions.contains(entry.attachment.url.substringAfterLast('.'))) {
+            if (plainTextExtensions.contains(new URL(entry.attachment.url).getPath().substringAfterLast('.'))) {
                 cardView.getChildAt(0).visibility = View.GONE
                 cardView.addView(AttachmentPreviewWidget(cardView.context, entry.attachment, settings))
                 cardView.setOnClickListener(null)
