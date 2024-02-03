@@ -43,7 +43,7 @@ class TextFilePreview : Plugin() {
                 cardView.removeView(it)
             }
 
-            if (plainTextExtensions.contains(new URL(entry.attachment.url).getPath().substringAfterLast('.'))) {
+            if (plainTextExtensions.contains(URL(entry.attachment.url).getPath().substringAfterLast('.'))) {
                 cardView.getChildAt(0).visibility = View.GONE
                 cardView.addView(AttachmentPreviewWidget(cardView.context, entry.attachment, settings))
                 cardView.setOnClickListener(null)
