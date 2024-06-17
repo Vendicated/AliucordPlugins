@@ -83,7 +83,7 @@ class PlayableEmbeds : Plugin() {
         val playButton = cardView.findViewById<View>(chatListItemEmbedImageIcons)
         playButton.visibility = View.GONE
         chatListItemEmbedImage.visibility = View.GONE
-        val posterUrl = embed.image?.url
+        val posterUrl = embed.thumbnail?.proxyUrl
 
         val webView = ScrollableWebView(ctx).apply {
             id = widgetId
@@ -98,11 +98,12 @@ class PlayableEmbeds : Plugin() {
 
         webviewMap[webView] = embed.url
         webView.run {
+            val needsPreload = if (posterUrl != null) "none" else "metadata"
             loadData(
                 """
                 <html>
                     <body style="margin: 0; padding: 0;">
-                        <video poster="$posterUrl" preload="metadata" autoplay="false" controls style="width: 100%">
+                        <video poster="$posterUrl" preload="$needsPreload" autoplay="false" controls style="width: 100%">
                             <source src="$videoUrl" type="video/mp4">
                         </video>
                     </body>
