@@ -1,8 +1,11 @@
-version = "3.6.2"
+version = "3.6.3"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+   # 3.6.3
+   *  got rid of discord links being in the supported links
+
     # 3.6.2
     * Now prompts to switch to dark mode if using light/pureEvil theme
     
