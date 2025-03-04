@@ -43,6 +43,7 @@ val ALLOWED_RESOURCE_DOMAINS = arrayOf(
     "i.imgur.com",
     "i.ibb.co", // only for you, FrozenPhoton
     "files.catbox.moe",
+    "file.garden",
 )
 
 val ALLOWED_RESOURCE_DOMAINS_PATTERN: Pattern by lazy {
