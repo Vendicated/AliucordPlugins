@@ -1,15 +1,11 @@
-version = "3.6.5"
+version = "3.6.3"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
-    # 3.6.5
-    * added file garden to allowed links
-
-    # 3.6.4
-    * added catbox to allowed links
-
     # 3.6.3
+    * added file garden to allowed links
+    * added catbox to allowed links
     * got rid of discord links being in the supported links
 
     # 3.6.2
