@@ -55,6 +55,7 @@ fun addPatches(patcher: PatcherAPI) {
         if (Themer.mSettings.customSounds) patchOpenRawResource()
 
         patchGetColor()
+        patchLoadDrawable()
         patchSetColor()
         patchColorStateLists()
         tintDrawables()
@@ -231,6 +232,34 @@ private fun PatcherAPI.patchGetFont() {
             param.args[5]?.let {
                 it as ResourcesCompat.FontCallback
                 it.callbackSuccessAsync(font, param.args[6] as Handler?)
+            }
+        }
+    })
+}
+
+private fun PatcherAPI.patchLoadDrawable() {
+    val target = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        Resources::class.java.getDeclaredMethod(
+            "loadDrawable",
+            TypedValue::class.java,
+            Int::class.javaPrimitiveType!!,
+            Int::class.javaPrimitiveType!!,
+            Resources.Theme::class.java
+        )
+    } else {
+        Resources::class.java.getDeclaredMethod(
+            "loadDrawable",
+            TypedValue::class.java,
+            Int::class.javaPrimitiveType!!,
+            Resources.Theme::class.java
+        )
+    }
+
+    patch(target, PreHook { param ->
+        val value = param.args[0] as TypedValue
+        if (value.type >= TypedValue.TYPE_FIRST_COLOR_INT && value.type <= TypedValue.TYPE_LAST_COLOR_INT) {
+            ResourceManager.getColorReplacement(value.data)?.let {
+                value.data = it
             }
         }
     })
