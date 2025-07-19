@@ -238,21 +238,31 @@ private fun PatcherAPI.patchGetFont() {
 }
 
 private fun PatcherAPI.patchLoadDrawable() {
-    patch(
+    val target = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
         Resources::class.java.getDeclaredMethod(
             "loadDrawable",
             TypedValue::class.java,
             Int::class.javaPrimitiveType!!,
             Int::class.javaPrimitiveType!!,
             Resources.Theme::class.java
-        ), PreHook { param ->
-            val value = param.args[0] as TypedValue
-            if (value.type >= TypedValue.TYPE_FIRST_COLOR_INT && value.type <= TypedValue.TYPE_LAST_COLOR_INT) {
-                ResourceManager.getColorReplacement(value.data)?.let {
-                    value.data = it
-                }
+        )
+    } else {
+        Resources::class.java.getDeclaredMethod(
+            "loadDrawable",
+            TypedValue::class.java,
+            Int::class.javaPrimitiveType!!,
+            Resources.Theme::class.java
+        )
+    }
+
+    patch(target, PreHook { param ->
+        val value = param.args[0] as TypedValue
+        if (value.type >= TypedValue.TYPE_FIRST_COLOR_INT && value.type <= TypedValue.TYPE_LAST_COLOR_INT) {
+            ResourceManager.getColorReplacement(value.data)?.let {
+                value.data = it
             }
-        })
+        }
+    })
 }
 
 private fun PatcherAPI.patchOpenRawResource() {
