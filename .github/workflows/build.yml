@@ -1,55 +1,51 @@
 name: Build
 
 concurrency: 
-  group: "build"
+  group: 'build'
   cancel-in-progress: true
-
-
+  
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    permissions:
-      contents: write
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
-        with:
-          path: "src"
+    - name: Checkout
+      uses: actions/checkout@master
+      with:
+        path: 'src'
 
-      - name: Checkout builds
-        uses: actions/checkout@master
-        with:
-          ref: "builds"
-          path: "builds"
+    - name: Checkout builds
+      uses: actions/checkout@master
+      with:
+        ref: 'builds'
+        path: 'builds'
 
-      - name: Setup JDK 11
-        uses: actions/setup-java@v2
-        with:
-          java-version: 11
-          distribution: zulu
-          cache: gradle
+    - name: Setup JDK 17
+      uses: actions/setup-java@v1
+      with:
+        java-version: 17
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
 
-      - name: Build Plugins
-        run: |
-          cd $GITHUB_WORKSPACE/src
-          chmod +x gradlew
-          ./gradlew make generateUpdaterJson
-          cp **/build/*.zip $GITHUB_WORKSPACE/builds
-          cp build/updater.json $GITHUB_WORKSPACE/builds
+    - name: Build Plugins
+      run: |
+        cd $GITHUB_WORKSPACE/src
+        chmod +x gradlew
+        ./gradlew make generateUpdaterJson
+        cp **/build/*.zip $GITHUB_WORKSPACE/builds
+        cp build/updater.json $GITHUB_WORKSPACE/builds
 
-      - name: Push builds
-        run: |
-          cd $GITHUB_WORKSPACE/builds
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          git add .
-          git commit -m "Build $GITHUB_SHA" || true   # do not error if nothing to commit
-          git push
+    - name: Push builds
+      run: |
+        cd $GITHUB_WORKSPACE/builds
+        git config --local user.email "actions@github.com"
+        git config --local user.name "GitHub Actions"
+        git add .
+        git commit -m "Build $GITHUB_SHA"
+        git push
