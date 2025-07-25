@@ -35,6 +35,7 @@ import com.aliucord.wrappers.messages.AttachmentWrapper.Companion.url
 import com.discord.app.*
 import com.discord.databinding.WidgetChatListAdapterItemEmbedBinding
 import com.discord.utilities.color.ColorCompat
+import com.discord.views.UsernameView
 import com.discord.widgets.chat.list.actions.WidgetChatListActions
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemAttachment
 import com.discord.widgets.chat.list.adapter.WidgetChatListAdapterItemEmbed
@@ -263,6 +264,16 @@ private fun PatcherAPI.patchLoadDrawable() {
             }
         }
     })
+
+    // UsernameView somehow doesn't follow the fonts loaded from
+    // the ResourcesCompat hook, so it must be hooked separately
+    patch(UsernameView::class.java.getDeclaredMethod("setUsernameColor", Int::class.javaPrimitiveType),
+        Hook { param ->
+            with (param.thisObject as UsernameView) {
+                // Target the SimpleDraweeSpanTextView found in the ViewBinding used by UsernameView
+                this.j.c.typeface = ResourceManager.getFontForId(Constants.Fonts.whitney_medium) ?: this.j.c.typeface
+            }
+        })
 }
 
 private fun PatcherAPI.patchOpenRawResource() {
