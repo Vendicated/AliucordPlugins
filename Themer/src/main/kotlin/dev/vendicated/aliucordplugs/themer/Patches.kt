@@ -42,9 +42,12 @@ import com.facebook.drawee.view.SimpleDraweeView
 import com.google.android.material.textfield.TextInputLayout
 import com.jaredrummler.android.colorpicker.ColorPickerDialog
 import com.lytefast.flexinput.R
+import de.robv.android.xposed.XposedBridge
 import java.io.*
+import java.lang.reflect.Member
 import java.net.URLDecoder
 import java.util.regex.Pattern
+import kotlin.to
 
 fun addPatches(patcher: PatcherAPI) {
     patcher.run {
@@ -53,6 +56,8 @@ fun addPatches(patcher: PatcherAPI) {
         if (Themer.mSettings.enableFontHook) patchGetFont()
 
         if (Themer.mSettings.customSounds) patchOpenRawResource()
+
+        deoptimize()
 
         patchGetColor()
         patchLoadDrawable()
@@ -66,6 +71,31 @@ fun addPatches(patcher: PatcherAPI) {
 
         // Set text colour of transparency options in colour picker
         patchColorPicker()
+    }
+}
+
+/**
+ * Some methods are inlined despite Aliu's best efforts to prevent it.
+ * Here we deoptimise (un-inline) a few that prevent Themer from doing its job.
+ */
+fun deoptimize() {
+    val thingsToDeoptimize = mapOf(
+        // ColorStateList.getColorForState
+        RippleDrawable::class to "updateRipplePaint",
+        TextView::class to "updateTextColors",
+        Drawable::class to "updateBlendModeFilter",
+        GradientDrawable::class to "updateLocalState",
+
+        // ColorDrawable.setColor
+        View::class to "setBackgroundColor",
+    )
+    thingsToDeoptimize.forEach { (clazz, name) ->
+        val methods: List<Member> = if (name == "<init>") {
+            clazz.java.declaredConstructors.toList()
+        } else {
+            clazz.java.declaredMethods.filter { it.name == name }
+        }
+        methods.forEach { XposedBridge.deoptimizeMethod(it) }
     }
 }
 
