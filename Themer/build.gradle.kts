@@ -7,7 +7,7 @@ aliucord.changelog.set(
     * Fix colour theming for some elements like user profile header and chatbox
 
     # 3.6.3
-    * Fix color theming for newer android versions
+    * Fix colour theming for newer android versions
 
     # 3.6.2
     * Now prompts to switch to dark mode if using light/pureEvil theme
