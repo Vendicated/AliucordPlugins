@@ -4,7 +4,7 @@ description = "Apply custom themes to your Discord"
 aliucord.changelog.set(
     """
     # 3.6.4
-    * Fix color theming for some elements like user profile header and chatbox.
+    * Fix color theming for some elements like user profile header and chatbox
 
     # 3.6.3
     * Fix color theming for newer android versions
