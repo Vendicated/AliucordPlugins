@@ -105,7 +105,10 @@ private fun addEmbed(
     var setFields = false
 
     msg.attachments.forEach { a ->
-        if (a.height != null) {
+        // Skip spoilered attachments - don't embed images/videos that are marked as spoilers
+        val isSpoiler = a.filename.startsWith("SPOILER_", ignoreCase = true)
+        
+        if (a.height != null && !isSpoiler) {
             if (videoLinkPattern.matcher(a.url).find()) {
                 if (!setVideo) {
                     eb.setVideo(a.url, a.proxyUrl, a.height, a.width)
@@ -134,23 +137,32 @@ private fun addEmbed(
         }
         if (!setThumb && it.rawThumbnail != null) {
             it.rawThumbnail?.let { t ->
-                eb.setThumbnail(t.url, t.proxyUrl, t.height, t.width)
+                // Skip spoilered thumbnails
+                if (!t.url.contains("SPOILER_", ignoreCase = true)) {
+                    eb.setThumbnail(t.url, t.proxyUrl, t.height, t.width)
+                    setThumb = true
+                }
             }
-            setThumb = true
         }
         if (!setImg && it.rawImage != null) {
             it.rawImage?.let { i ->
-                eb.setImage(i.url, i.proxyUrl, i.height, i.width)
+                // Skip spoilered images
+                if (!i.url.contains("SPOILER_", ignoreCase = true)) {
+                    eb.setImage(i.url, i.proxyUrl, i.height, i.width)
+                    setImg = true
+                }
             }
-            setImg = true
         }
         if (!setVideo && it.rawVideo != null) {
             it.rawVideo?.let { v ->
-                eb.setVideo(v.url, v.proxyUrl, v.height, v.width)
+                // Skip spoilered videos
+                if (!v.url.contains("SPOILER_", ignoreCase = true)) {
+                    eb.setVideo(v.url, v.proxyUrl, v.height, v.width)
+                    eb.setType(EmbedType.VIDEO)
+                    setVideo = true
+                    setImg = true
+                }
             }
-            setVideo = true
-            setImg = true
-            eb.setType(EmbedType.VIDEO)
         }
         if (description == null && it.description?.isEmpty() == false) {
             description = it.description

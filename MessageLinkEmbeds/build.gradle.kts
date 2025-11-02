@@ -1,8 +1,11 @@
-version = "1.4.5"
+version = "1.4.6"
 description = "Embeds message links"
 
 aliucord.changelog.set(
     """
+    # 1.4.6
+    * Respect image spoilers - don't show spoilered images/videos in message link embeds
+    
     # 1.4.4 & 1.4.5
     * Fix for new Discord versions
     
