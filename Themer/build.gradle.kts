@@ -1,8 +1,11 @@
-version = "3.6.4"
+version = "3.6.5"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    # 3.6.5
+    * Add to Aliucord settings below plugins for quicker access to themes
+
     # 3.6.4
     * Fix colour theming for some elements like user profile header and chatbox
 

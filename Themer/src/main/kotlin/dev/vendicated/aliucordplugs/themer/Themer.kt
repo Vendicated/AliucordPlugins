@@ -20,8 +20,18 @@ import com.aliucord.entities.Plugin
 import com.aliucord.patcher.PreHook
 import com.aliucord.utils.RxUtils.subscribe
 import com.discord.stores.StoreStream
+import com.discord.widgets.settings.WidgetSettings
+import com.discord.utilities.color.ColorCompat
+import com.lytefast.flexinput.R
+import com.aliucord.Constants
+import com.aliucord.Utils
+import de.robv.android.xposed.XC_MethodHook
 import dev.vendicated.aliucordplugs.themer.settings.ThemerSettings
 import rx.Subscription
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
+import androidx.core.content.res.ResourcesCompat
 
 val logger = Logger("Themer")
 var currentTheme = ""
@@ -59,6 +69,31 @@ class Themer : Plugin() {
                     settings.enableFontHook = false
                     settings.fontHookCausedCrash = true
                 }
+            }
+        })
+        patcher.patch(WidgetSettings::class.java, "onViewBound", arrayOf(View::class.java), object : XC_MethodHook(10000) {
+            override fun afterHookedMethod(param: XC_MethodHook.MethodHookParam) {
+                val layout = ((param.args[0] as ViewGroup).getChildAt(1) as ViewGroup).getChildAt(0) as ViewGroup
+                var idx = 0
+                while (idx < layout.childCount) {
+                    val child = layout.getChildAt(idx)
+                    if (child is TextView && child.text.toString().equals("Plugins", ignoreCase = true)) {
+                        idx += 1
+                        break
+                    }
+                    idx += 1
+                }
+
+                layout.addView(TextView(layout.context, null, 0, R.i.UiKit_Settings_Item_Icon).apply {
+                    text = "Themer"
+                    typeface = ResourcesCompat.getFont(context, Constants.Fonts.whitney_medium)
+
+                    setCompoundDrawablesRelativeWithIntrinsicBounds(context.getDrawable(R.e.ic_theme_24dp)!!.mutate().apply {
+                        setTint(ColorCompat.getThemedColor(context, R.b.colorInteractiveNormal))
+                    }, null, null, null);
+
+                    setOnClickListener { Utils.openPageWithProxy(it.context, ThemerSettings()) }
+                }, idx)
             }
         })
     }
