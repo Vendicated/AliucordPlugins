@@ -1,12 +1,12 @@
 {
     "manifest": {
         "author": "Ven#8810",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "name": "Firefly",
         "updater": "https:\/\/raw.githubusercontent.com\/Vendicated\/AliucordPlugins\/main\/Themer\/Firefly.json"
     },
     "background": {
-        "url": "https:\/\/media.discordapp.net\/attachments\/811263527239024640\/887828992164511764\/797185.png",
+        "url": "https:\/\/github.com\/GitXpresso\/ATTR\/blob\/main\/797185.png?raw=true",
         "overlay_alpha": 0,
         "blur_radius": 0
     },
