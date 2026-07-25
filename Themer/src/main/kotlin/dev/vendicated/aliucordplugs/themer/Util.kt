@@ -10,7 +10,12 @@
 
 package dev.vendicated.aliucordplugs.themer
 
+import android.graphics.Color
+import android.os.Build
+import androidx.core.content.ContextCompat
+import com.aliucord.Utils
 import com.aliucord.api.SettingsAPI
+import com.aliucord.utils.ReflectUtils
 import dev.vendicated.aliucordplugs.themer.settings.editor.tabs.color.ColorTuple
 import org.json.JSONObject
 
@@ -30,9 +35,51 @@ var SettingsAPI.fontHookCausedCrash
     get() = getBool("fontHookCausedCrash", false)
     set(v) = setBool("fontHookCausedCrash", v)
 
+fun JSONObject.parseColor(key: String): Int {
+    val v = getString(key)
+    return if (v.startsWith("system_")) {
+        if (Build.VERSION.SDK_INT < 31)
+            throw UnsupportedOperationException("system_ colours are only supported on Android 12.")
+
+        try {
+            ContextCompat.getColor(
+                Utils.appContext,
+                ReflectUtils.getField(android.R.color::class.java, null, v) as Int
+            )
+        } catch (th: Throwable) {
+            throw IllegalArgumentException("No such color: $v", th)
+        }
+    } else {
+        try {
+            v.toInt()
+        } catch (e: NumberFormatException) {
+            try {
+                if (v.startsWith("0x", true)) {
+                    v.substring(2).toLong(16).toInt()
+                } else if (v.startsWith("#")) {
+                    Color.parseColor(v)
+                } else {
+                    v.toLong().toInt()
+                }
+            } catch (th: Throwable) {
+                try {
+                    Color.parseColor(v)
+                } catch (ignored: Throwable) {
+                    throw IllegalArgumentException("No such color or invalid format: $v", th)
+                }
+            }
+        }
+    }
+}
+
 fun JSONObject.toColorArray() = ArrayList<ColorTuple>().apply {
     keys().forEach {
-        add(ColorTuple(it, getInt(it)))
+        try {
+            add(ColorTuple(it, parseColor(it)))
+        } catch (th: Throwable) {
+            logger.error("Failed to parse color for key $it", th)
+            add(ColorTuple(it, Color.MAGENTA))
+        }
     }
     sortBy { it.name }
 }

@@ -1,8 +1,11 @@
-version = "3.6.4"
+version = "3.6.5"
 description = "Apply custom themes to your Discord"
 
 aliucord.changelog.set(
     """
+    # 3.6.5
+    * Fix theme editor crashing when themes use Android 12 Material You (system_) dynamic colors, hexadecimal strings (#FF..., 0xFF...), or color names
+    
     # 3.6.4
     * Fix colour theming for some elements like user profile header and chatbox
 
