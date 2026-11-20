@@ -1,9 +1,9 @@
 name: Build
 
-concurrency: 
+concurrency:
   group: 'build'
   cancel-in-progress: true
-  
+
 on:
   push:
     branches:
@@ -14,38 +14,39 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
-      with:
-        path: 'src'
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: 'src'
 
-    - name: Checkout builds
-      uses: actions/checkout@master
-      with:
-        ref: 'builds'
-        path: 'builds'
+      - name: Checkout builds
+        uses: actions/checkout@v4
+        with:
+          ref: 'builds'
+          path: 'builds'
 
-    - name: Setup JDK 17
-      uses: actions/setup-java@v1
-      with:
-        java-version: 17
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
 
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v2
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
 
-    - name: Build Plugins
-      run: |
-        cd $GITHUB_WORKSPACE/src
-        chmod +x gradlew
-        ./gradlew make generateUpdaterJson
-        cp **/build/*.zip $GITHUB_WORKSPACE/builds
-        cp build/updater.json $GITHUB_WORKSPACE/builds
+      - name: Build Plugins
+        run: |
+          cd "$GITHUB_WORKSPACE/src"
+          chmod +x gradlew
+          ./gradlew make generateUpdaterJson
+          cp **/build/*.zip "$GITHUB_WORKSPACE/builds"
+          cp build/updater.json "$GITHUB_WORKSPACE/builds"
 
-    - name: Push builds
-      run: |
-        cd $GITHUB_WORKSPACE/builds
-        git config --local user.email "actions@github.com"
-        git config --local user.name "GitHub Actions"
-        git add .
-        git commit -m "Build $GITHUB_SHA"
-        git push
+      - name: Push builds
+        run: |
+          cd "$GITHUB_WORKSPACE/builds"
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          git add .
+          git commit -m "Build $GITHUB_SHA"
+          git push
