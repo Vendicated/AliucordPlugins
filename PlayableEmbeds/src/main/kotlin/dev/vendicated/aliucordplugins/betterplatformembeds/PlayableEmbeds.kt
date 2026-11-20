@@ -94,10 +94,12 @@ class PlayableEmbeds : Plugin() {
         webviewMap[webView] = url
 
         webView.run {
-            loadData(
+            loadWithBaseUrl(
+                "https://aliucord.com/",
                 """
                 <html>
                     <head>
+                        <meta name="referrer" content="strict-origin-when-cross-origin">
                         <style>
                             body {
                                 margin: 0;
@@ -132,7 +134,8 @@ class PlayableEmbeds : Plugin() {
                 </html>
                 """,
                 "text/html",
-                "UTF-8"
+                "UTF-8",
+                null
             )
         }
     }
