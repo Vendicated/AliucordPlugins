@@ -38,15 +38,39 @@ jobs:
         run: |
           cd "$GITHUB_WORKSPACE/src"
           chmod +x gradlew
-          ./gradlew make generateUpdaterJson
-          cp **/build/*.zip "$GITHUB_WORKSPACE/builds"
-          cp build/updater.json "$GITHUB_WORKSPACE/builds"
+
+          if ./gradlew --continue make generateUpdaterJson; then
+            echo "BUILD_STATUS=0" >> "$GITHUB_ENV"
+          else
+            status=$?
+            echo "BUILD_STATUS=$status" >> "$GITHUB_ENV"
+            echo "::warning::Some plugins failed to build (exit code $status)"
+          fi
+
+          # Copy all successfully generated plugin archives
+          find . -type f -path '*/build/*.zip' \
+            -exec cp -t "$GITHUB_WORKSPACE/builds" {} +
+
+          # Copy updater if generated
+          if [ -f build/updater.json ]; then
+            cp build/updater.json "$GITHUB_WORKSPACE/builds"
+          fi
 
       - name: Push builds
         run: |
           cd "$GITHUB_WORKSPACE/builds"
+
           git config --local user.email "actions@github.com"
           git config --local user.name "GitHub Actions"
-          git add .
-          git commit -m "Build $GITHUB_SHA"
-          git push
+
+          git add -A
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Build $GITHUB_SHA"
+            git push
+          else
+            echo "No build artifacts changed."
+          fi
+
+          # Preserve failure status so GitHub Actions reports failed builds
+          exit "${BUILD_STATUS:-0}"
